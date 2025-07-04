@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/bufbuild/protovalidate-go v0.10.0
-	github.com/caarlos0/go-version v0.2.0
+	github.com/caarlos0/go-version v0.2.1
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gobwas/glob v0.2.3
