@@ -5,7 +5,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
-	
+
 	"go.admiral.io/admiral/internal/endpoint"
 )
 
@@ -30,6 +30,6 @@ func (r *registrar) GRPCServer() *grpc.Server {
 	return r.s
 }
 
-func (r *registrar) RegisterJSONGateway(f endpoint.GatewayRegisterAPIHandlerFunc) error {
+func (r *registrar) RegisterJSONGateway(f endpoint.GatewayRegisterAPIEndpointFunc) error {
 	return f(r.ctx, r.m, r.c)
 }

@@ -95,6 +95,7 @@ func (x *Cluster) GetUpdatedAt() *timestamppb.Timestamp {
 type CreateClusterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,2,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -136,9 +137,17 @@ func (x *CreateClusterRequest) GetName() string {
 	return ""
 }
 
+func (x *CreateClusterRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
 type CreateClusterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,6 +187,13 @@ func (x *CreateClusterResponse) GetCluster() *Cluster {
 		return x.Cluster
 	}
 	return nil
+}
+
+func (x *CreateClusterResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
 }
 
 type ListClustersRequest struct {
@@ -548,6 +564,190 @@ func (*DeleteClusterResponse) Descriptor() ([]byte, []int) {
 	return file_cluster_v1_cluster_proto_rawDescGZIP(), []int{10}
 }
 
+type RegisterClusterRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ClusterIdentifier string                 `protobuf:"bytes,1,opt,name=cluster_identifier,json=clusterIdentifier,proto3" json:"cluster_identifier,omitempty"`
+	Metadata          map[string]string      `protobuf:"bytes,2,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *RegisterClusterRequest) Reset() {
+	*x = RegisterClusterRequest{}
+	mi := &file_cluster_v1_cluster_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterClusterRequest) ProtoMessage() {}
+
+func (x *RegisterClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_v1_cluster_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterClusterRequest.ProtoReflect.Descriptor instead.
+func (*RegisterClusterRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_v1_cluster_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RegisterClusterRequest) GetClusterIdentifier() string {
+	if x != nil {
+		return x.ClusterIdentifier
+	}
+	return ""
+}
+
+func (x *RegisterClusterRequest) GetMetadata() map[string]string {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+type RegisterClusterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterClusterResponse) Reset() {
+	*x = RegisterClusterResponse{}
+	mi := &file_cluster_v1_cluster_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterClusterResponse) ProtoMessage() {}
+
+func (x *RegisterClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_v1_cluster_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterClusterResponse.ProtoReflect.Descriptor instead.
+func (*RegisterClusterResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_v1_cluster_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RegisterClusterResponse) GetCluster() *Cluster {
+	if x != nil {
+		return x.Cluster
+	}
+	return nil
+}
+
+type ResetClusterTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId     string                 `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetClusterTokenRequest) Reset() {
+	*x = ResetClusterTokenRequest{}
+	mi := &file_cluster_v1_cluster_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetClusterTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetClusterTokenRequest) ProtoMessage() {}
+
+func (x *ResetClusterTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_v1_cluster_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetClusterTokenRequest.ProtoReflect.Descriptor instead.
+func (*ResetClusterTokenRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_v1_cluster_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ResetClusterTokenRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+type ResetClusterTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetClusterTokenResponse) Reset() {
+	*x = ResetClusterTokenResponse{}
+	mi := &file_cluster_v1_cluster_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetClusterTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetClusterTokenResponse) ProtoMessage() {}
+
+func (x *ResetClusterTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_v1_cluster_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetClusterTokenResponse.ProtoReflect.Descriptor instead.
+func (*ResetClusterTokenResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_v1_cluster_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ResetClusterTokenResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
 var File_cluster_v1_cluster_proto protoreflect.FileDescriptor
 
 const file_cluster_v1_cluster_proto_rawDesc = "" +
@@ -560,12 +760,17 @@ const file_cluster_v1_cluster_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"6\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xc7\x01\n" +
 	"\x14CreateClusterRequest\x12\x1e\n" +
 	"\x04name\x18\x01 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\"N\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\x12R\n" +
+	"\bmetadata\x18\x02 \x03(\v26.admiral.cluster.v1.CreateClusterRequest.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"q\n" +
 	"\x15CreateClusterResponse\x125\n" +
-	"\acluster\x18\x01 \x01(\v2\x1b.admiral.cluster.v1.ClusterR\acluster\"}\n" +
+	"\acluster\x18\x01 \x01(\v2\x1b.admiral.cluster.v1.ClusterR\acluster\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\"}\n" +
 	"\x13ListClustersRequest\x12\x16\n" +
 	"\x06filter\x18\x01 \x01(\tR\x06filter\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\"\n" +
@@ -585,7 +790,20 @@ const file_cluster_v1_cluster_proto_rawDesc = "" +
 	"\acluster\x18\x01 \x01(\v2\x1b.admiral.cluster.v1.ClusterR\acluster\"0\n" +
 	"\x14DeleteClusterRequest\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\"\x17\n" +
-	"\x15DeleteClusterResponse2\xa0\x05\n" +
+	"\x15DeleteClusterResponse\"\xe4\x01\n" +
+	"\x16RegisterClusterRequest\x127\n" +
+	"\x12cluster_identifier\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x11clusterIdentifier\x12T\n" +
+	"\bmetadata\x18\x02 \x03(\v28.admiral.cluster.v1.RegisterClusterRequest.MetadataEntryR\bmetadata\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"P\n" +
+	"\x17RegisterClusterResponse\x125\n" +
+	"\acluster\x18\x01 \x01(\v2\x1b.admiral.cluster.v1.ClusterR\acluster\"C\n" +
+	"\x18ResetClusterTokenRequest\x12'\n" +
+	"\n" +
+	"cluster_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\">\n" +
+	"\x19ResetClusterTokenResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2\xb3\x06\n" +
 	"\n" +
 	"ClusterAPI\x12\x81\x01\n" +
 	"\rCreateCluster\x12(.admiral.cluster.v1.CreateClusterRequest\x1a).admiral.cluster.v1.CreateClusterResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/api/v1/clusters\x12{\n" +
@@ -593,7 +811,8 @@ const file_cluster_v1_cluster_proto_rawDesc = "" +
 	"\n" +
 	"GetCluster\x12%.admiral.cluster.v1.GetClusterRequest\x1a&.admiral.cluster.v1.GetClusterResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/clusters/{id}\x12\x8e\x01\n" +
 	"\rUpdateCluster\x12(.admiral.cluster.v1.UpdateClusterRequest\x1a).admiral.cluster.v1.UpdateClusterResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\x1a\x1d/api/v1/clusters/{cluster.id}\x12\x83\x01\n" +
-	"\rDeleteCluster\x12(.admiral.cluster.v1.DeleteClusterRequest\x1a).admiral.cluster.v1.DeleteClusterResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/api/v1/clusters/{id}B\xc0\x01\n" +
+	"\rDeleteCluster\x12(.admiral.cluster.v1.DeleteClusterRequest\x1a).admiral.cluster.v1.DeleteClusterResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/api/v1/clusters/{id}\x12\x90\x01\n" +
+	"\x0fRegisterCluster\x12*.admiral.cluster.v1.RegisterClusterRequest\x1a+.admiral.cluster.v1.RegisterClusterResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/clusters/registerB\xc0\x01\n" +
 	"\x16com.admiral.cluster.v1B\fClusterProtoP\x01Z.go.admiral.io/admiral/api/cluster/v1;clusterv1\xa2\x02\x03ACX\xaa\x02\x12Admiral.Cluster.V1\xca\x02\x12Admiral\\Cluster\\V1\xe2\x02\x1eAdmiral\\Cluster\\V1\\GPBMetadata\xea\x02\x14Admiral::Cluster::V1b\x06proto3"
 
 var (
@@ -608,44 +827,55 @@ func file_cluster_v1_cluster_proto_rawDescGZIP() []byte {
 	return file_cluster_v1_cluster_proto_rawDescData
 }
 
-var file_cluster_v1_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_cluster_v1_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_cluster_v1_cluster_proto_goTypes = []any{
-	(*Cluster)(nil),               // 0: admiral.cluster.v1.Cluster
-	(*CreateClusterRequest)(nil),  // 1: admiral.cluster.v1.CreateClusterRequest
-	(*CreateClusterResponse)(nil), // 2: admiral.cluster.v1.CreateClusterResponse
-	(*ListClustersRequest)(nil),   // 3: admiral.cluster.v1.ListClustersRequest
-	(*ListClustersResponse)(nil),  // 4: admiral.cluster.v1.ListClustersResponse
-	(*GetClusterRequest)(nil),     // 5: admiral.cluster.v1.GetClusterRequest
-	(*GetClusterResponse)(nil),    // 6: admiral.cluster.v1.GetClusterResponse
-	(*UpdateClusterRequest)(nil),  // 7: admiral.cluster.v1.UpdateClusterRequest
-	(*UpdateClusterResponse)(nil), // 8: admiral.cluster.v1.UpdateClusterResponse
-	(*DeleteClusterRequest)(nil),  // 9: admiral.cluster.v1.DeleteClusterRequest
-	(*DeleteClusterResponse)(nil), // 10: admiral.cluster.v1.DeleteClusterResponse
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*Cluster)(nil),                   // 0: admiral.cluster.v1.Cluster
+	(*CreateClusterRequest)(nil),      // 1: admiral.cluster.v1.CreateClusterRequest
+	(*CreateClusterResponse)(nil),     // 2: admiral.cluster.v1.CreateClusterResponse
+	(*ListClustersRequest)(nil),       // 3: admiral.cluster.v1.ListClustersRequest
+	(*ListClustersResponse)(nil),      // 4: admiral.cluster.v1.ListClustersResponse
+	(*GetClusterRequest)(nil),         // 5: admiral.cluster.v1.GetClusterRequest
+	(*GetClusterResponse)(nil),        // 6: admiral.cluster.v1.GetClusterResponse
+	(*UpdateClusterRequest)(nil),      // 7: admiral.cluster.v1.UpdateClusterRequest
+	(*UpdateClusterResponse)(nil),     // 8: admiral.cluster.v1.UpdateClusterResponse
+	(*DeleteClusterRequest)(nil),      // 9: admiral.cluster.v1.DeleteClusterRequest
+	(*DeleteClusterResponse)(nil),     // 10: admiral.cluster.v1.DeleteClusterResponse
+	(*RegisterClusterRequest)(nil),    // 11: admiral.cluster.v1.RegisterClusterRequest
+	(*RegisterClusterResponse)(nil),   // 12: admiral.cluster.v1.RegisterClusterResponse
+	(*ResetClusterTokenRequest)(nil),  // 13: admiral.cluster.v1.ResetClusterTokenRequest
+	(*ResetClusterTokenResponse)(nil), // 14: admiral.cluster.v1.ResetClusterTokenResponse
+	nil,                               // 15: admiral.cluster.v1.CreateClusterRequest.MetadataEntry
+	nil,                               // 16: admiral.cluster.v1.RegisterClusterRequest.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 17: google.protobuf.Timestamp
 }
 var file_cluster_v1_cluster_proto_depIdxs = []int32{
-	11, // 0: admiral.cluster.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
-	11, // 1: admiral.cluster.v1.Cluster.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: admiral.cluster.v1.CreateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	0,  // 3: admiral.cluster.v1.ListClustersResponse.clusters:type_name -> admiral.cluster.v1.Cluster
-	0,  // 4: admiral.cluster.v1.GetClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	0,  // 5: admiral.cluster.v1.UpdateClusterRequest.cluster:type_name -> admiral.cluster.v1.Cluster
-	0,  // 6: admiral.cluster.v1.UpdateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	1,  // 7: admiral.cluster.v1.ClusterAPI.CreateCluster:input_type -> admiral.cluster.v1.CreateClusterRequest
-	3,  // 8: admiral.cluster.v1.ClusterAPI.ListClusters:input_type -> admiral.cluster.v1.ListClustersRequest
-	5,  // 9: admiral.cluster.v1.ClusterAPI.GetCluster:input_type -> admiral.cluster.v1.GetClusterRequest
-	7,  // 10: admiral.cluster.v1.ClusterAPI.UpdateCluster:input_type -> admiral.cluster.v1.UpdateClusterRequest
-	9,  // 11: admiral.cluster.v1.ClusterAPI.DeleteCluster:input_type -> admiral.cluster.v1.DeleteClusterRequest
-	2,  // 12: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
-	4,  // 13: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
-	6,  // 14: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
-	8,  // 15: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
-	10, // 16: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
-	12, // [12:17] is the sub-list for method output_type
-	7,  // [7:12] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	17, // 0: admiral.cluster.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
+	17, // 1: admiral.cluster.v1.Cluster.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 2: admiral.cluster.v1.CreateClusterRequest.metadata:type_name -> admiral.cluster.v1.CreateClusterRequest.MetadataEntry
+	0,  // 3: admiral.cluster.v1.CreateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	0,  // 4: admiral.cluster.v1.ListClustersResponse.clusters:type_name -> admiral.cluster.v1.Cluster
+	0,  // 5: admiral.cluster.v1.GetClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	0,  // 6: admiral.cluster.v1.UpdateClusterRequest.cluster:type_name -> admiral.cluster.v1.Cluster
+	0,  // 7: admiral.cluster.v1.UpdateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	16, // 8: admiral.cluster.v1.RegisterClusterRequest.metadata:type_name -> admiral.cluster.v1.RegisterClusterRequest.MetadataEntry
+	0,  // 9: admiral.cluster.v1.RegisterClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	1,  // 10: admiral.cluster.v1.ClusterAPI.CreateCluster:input_type -> admiral.cluster.v1.CreateClusterRequest
+	3,  // 11: admiral.cluster.v1.ClusterAPI.ListClusters:input_type -> admiral.cluster.v1.ListClustersRequest
+	5,  // 12: admiral.cluster.v1.ClusterAPI.GetCluster:input_type -> admiral.cluster.v1.GetClusterRequest
+	7,  // 13: admiral.cluster.v1.ClusterAPI.UpdateCluster:input_type -> admiral.cluster.v1.UpdateClusterRequest
+	9,  // 14: admiral.cluster.v1.ClusterAPI.DeleteCluster:input_type -> admiral.cluster.v1.DeleteClusterRequest
+	11, // 15: admiral.cluster.v1.ClusterAPI.RegisterCluster:input_type -> admiral.cluster.v1.RegisterClusterRequest
+	2,  // 16: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
+	4,  // 17: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
+	6,  // 18: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
+	8,  // 19: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
+	10, // 20: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
+	12, // 21: admiral.cluster.v1.ClusterAPI.RegisterCluster:output_type -> admiral.cluster.v1.RegisterClusterResponse
+	16, // [16:22] is the sub-list for method output_type
+	10, // [10:16] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_cluster_v1_cluster_proto_init() }
@@ -660,7 +890,7 @@ func file_cluster_v1_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cluster_v1_cluster_proto_rawDesc), len(file_cluster_v1_cluster_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

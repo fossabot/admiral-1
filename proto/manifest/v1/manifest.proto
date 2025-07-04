@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package admiral.manifest.v1;
+
+option go_package = "go.admiral.io/admiral/api/manifest/v1;manifestv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+service ManifestAPI {
+  rpc CreateManifest(CreateManifestRequest) returns (CreateManifestResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/manifests"
+      body: "*"
+    };
+  }
+
+  rpc ListManifests(ListManifestsRequest) returns (ListManifestsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/manifests"
+    };
+  }
+
+  rpc GetManifest(GetManifestRequest) returns (GetManifestResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/manifests/{id}"
+    };
+  }
+
+  rpc UpdateManifest(UpdateManifestRequest) returns (UpdateManifestResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/manifests/{version_group_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteManifest(DeleteManifestRequest) returns (DeleteManifestResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/manifests/{version_group_id}"
+    };
+  }
+}
+
+message Manifest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string application_id = 3 [(buf.validate.field).string.uuid = true];
+  string version_group_id = 2 [(buf.validate.field).string.uuid = true];
+  string name = 4 [(buf.validate.field).string = { min_len: 1, max_len: 255 }];
+  optional string description = 5 [(buf.validate.field).string.max_len = 1024];
+  optional ManifestFile file = 6;
+  uint32 version = 7;
+  bool is_latest = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message ManifestFile {
+  bytes file_content = 1 [(buf.validate.field).bytes = { min_len: 1, max_len: 10485760 }];
+  string checksum_type = 2 [(buf.validate.field).string = { min_len: 1, max_len: 50, in: ["sha256"] }];
+  string checksum = 3 [(buf.validate.field).string = { min_len: 32, max_len: 64, pattern: "^[0-9a-fA-F]+$" }];
+}
+
+message CreateManifestRequest {
+  string application_id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 255 }];
+  optional string description = 3 [(buf.validate.field).string.max_len = 1024];
+  bytes file_content = 4 [(buf.validate.field).bytes = { min_len: 1, max_len: 10485760 }];
+}
+message CreateManifestResponse {
+  Manifest manifest = 1;
+}
+
+message ListManifestsRequest {
+  string filter = 1;
+  int32 page_size = 2;
+  optional string page_token = 3;
+}
+message ListManifestsResponse {
+  repeated Manifest manifests = 1;
+  string next_page_token = 2;
+}
+
+message GetManifestRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetManifestResponse {
+  Manifest manifest = 1;
+}
+
+message UpdateManifestRequest {
+  string application_id = 2 [(buf.validate.field).string.uuid = true];
+  string version_group_id = 1 [(buf.validate.field).string.uuid = true];
+  optional string name = 3 [(buf.validate.field).string.max_len = 255];
+  optional string description = 4 [(buf.validate.field).string.max_len = 1024];
+  optional bytes file_content = 5 [(buf.validate.field).bytes = { max_len: 10485760 }];
+}
+message UpdateManifestResponse {
+  Manifest manifest = 1;
+}
+
+message DeleteManifestRequest {
+  string version_group_id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteManifestResponse {}

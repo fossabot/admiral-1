@@ -3,5 +3,6 @@
 package tools
 
 import (
+	_ "github.com/mna/pigeon"
 	_ "github.com/shurcooL/vfsgen"
 )

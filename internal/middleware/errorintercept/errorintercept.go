@@ -40,11 +40,11 @@ func (m *Middleware) UnaryInterceptor() grpc.UnaryServerInterceptor {
 		// Invoke handler.
 		resp, err := handler(ctx, req)
 
-		// Attempt to transform error if there was one.
+		// Attempt to transform an error if there was one.
 		if err != nil {
 			// Iterate in reverse order over each interceptor so the 'significant' foundational service's interceptors get applied last.
 			for i := len(m.interceptors) - 1; i >= 0; i-- {
-				// Apply interceptor and overwrite error.
+				// Apply interceptor and overwrite the error.
 				err = m.interceptors[i](err)
 			}
 		}

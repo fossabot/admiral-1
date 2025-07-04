@@ -18,6 +18,7 @@ import (
 
 	"go.admiral.io/admiral/internal/config"
 	"go.admiral.io/admiral/internal/endpoint"
+	"go.admiral.io/admiral/internal/gateway/meta"
 	"go.admiral.io/admiral/internal/gateway/mux"
 	"go.admiral.io/admiral/internal/gateway/stats"
 	"go.admiral.io/admiral/internal/middleware"
@@ -65,15 +66,15 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 	}
 
 	// Instantiate and register services.
-	for name, factory := range cf.Services {
-		logger := logger.With(zap.String("serviceName", name))
+	for _, entry := range cf.Services {
+		logger := logger.With(zap.String("serviceName", entry.Name))
 
 		logger.Info("registering service")
-		svc, err := factory(cfg, logger, scope.SubScope(name))
+		svc, err := entry.Factory(cfg, logger, scope.SubScope(entry.Name))
 		if err != nil {
 			logger.Fatal("service instantiation failed", zap.Error(err))
 		}
-		service.Registry[name] = svc
+		service.Registry[entry.Name] = svc
 
 		if ei, ok := svc.(errorintercept.Interceptor); ok {
 			logger.Info("service registered an error conversion interceptor")
@@ -115,6 +116,13 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 		interceptors = append(interceptors, m.UnaryInterceptor())
 	}
 
+	// TODO: Refactor handler logic:
+	//       - It would be cleaner to initialize the handler with dependencies like logger and metrics scope,
+	//         and then pass it to the mux instead of wiring things individually.
+	//       - Also, review how cookies are handled in middleware and handlers.
+	//       - Currently, gRPC cookies are passed via gRPC metadata, but we should explore whether using context
+	//         directly is a better or more idiomatic approach.
+
 	// Instantiate and register modules listed in the configuration.
 	rpcMux, err := mux.New(interceptors, assets, metricsHandler, cfg.Server)
 	if err != nil {
@@ -150,12 +158,12 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 
 	reg := newRegistrar(ctx, rpcMux.JSONGateway, rpcMux.GRPCServer, conn)
 	for name, factory := range cf.Endpoints {
-		logger := logger.With(zap.String("handlerName", name))
+		logger := logger.With(zap.String("endpointName", name))
 
-		logger.Info("registering handler")
+		logger.Info("registering endpoint")
 		h, err := factory(cfg, logger, scope.SubScope(name))
 		if err != nil {
-			logger.Fatal("handler instantiation failed", zap.Error(err))
+			logger.Fatal("endpoint instantiation failed", zap.Error(err))
 		}
 
 		if err := h.Register(reg); err != nil {
@@ -167,9 +175,9 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 	rpcMux.EnableGRPCReflection()
 
 	// Save metadata on what RPCs being served for fast-lookup by internal services.
-	//if err := meta.GenerateGRPCMetadata(rpcMux.GRPCServer); err != nil {
-	//	logger.Fatal("reflection on grpc server failed", zap.Error(err))
-	//}
+	if err := meta.GenerateGRPCMetadata(rpcMux.GRPCServer); err != nil {
+		logger.Fatal("reflection on grpc server failed", zap.Error(err))
+	}
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Listener.Address, cfg.Server.Listener.Port)
 	logger.Info("listening", zap.Namespace("tcp"), zap.String("addr", addr))
@@ -213,7 +221,6 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 
 	signal.Stop(sc)
 
-	// Shutdown timeout should be max request timeout (with 1s buffer).
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -224,7 +231,6 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 	logger.Debug("server shutdown gracefully")
 }
 
-// Returns maximum timeout, where 0 is considered maximum (i.e. no timeout).
 func computeMaximumTimeout(cfg *config.Timeouts) time.Duration {
 	if cfg == nil {
 		return timeouts.DefaultTimeout

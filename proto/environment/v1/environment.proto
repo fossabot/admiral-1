@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package admiral.environment.v1;
+
+option go_package = "go.admiral.io/admiral/api/environment/v1;environmentv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+service EnvironmentAPI {
+  rpc CreateEnvironment(CreateEnvironmentRequest) returns (CreateEnvironmentResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/environments"
+      body: "*"
+    };
+  }
+
+  rpc ListEnvironments(ListEnvironmentsRequest) returns (ListEnvironmentsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/environments"
+    };
+  }
+
+  rpc GetEnvironment(GetEnvironmentRequest) returns (GetEnvironmentResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/environments/{id}"
+    };
+  }
+
+  rpc UpdateEnvironment(UpdateEnvironmentRequest) returns (UpdateEnvironmentResponse) {
+    option (google.api.http) = {
+      put : "/api/v1/environments/{environment.id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteEnvironment(DeleteEnvironmentRequest) returns (DeleteEnvironmentResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/environments/{id}"
+    };
+  }
+}
+
+message Environment {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string application_id = 2 [(buf.validate.field).string.uuid = true];
+  optional string cluster_id = 3;
+  string name = 4 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  optional string namespace = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message CreateEnvironmentRequest {
+  string application_id = 1 [(buf.validate.field).string.uuid = true];
+  optional string cluster_id = 2;
+  string name = 3 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255
+  ];
+  optional string namespace = 4;
+}
+message CreateEnvironmentResponse {
+  Environment environment = 1;
+}
+
+message ListEnvironmentsRequest {
+  string filter = 1;
+  int32 page_size = 2;
+  optional string page_token = 3;
+}
+message ListEnvironmentsResponse {
+  repeated Environment environments = 1;
+  string next_page_token = 2;
+}
+
+message GetEnvironmentRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetEnvironmentResponse {
+  Environment environment = 1;
+}
+
+message UpdateEnvironmentRequest {
+  Environment environment = 1;
+}
+message UpdateEnvironmentResponse {
+  Environment environment = 1;
+}
+
+message DeleteEnvironmentRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteEnvironmentResponse {}

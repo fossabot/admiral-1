@@ -40,6 +40,19 @@ service ClusterAPI {
       delete : "/api/v1/clusters/{id}"
     };
   }
+
+  rpc RegisterCluster(RegisterClusterRequest) returns (RegisterClusterResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/clusters/register"
+      body: "*"
+    };
+  }
+
+//  rpc ResetClusterToken(ResetClusterTokenRequest) returns (ResetClusterTokenResponse) {
+//    option (google.api.http) = {
+//      post: "/api/v1/clusters/{cluster_id}/reset-token"
+//      body: "*"
+//    };
 }
 
 message Cluster {
@@ -58,9 +71,11 @@ message CreateClusterRequest {
     (buf.validate.field).string.min_len = 1,
     (buf.validate.field).string.max_len = 255
   ];
+  map<string, string> metadata = 2;
 }
 message CreateClusterResponse {
   Cluster cluster = 1;
+  string access_token = 2;
 }
 
 message ListClustersRequest {
@@ -91,3 +106,20 @@ message DeleteClusterRequest {
   string id = 1 [(buf.validate.field).string.uuid = true];
 }
 message DeleteClusterResponse {}
+
+message RegisterClusterRequest {
+  string cluster_identifier = 1 [
+    (buf.validate.field).string.uuid = true
+  ];
+  map<string, string> metadata = 2;
+}
+message RegisterClusterResponse {
+  Cluster cluster = 1;
+}
+
+message ResetClusterTokenRequest {
+  string cluster_id = 1 [(buf.validate.field).string.uuid = true];
+}
+message ResetClusterTokenResponse {
+  string access_token = 1;
+}

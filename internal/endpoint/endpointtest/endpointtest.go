@@ -36,7 +36,7 @@ func (r *TestRegistrar) GRPCServer() *grpc.Server {
 	return r.grpcServer
 }
 
-func (r *TestRegistrar) RegisterJSONGateway(handlerFunc endpoint.GatewayRegisterAPIHandlerFunc) error {
+func (r *TestRegistrar) RegisterJSONGateway(handlerFunc endpoint.GatewayRegisterAPIEndpointFunc) error {
 	r.jsonCount++
 	if r.jsonCount != len(r.grpcServer.GetServiceInfo()) {
 		panic("RegisterJSONGateway called more than gRPC or no gRPC registration found")

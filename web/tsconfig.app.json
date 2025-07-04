@@ -22,9 +22,13 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
+    /* Config */
     "paths": {
       "@/*": ["./src/*"]
-    }
-  },
-  "include": ["src"]
+    },
+    "allowSyntheticDefaultImports": true,
+
+    /* Type Declaration */
+    "typeRoots": ["./types"]
+  }
 }

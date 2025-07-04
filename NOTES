@@ -1,0 +1,7 @@
+- manifest values should also include app and environment values (for example you should be able to get the environment name in the values)
+- implement list get delete revision
+- implement access token
+- simplify web to ship v1
+- me endpoint should be on the server side and should return id token info ?
+
+ship v1

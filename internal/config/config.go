@@ -13,6 +13,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Config struct {
+	Server   Server   `yaml:"server"`
+	Handlers Handlers `yaml:"handlers"`
+	Services Services `yaml:"services"`
+}
+
 func Build(file string, envFiles []string, debug bool) *Config {
 	tmpLogger := newTmpLogger()
 
@@ -87,10 +93,14 @@ func parseConfig(file string, debug bool) (*Config, error) {
 	// Set default values in the configuration.
 	cfg = setDefaults(cfg)
 
-	// Validate the configuration struct.
+	// Validate the configuration
 	validate := validator.New()
 	if err := validate.Struct(cfg); err != nil {
-		tmpLogger.Fatal("configuration validation failed", zap.Error(err))
+		tmpLogger.Fatal("struct tag validation failed", zap.Error(err))
+		return nil, err
+	}
+	if err := cfg.validate(); err != nil {
+		tmpLogger.Fatal("custom configuration validation failed", zap.Error(err))
 		return nil, err
 	}
 
@@ -117,4 +127,33 @@ func setDefaults(cfg *Config) *Config {
 		}
 	}
 	return cfg
+}
+
+func (c *Config) validate() error {
+	if c == nil {
+		return fmt.Errorf("config is nil")
+	}
+
+	// Validate stats reporter type if stats are configured
+	if c.Server.Stats != nil {
+		if err := c.Server.Stats.ReporterType.Validate(); err != nil {
+			return fmt.Errorf("invalid server.stats.reporter_type: %w", err)
+		}
+	}
+
+	// Validate database SSL mode (nil-safe due to pointer)
+	if c.Services.Database != nil {
+		if err := c.Services.Database.SSLMode.Validate(); err != nil {
+			return fmt.Errorf("invalid services.database.ssl_mode: %w", err)
+		}
+	} else {
+		return fmt.Errorf("services.database config is nil")
+	}
+
+	// Validate storage config
+	if err := c.Services.Storage.Validate(); err != nil {
+		return fmt.Errorf("invalid services.storage config: %w", err)
+	}
+
+	return nil
 }

@@ -28,6 +28,7 @@ type migrateCmd struct {
 type migrateOpts struct {
 	force bool
 	down  bool
+	reset bool
 }
 
 type migrator struct {
@@ -61,6 +62,9 @@ func newMigrateCmd() *migrateCmd {
 				force:  root.opts.force,
 			}
 
+			if root.opts.reset {
+				return m.Reset()
+			}
 			if root.opts.down {
 				return m.Down()
 			}
@@ -68,8 +72,9 @@ func newMigrateCmd() *migrateCmd {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&root.opts.force, "force", "f", false, "Do not ask user for confirmation")
-	cmd.Flags().BoolVar(&root.opts.down, "down", false, "Migrates down by one version")
+	cmd.Flags().BoolVarP(&root.opts.force, "force", "f", false, "do not ask user for confirmation")
+	cmd.Flags().BoolVar(&root.opts.down, "down", false, "migrates down by one version")
+	cmd.Flags().BoolVar(&root.opts.reset, "reset", false, "resets dirty migration state")
 
 	root.Cmd = cmd
 	return root
@@ -81,8 +86,8 @@ func (m *migrator) setupSqlClient() (*sql.DB, string, error) {
 		return nil, "", fmt.Errorf("failed to create database client: %w", err)
 	}
 
-	dbClient, ok := pgdb.(database.Client)
-	if !ok || dbClient.DB() == nil {
+	dbService, ok := pgdb.(database.Service)
+	if !ok || dbService.DB() == nil {
 		return nil, "", errors.New("no valid database client found")
 	}
 
@@ -91,7 +96,7 @@ func (m *migrator) setupSqlClient() (*sql.DB, string, error) {
 		m.config.Services.Database.Host,
 		m.config.Services.Database.Port,
 	)
-	return dbClient.DB(), hostInfo, nil
+	return dbService.DB(), hostInfo, nil
 }
 
 func (m *migrator) setupSqlMigrator() (*migrate.Migrate, error) {
@@ -190,6 +195,35 @@ func (m *migrator) Down() error {
 		return fmt.Errorf("failed to apply down migration: %w", err)
 	}
 	m.log.Info("Down migration applied successfully")
+	return nil
+}
+
+func (m *migrator) Reset() error {
+	migrator, err := m.setupSqlMigrator()
+	if err != nil {
+		return err
+	}
+
+	version, dirty, err := migrator.Version()
+	if err != nil {
+		return fmt.Errorf("failed to get migration version: %w", err)
+	}
+
+	if !dirty {
+		m.log.Info("Schema is not dirty, nothing to reset")
+		return nil
+	}
+
+	msg := fmt.Sprintf("Schema is dirty at version %d. Resetting will allow future migrations but may cause inconsistencies.", version)
+	if err := m.confirmWithUser(msg); err != nil {
+		return err
+	}
+
+	if err := migrator.Force(int(version)); err != nil {
+		return fmt.Errorf("failed to force migration version: %w", err)
+	}
+
+	m.log.Info("Migration state reset; dirty flag cleared")
 	return nil
 }
 

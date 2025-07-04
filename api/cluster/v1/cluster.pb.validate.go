@@ -219,6 +219,8 @@ func (m *CreateClusterRequest) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for Metadata
+
 	if len(errors) > 0 {
 		return CreateClusterRequestMultiError(errors)
 	}
@@ -349,6 +351,8 @@ func (m *CreateClusterResponse) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for AccessToken
 
 	if len(errors) > 0 {
 		return CreateClusterResponseMultiError(errors)
@@ -1380,3 +1384,448 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteClusterResponseValidationError{}
+
+// Validate checks the field values on RegisterClusterRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RegisterClusterRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RegisterClusterRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RegisterClusterRequestMultiError, or nil if none found.
+func (m *RegisterClusterRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RegisterClusterRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterIdentifier
+
+	// no validation rules for Metadata
+
+	if len(errors) > 0 {
+		return RegisterClusterRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// RegisterClusterRequestMultiError is an error wrapping multiple validation
+// errors returned by RegisterClusterRequest.ValidateAll() if the designated
+// constraints aren't met.
+type RegisterClusterRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RegisterClusterRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RegisterClusterRequestMultiError) AllErrors() []error { return m }
+
+// RegisterClusterRequestValidationError is the validation error returned by
+// RegisterClusterRequest.Validate if the designated constraints aren't met.
+type RegisterClusterRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RegisterClusterRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RegisterClusterRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RegisterClusterRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RegisterClusterRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RegisterClusterRequestValidationError) ErrorName() string {
+	return "RegisterClusterRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RegisterClusterRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRegisterClusterRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RegisterClusterRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RegisterClusterRequestValidationError{}
+
+// Validate checks the field values on RegisterClusterResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RegisterClusterResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RegisterClusterResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RegisterClusterResponseMultiError, or nil if none found.
+func (m *RegisterClusterResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RegisterClusterResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetCluster()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RegisterClusterResponseValidationError{
+					field:  "Cluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RegisterClusterResponseValidationError{
+					field:  "Cluster",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCluster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RegisterClusterResponseValidationError{
+				field:  "Cluster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return RegisterClusterResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RegisterClusterResponseMultiError is an error wrapping multiple validation
+// errors returned by RegisterClusterResponse.ValidateAll() if the designated
+// constraints aren't met.
+type RegisterClusterResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RegisterClusterResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RegisterClusterResponseMultiError) AllErrors() []error { return m }
+
+// RegisterClusterResponseValidationError is the validation error returned by
+// RegisterClusterResponse.Validate if the designated constraints aren't met.
+type RegisterClusterResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RegisterClusterResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RegisterClusterResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RegisterClusterResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RegisterClusterResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RegisterClusterResponseValidationError) ErrorName() string {
+	return "RegisterClusterResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RegisterClusterResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRegisterClusterResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RegisterClusterResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RegisterClusterResponseValidationError{}
+
+// Validate checks the field values on ResetClusterTokenRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResetClusterTokenRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResetClusterTokenRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResetClusterTokenRequestMultiError, or nil if none found.
+func (m *ResetClusterTokenRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResetClusterTokenRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterId
+
+	if len(errors) > 0 {
+		return ResetClusterTokenRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResetClusterTokenRequestMultiError is an error wrapping multiple validation
+// errors returned by ResetClusterTokenRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ResetClusterTokenRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResetClusterTokenRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResetClusterTokenRequestMultiError) AllErrors() []error { return m }
+
+// ResetClusterTokenRequestValidationError is the validation error returned by
+// ResetClusterTokenRequest.Validate if the designated constraints aren't met.
+type ResetClusterTokenRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResetClusterTokenRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResetClusterTokenRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResetClusterTokenRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResetClusterTokenRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResetClusterTokenRequestValidationError) ErrorName() string {
+	return "ResetClusterTokenRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResetClusterTokenRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResetClusterTokenRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResetClusterTokenRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResetClusterTokenRequestValidationError{}
+
+// Validate checks the field values on ResetClusterTokenResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResetClusterTokenResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResetClusterTokenResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResetClusterTokenResponseMultiError, or nil if none found.
+func (m *ResetClusterTokenResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResetClusterTokenResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for AccessToken
+
+	if len(errors) > 0 {
+		return ResetClusterTokenResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResetClusterTokenResponseMultiError is an error wrapping multiple validation
+// errors returned by ResetClusterTokenResponse.ValidateAll() if the
+// designated constraints aren't met.
+type ResetClusterTokenResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResetClusterTokenResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResetClusterTokenResponseMultiError) AllErrors() []error { return m }
+
+// ResetClusterTokenResponseValidationError is the validation error returned by
+// ResetClusterTokenResponse.Validate if the designated constraints aren't met.
+type ResetClusterTokenResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResetClusterTokenResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResetClusterTokenResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResetClusterTokenResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResetClusterTokenResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResetClusterTokenResponseValidationError) ErrorName() string {
+	return "ResetClusterTokenResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResetClusterTokenResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResetClusterTokenResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResetClusterTokenResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResetClusterTokenResponseValidationError{}

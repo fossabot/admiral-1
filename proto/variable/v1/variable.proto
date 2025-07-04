@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package admiral.variable.v1;
+
+option go_package = "go.admiral.io/admiral/api/variable/v1;variablev1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+service VariableAPI {
+  rpc CreateVariable(CreateVariableRequest) returns (CreateVariableResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/variables"
+      body: "*"
+    };
+  }
+
+  rpc ListVariables(ListVariablesRequest) returns (ListVariablesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/variables"
+    };
+  }
+
+  rpc GetVariable(GetVariableRequest) returns (GetVariableResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/variables/{id}"
+    };
+  }
+
+  rpc UpdateVariable(UpdateVariableRequest) returns (UpdateVariableResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/variables/{variable.id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteVariable(DeleteVariableRequest) returns (DeleteVariableResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/variables/{id}"
+    };
+  }
+}
+
+message Variable {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  optional string application_id = 2 [(buf.validate.field).string.uuid = true];
+  optional string environment_id = 3 [(buf.validate.field).string.uuid = true];
+  string key = 4 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255,
+    (buf.validate.field).string.pattern = "^[a-zA-Z0-9_]([-a-zA-Z0-9_]*[a-zA-Z0-9_])?$"
+  ];
+  string value = 5 [(buf.validate.field).string.min_len = 1];
+  optional string description = 6;
+  bool is_sensitive = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message CreateVariableRequest {
+  optional string application_id = 1 [(buf.validate.field).string.uuid = true];
+  optional string environment_id = 2 [(buf.validate.field).string.uuid = true];
+  string key = 3 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 255,
+    (buf.validate.field).string.pattern = "^[a-zA-Z0-9_]([-a-zA-Z0-9_]*[a-zA-Z0-9_])?$"
+  ];
+  string value = 4 [(buf.validate.field).string.min_len = 1];
+  optional string description = 5;
+  bool is_sensitive = 6;
+}
+message CreateVariableResponse {
+  Variable variable = 1;
+}
+
+message ListVariablesRequest {
+  string filter = 1;
+  bool effective = 2;
+  int32 page_size = 3;
+  optional string page_token = 4;
+}
+message ListVariablesResponse {
+  repeated Variable variables = 1;
+  string next_page_token = 2;
+}
+
+message GetVariableRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetVariableResponse {
+  Variable variable = 1;
+}
+
+message UpdateVariableRequest {
+  Variable variable = 1;
+}
+message UpdateVariableResponse {
+  Variable variable = 1;
+}
+
+message DeleteVariableRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteVariableResponse {}

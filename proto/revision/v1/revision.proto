@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package admiral.revision.v1;
+
+option go_package = "go.admiral.io/admiral/api/revision/v1;revisionv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+service RevisionAPI {
+  rpc CreateRevision(CreateRevisionRequest) returns (CreateRevisionResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/revisions"
+      body: "*"
+    };
+  }
+}
+
+message Revision {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string application_id = 2 [(buf.validate.field).string.uuid = true];
+  string environment_id = 3 [(buf.validate.field).string.uuid = true];
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message CreateRevisionRequest {
+  string application_id = 1 [(buf.validate.field).string.uuid = true];
+  string environment_id = 2 [(buf.validate.field).string.uuid = true];
+}
+message CreateRevisionResponse {
+  Revision revision = 1;
+}
+

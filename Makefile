@@ -48,6 +48,10 @@ proto-verify:
 	@$(MAKE) proto
 	tools/ensure-no-diff.sh server/api web/src/api
 
+.PHONE: pigeon # Generate PEG parser
+pigeon:
+	 pigeon -o internal/querybuilder/parser.go internal/querybuilder/parser.peg
+
 .PHONY: server # Build the standalone server.
 server: preflight-checks-go
 	go build -o ./build/admiral-server \

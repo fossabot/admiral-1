@@ -1,0 +1,24 @@
+.paper {
+  padding: 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.container {
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.errorContainer {
+  color: #d32f2f;
+  text-align: center;
+  margin-top: 32px;
+}

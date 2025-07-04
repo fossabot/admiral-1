@@ -7,6 +7,7 @@ import (
 	"net/http/pprof"
 	"net/textproto"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -17,8 +18,11 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
-	
+	"google.golang.org/protobuf/proto"
+
 	"go.admiral.io/admiral/internal/config"
+	"go.admiral.io/admiral/internal/service"
+	"go.admiral.io/admiral/internal/service/session"
 )
 
 const (
@@ -29,27 +33,31 @@ const (
 
 type Mux struct {
 	JSONGateway *runtime.ServeMux
-	HTTPMux     http.Handler
 	GRPCServer  *grpc.Server
+	HTTPMux     http.Handler
+}
+
+type Route struct {
+	Path    string
+	Handler http.Handler
 }
 
 func New(unaryInterceptors []grpc.UnaryServerInterceptor, assets http.FileSystem, metricsHandler http.Handler, cfg config.Server) (*Mux, error) {
-	//secureCookies := true
-	//if gatewayCfg.SecureCookies != nil {
-	//	secureCookies = gatewayCfg.SecureCookies.Value
-	//}
+	sessionService, err := service.GetService[session.Service]("service.session")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session service: %w", err)
+	}
 
 	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(unaryInterceptors...))
+
 	jsonGateway := runtime.NewServeMux(
-		//runtime.WithForwardResponseOption(newCustomResponseForwarder(secureCookies)),
+		runtime.WithForwardResponseOption(newCustomResponseForwarder(sessionService)),
 		runtime.WithErrorHandler(customErrorHandler),
 		runtime.WithMarshalerOption(
 			runtime.MIMEWildcard,
 			&runtime.JSONPb{
 				MarshalOptions: protojson.MarshalOptions{
-					// Use camelCase for the JSON version.
-					UseProtoNames: false,
-					// Transmit zero-values over the wire.
+					UseProtoNames:   false,
 					EmitUnpopulated: true,
 				},
 				UnmarshalOptions: protojson.UnmarshalOptions{},
@@ -60,9 +68,9 @@ func New(unaryInterceptors []grpc.UnaryServerInterceptor, assets http.FileSystem
 
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/", &assetHandler{
-		next:       jsonGateway,
-		fileSystem: assets,
-		fileServer: http.FileServer(assets),
+		FileSystem: assets,
+		FileServer: http.FileServer(assets),
+		Next:       jsonGateway,
 	})
 
 	if cfg.EnablePprof {
@@ -74,9 +82,9 @@ func New(unaryInterceptors []grpc.UnaryServerInterceptor, assets http.FileSystem
 	}
 
 	mux := &Mux{
-		GRPCServer:  grpcServer,
 		JSONGateway: jsonGateway,
-		HTTPMux:     httpMux,
+		GRPCServer:  grpcServer,
+		HTTPMux:     sessionService.LoadAndSave(httpMux),
 	}
 	return mux, nil
 }
@@ -91,6 +99,41 @@ func (m *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (m *Mux) EnableGRPCReflection() {
 	reflection.Register(m.GRPCServer)
+}
+
+func newCustomResponseForwarder(sess session.Service) func(context.Context, http.ResponseWriter, proto.Message) error {
+	return func(ctx context.Context, w http.ResponseWriter, resp proto.Message) error {
+		md, ok := runtime.ServerMetadataFromContext(ctx)
+		if !ok {
+			return nil
+		}
+
+		if tokens := md.HeaderMD.Get("Set-Access-Token"); len(tokens) > 0 {
+			sess.Put(ctx, "accessToken", tokens[0])
+		}
+
+		if tokens := md.HeaderMD.Get("Set-Refresh-Token"); len(tokens) > 0 {
+			sess.Put(ctx, "refreshToken", tokens[0])
+		}
+
+		// Redirect if it's the browser (non-XHR).
+		redirects := md.HeaderMD.Get("Location")
+		if len(redirects) > 0 && isBrowser(requestHeadersFromResponseWriter(w)) {
+			code := http.StatusFound
+			if st := md.HeaderMD.Get("Location-Status"); len(st) > 0 {
+				headerCodeOverride, err := strconv.Atoi(st[0])
+				if err != nil {
+					return err
+				}
+				code = headerCodeOverride
+			}
+
+			w.Header().Set("Location", redirects[0])
+			w.WriteHeader(code)
+		}
+
+		return nil
+	}
 }
 
 func customHeaderMatcher(key string) (string, bool) {

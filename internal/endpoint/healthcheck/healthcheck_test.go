@@ -2,13 +2,14 @@ package healthcheck
 
 import (
 	"context"
-	healthcheckv1 "go.admiral.io/admiral/api/healthcheck/v1"
-	"go.admiral.io/admiral/internal/endpoint/endpointtest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap/zaptest"
+
+	healthcheckv1 "go.admiral.io/admiral/api/healthcheck/v1"
+	"go.admiral.io/admiral/internal/endpoint/endpointtest"
 )
 
 func TestModule(t *testing.T) {

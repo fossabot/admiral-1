@@ -28,8 +28,9 @@ type Application struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Description   *string                `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -78,6 +79,13 @@ func (x *Application) GetName() string {
 	return ""
 }
 
+func (x *Application) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
 func (x *Application) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -95,6 +103,7 @@ func (x *Application) GetUpdatedAt() *timestamppb.Timestamp {
 type CreateApplicationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   *string                `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -132,6 +141,13 @@ func (*CreateApplicationRequest) Descriptor() ([]byte, []int) {
 func (x *CreateApplicationRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateApplicationRequest) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
 	}
 	return ""
 }
@@ -552,18 +568,22 @@ var File_application_v1_application_proto protoreflect.FileDescriptor
 
 const file_application_v1_application_proto_rawDesc = "" +
 	"\n" +
-	" application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bbuf/validate/validate.proto\"\xbd\x01\n" +
+	" application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bbuf/validate/validate.proto\"\xf4\x01\n" +
 	"\vApplication\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x1e\n" +
 	"\x04name\x18\x02 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\x129\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\x12%\n" +
+	"\vdescription\x18\x03 \x01(\tH\x00R\vdescription\x88\x01\x01\x129\n" +
 	"\n" +
-	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\":\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0e\n" +
+	"\f_description\"q\n" +
 	"\x18CreateApplicationRequest\x12\x1e\n" +
 	"\x04name\x18\x01 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\"b\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\x12%\n" +
+	"\vdescription\x18\x02 \x01(\tH\x00R\vdescription\x88\x01\x01B\x0e\n" +
+	"\f_description\"b\n" +
 	"\x19CreateApplicationResponse\x12E\n" +
 	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"\x81\x01\n" +
 	"\x17ListApplicationsRequest\x12\x16\n" +
@@ -651,6 +671,8 @@ func file_application_v1_application_proto_init() {
 	if File_application_v1_application_proto != nil {
 		return
 	}
+	file_application_v1_application_proto_msgTypes[0].OneofWrappers = []any{}
+	file_application_v1_application_proto_msgTypes[1].OneofWrappers = []any{}
 	file_application_v1_application_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

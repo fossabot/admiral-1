@@ -18,10 +18,10 @@ type api struct {
 	scope  tally.Scope
 }
 
-func New(_ *config.Config, logger *zap.Logger, scope tally.Scope) (endpoint.Endpoint, error) {
+func New(_ *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpoint, error) {
 	return &api{
-		logger: logger,
-		scope:  scope,
+		logger: log.Named("healthcheck"),
+		scope:  scope.SubScope("healthcheck"),
 	}, nil
 }
 

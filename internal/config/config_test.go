@@ -88,7 +88,7 @@ server:
 server:
   listener:
     address: "0.0.0.0"
-    port: invalid # Invalid type
+    port: invalid # Invalid model
 `
 		err := os.WriteFile(configFile, []byte(content), 0600)
 		assert.NoError(t, err)

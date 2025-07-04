@@ -72,7 +72,7 @@ func newRootCmd(versionInfo goversion.Info, exit func(int)) *rootCmd {
 	cmd.SetVersionTemplate("{{.Version}}")
 	cmd.CompletionOptions.DisableDefaultCmd = true
 
-	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", "config.yaml", "Load configuration from file")
+	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", "config.yaml", "load configuration from file")
 	_ = cmd.MarkFlagFilename("config", "yaml", "yml")
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "print the final configuration file to stdout")
 	cmd.PersistentFlags().Var(&envVarFiles, "env", "path to additional .env files to load")

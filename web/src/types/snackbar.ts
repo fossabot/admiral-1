@@ -1,0 +1,16 @@
+import { AlertProps, SnackbarOrigin } from '@mui/material';
+
+export interface SnackbarProps {
+  action: boolean;
+  open: boolean;
+  message: string;
+  anchorOrigin: SnackbarOrigin;
+  variant: string;
+  alert: AlertProps;
+  transition: string;
+  close: boolean;
+  dense: boolean;
+  maxStack: number;
+  iconVariant: string;
+  actionButton: boolean;
+}

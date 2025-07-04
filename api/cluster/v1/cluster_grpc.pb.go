@@ -19,11 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ClusterAPI_CreateCluster_FullMethodName = "/admiral.cluster.v1.ClusterAPI/CreateCluster"
-	ClusterAPI_ListClusters_FullMethodName  = "/admiral.cluster.v1.ClusterAPI/ListClusters"
-	ClusterAPI_GetCluster_FullMethodName    = "/admiral.cluster.v1.ClusterAPI/GetCluster"
-	ClusterAPI_UpdateCluster_FullMethodName = "/admiral.cluster.v1.ClusterAPI/UpdateCluster"
-	ClusterAPI_DeleteCluster_FullMethodName = "/admiral.cluster.v1.ClusterAPI/DeleteCluster"
+	ClusterAPI_CreateCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/CreateCluster"
+	ClusterAPI_ListClusters_FullMethodName    = "/admiral.cluster.v1.ClusterAPI/ListClusters"
+	ClusterAPI_GetCluster_FullMethodName      = "/admiral.cluster.v1.ClusterAPI/GetCluster"
+	ClusterAPI_UpdateCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/UpdateCluster"
+	ClusterAPI_DeleteCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/DeleteCluster"
+	ClusterAPI_RegisterCluster_FullMethodName = "/admiral.cluster.v1.ClusterAPI/RegisterCluster"
 )
 
 // ClusterAPIClient is the client API for ClusterAPI service.
@@ -35,6 +36,7 @@ type ClusterAPIClient interface {
 	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*GetClusterResponse, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterRequest, opts ...grpc.CallOption) (*UpdateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error)
+	RegisterCluster(ctx context.Context, in *RegisterClusterRequest, opts ...grpc.CallOption) (*RegisterClusterResponse, error)
 }
 
 type clusterAPIClient struct {
@@ -95,6 +97,16 @@ func (c *clusterAPIClient) DeleteCluster(ctx context.Context, in *DeleteClusterR
 	return out, nil
 }
 
+func (c *clusterAPIClient) RegisterCluster(ctx context.Context, in *RegisterClusterRequest, opts ...grpc.CallOption) (*RegisterClusterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterClusterResponse)
+	err := c.cc.Invoke(ctx, ClusterAPI_RegisterCluster_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ClusterAPIServer is the server API for ClusterAPI service.
 // All implementations should embed UnimplementedClusterAPIServer
 // for forward compatibility.
@@ -104,6 +116,7 @@ type ClusterAPIServer interface {
 	GetCluster(context.Context, *GetClusterRequest) (*GetClusterResponse, error)
 	UpdateCluster(context.Context, *UpdateClusterRequest) (*UpdateClusterResponse, error)
 	DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error)
+	RegisterCluster(context.Context, *RegisterClusterRequest) (*RegisterClusterResponse, error)
 }
 
 // UnimplementedClusterAPIServer should be embedded to have
@@ -127,6 +140,9 @@ func (UnimplementedClusterAPIServer) UpdateCluster(context.Context, *UpdateClust
 }
 func (UnimplementedClusterAPIServer) DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCluster not implemented")
+}
+func (UnimplementedClusterAPIServer) RegisterCluster(context.Context, *RegisterClusterRequest) (*RegisterClusterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterCluster not implemented")
 }
 func (UnimplementedClusterAPIServer) testEmbeddedByValue() {}
 
@@ -238,6 +254,24 @@ func _ClusterAPI_DeleteCluster_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterAPI_RegisterCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterAPIServer).RegisterCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ClusterAPI_RegisterCluster_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterAPIServer).RegisterCluster(ctx, req.(*RegisterClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ClusterAPI_ServiceDesc is the grpc.ServiceDesc for ClusterAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -264,6 +298,10 @@ var ClusterAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCluster",
 			Handler:    _ClusterAPI_DeleteCluster_Handler,
+		},
+		{
+			MethodName: "RegisterCluster",
+			Handler:    _ClusterAPI_RegisterCluster_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

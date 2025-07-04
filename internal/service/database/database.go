@@ -1,16 +1,20 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
+	"moul.io/zapgorm2"
 
 	"go.admiral.io/admiral/internal/config"
 	"go.admiral.io/admiral/internal/service"
@@ -18,26 +22,30 @@ import (
 
 const Name = "service.database"
 
-type client struct {
+type srv struct {
 	sqlDB  *sql.DB
 	gormDB *gorm.DB
 	logger *zap.Logger
 	scope  tally.Scope
 }
 
-type Client interface {
+type Service interface {
 	DB() *sql.DB
 	GormDB() *gorm.DB
 }
 
-func (c *client) DB() *sql.DB { return c.sqlDB }
+func (s *srv) DB() *sql.DB {
+	return s.sqlDB
+}
 
-func (c *client) GormDB() *gorm.DB {
-	return c.gormDB
+func (s *srv) GormDB() *gorm.DB {
+	return s.gormDB
 }
 
 func New(cfg *config.Config, logger *zap.Logger, scope tally.Scope) (service.Service, error) {
-	connection, err := connString(cfg.Services.Database)
+	dbCfg := cfg.Services.Database
+
+	connection, err := connString(dbCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -47,34 +55,95 @@ func New(cfg *config.Config, logger *zap.Logger, scope tally.Scope) (service.Ser
 		return nil, err
 	}
 
-	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{})
-	if err != nil {
-		return nil, err
+	// Configure connection pool
+	if dbCfg.MaxOpenConns > 0 {
+		sqlDB.SetMaxOpenConns(dbCfg.MaxOpenConns)
+	} else {
+		sqlDB.SetMaxOpenConns(100)
 	}
 
-	return &client{sqlDB: sqlDB, gormDB: gormDB, logger: logger, scope: scope}, nil
+	if dbCfg.MaxIdleConns > 0 {
+		sqlDB.SetMaxIdleConns(dbCfg.MaxIdleConns)
+	} else {
+		sqlDB.SetMaxIdleConns(10)
+	}
+
+	if dbCfg.ConnMaxLifetime > 0 {
+		sqlDB.SetConnMaxLifetime(dbCfg.ConnMaxLifetime)
+	} else {
+		sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	}
+
+	if dbCfg.ConnMaxIdleTime > 0 {
+		sqlDB.SetConnMaxIdleTime(dbCfg.ConnMaxIdleTime)
+	} else {
+		sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+	}
+
+	// Test connection
+	timeout := dbCfg.ConnectionTimeout
+	if timeout == 0 {
+		timeout = 5 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return nil, fmt.Errorf("database ping failed: %w", err)
+	}
+
+	zapGormLogger := zapgorm2.New(logger)
+	zapGormLogger.LogLevel = gormlogger.Silent
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{
+		Logger:                 zapGormLogger,
+		SkipDefaultTransaction: true,
+		PrepareStmt:            true,
+	})
+	if err != nil {
+		sqlDB.Close()
+		return nil, fmt.Errorf("failed to open GORM connection: %w", err)
+	}
+
+	logger.Info("database connected",
+		zap.String("host", cfg.Services.Database.Host),
+		zap.Int("port", cfg.Services.Database.Port),
+		zap.String("dbname", cfg.Services.Database.DatabaseName))
+
+	scope.Counter("database_connection_success").Inc(1)
+
+	return &srv{sqlDB: sqlDB, gormDB: gormDB, logger: logger, scope: scope}, nil
 }
 
 func connString(cfg *config.Database) (string, error) {
 	if cfg == nil {
 		return "", errors.New("no connection information")
 	}
+	if strings.ContainsAny(cfg.Host, " \t\n") {
+		return "", fmt.Errorf("invalid host: %s", cfg.Host)
+	}
+	if cfg.DatabaseName == "" {
+		return "", errors.New("database name is required")
+	}
 
 	// Base connection string
 	connection := fmt.Sprintf(
-		"host=%s port=%d dbname=%s user=%s password=%s",
+		"host=%s port=%d dbname=%s user=%s password=%s connect_timeout=10 application_name=admiral",
 		cfg.Host, cfg.Port, cfg.DatabaseName, cfg.User, cfg.Password,
 	)
 
-	// Handle SSLMode
-	switch cfg.SSLMode {
-	case config.SSLModeUnspecified, config.SSLModeDisable:
-		connection += " sslmode=disable"
-	default:
-		// Convert to lowercase and replace underscores with hyphens
-		mode := strings.ToLower(strings.ReplaceAll(cfg.SSLMode.String(), "_", "-"))
-		connection += fmt.Sprintf(" sslmode=%s", mode)
+	validSSLModes := map[config.SSLMode]string{
+		config.SSLModeUnspecified: "disable",
+		config.SSLModeDisable:     "disable",
+		config.SSLModeRequire:     "require",
+		config.SSLModeVerifyCA:    "verify-ca",
+		config.SSLModeVerifyFull:  "verify-full",
 	}
+	mode, ok := validSSLModes[cfg.SSLMode]
+	if !ok {
+		return "", fmt.Errorf("invalid SSLMode: %v", cfg.SSLMode)
+	}
+	connection += fmt.Sprintf(" sslmode=%s", mode)
 
 	return connection, nil
 }

@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	
+
 	"go.admiral.io/admiral/internal/config"
 	"go.admiral.io/admiral/internal/gateway/log"
 	"go.admiral.io/admiral/internal/gateway/meta"
@@ -34,8 +34,8 @@ func New(config *config.AccessLog, logger *zap.Logger, scope tally.Scope) (middl
 	}
 
 	return &mid{
-		logger:      logger,
-		scope:       scope,
+		logger:      logger.Named("accesslog"),
+		scope:       scope.SubScope("accesslog"),
 		statusCodes: statusCodes,
 	}, nil
 }

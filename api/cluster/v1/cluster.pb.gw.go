@@ -208,6 +208,30 @@ func local_request_ClusterAPI_DeleteCluster_0(ctx context.Context, marshaler run
 	return msg, metadata, err
 }
 
+func request_ClusterAPI_RegisterCluster_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RegisterClusterRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.RegisterCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ClusterAPI_RegisterCluster_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RegisterClusterRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.RegisterCluster(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterClusterAPIHandlerServer registers the http handlers for service ClusterAPI to "mux".
 // UnaryRPC     :call ClusterAPIServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -313,6 +337,26 @@ func RegisterClusterAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 			return
 		}
 		forward_ClusterAPI_DeleteCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_ClusterAPI_RegisterCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/RegisterCluster", runtime.WithHTTPPathPattern("/api/v1/clusters/register"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterAPI_RegisterCluster_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ClusterAPI_RegisterCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -439,21 +483,40 @@ func RegisterClusterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		}
 		forward_ClusterAPI_DeleteCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_ClusterAPI_RegisterCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/RegisterCluster", runtime.WithHTTPPathPattern("/api/v1/clusters/register"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterAPI_RegisterCluster_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ClusterAPI_RegisterCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_ClusterAPI_CreateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "clusters"}, ""))
-	pattern_ClusterAPI_ListClusters_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "clusters"}, ""))
-	pattern_ClusterAPI_GetCluster_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "id"}, ""))
-	pattern_ClusterAPI_UpdateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "cluster.id"}, ""))
-	pattern_ClusterAPI_DeleteCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "id"}, ""))
+	pattern_ClusterAPI_CreateCluster_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "clusters"}, ""))
+	pattern_ClusterAPI_ListClusters_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "clusters"}, ""))
+	pattern_ClusterAPI_GetCluster_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "id"}, ""))
+	pattern_ClusterAPI_UpdateCluster_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "cluster.id"}, ""))
+	pattern_ClusterAPI_DeleteCluster_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "clusters", "id"}, ""))
+	pattern_ClusterAPI_RegisterCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "clusters", "register"}, ""))
 )
 
 var (
-	forward_ClusterAPI_CreateCluster_0 = runtime.ForwardResponseMessage
-	forward_ClusterAPI_ListClusters_0  = runtime.ForwardResponseMessage
-	forward_ClusterAPI_GetCluster_0    = runtime.ForwardResponseMessage
-	forward_ClusterAPI_UpdateCluster_0 = runtime.ForwardResponseMessage
-	forward_ClusterAPI_DeleteCluster_0 = runtime.ForwardResponseMessage
+	forward_ClusterAPI_CreateCluster_0   = runtime.ForwardResponseMessage
+	forward_ClusterAPI_ListClusters_0    = runtime.ForwardResponseMessage
+	forward_ClusterAPI_GetCluster_0      = runtime.ForwardResponseMessage
+	forward_ClusterAPI_UpdateCluster_0   = runtime.ForwardResponseMessage
+	forward_ClusterAPI_DeleteCluster_0   = runtime.ForwardResponseMessage
+	forward_ClusterAPI_RegisterCluster_0 = runtime.ForwardResponseMessage
 )

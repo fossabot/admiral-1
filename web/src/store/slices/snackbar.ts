@@ -1,0 +1,78 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { SnackbarProps } from '@/types/snackbar';
+
+const initialState: SnackbarProps = {
+  action: false,
+  open: false,
+  message: 'Note archived',
+  anchorOrigin: {
+    vertical: 'bottom',
+    horizontal: 'right',
+  },
+  variant: 'default',
+  alert: {
+    color: 'info',
+    variant: 'filled',
+  },
+  transition: 'Fade',
+  close: true,
+  maxStack: 3,
+  dense: false,
+  iconVariant: 'hide',
+  actionButton: false,
+};
+
+const snackbarSlice = createSlice({
+  name: 'snackbar',
+  initialState,
+  reducers: {
+    // Opens the snackbar with specified configuration
+    openSnackbar(state, action) {
+      const { open, message, anchorOrigin, variant, alert, transition, close, actionButton } = action.payload;
+
+      state.action = !state.action;
+      state.open = open || initialState.open;
+      state.message = message || initialState.message;
+      state.anchorOrigin = anchorOrigin || initialState.anchorOrigin;
+      state.variant = variant || initialState.variant;
+      state.alert = {
+        color: alert?.color || initialState.alert.color,
+        variant: alert?.variant || initialState.alert.variant,
+      };
+      state.transition = transition || initialState.transition;
+      state.close = close === false ? close : initialState.close;
+      state.actionButton = actionButton || initialState.actionButton;
+    },
+
+    // Closes the snackbar
+    closeSnackbar(state) {
+      state.open = false;
+    },
+
+    // Updates the dense property
+    setDenseMode(state, action: PayloadAction<{ dense: boolean }>) {
+      state.dense = action.payload.dense;
+    },
+
+    // Updates the maximum number of stacked snackbars
+    setMaxStack(state, action: PayloadAction<{ maxStack: number }>) {
+      state.maxStack = action.payload.maxStack;
+    },
+
+    // Updates the icon variant display mode
+    setIconVariant(state, action: PayloadAction<{ iconVariant: string }>) {
+      state.iconVariant = action.payload.iconVariant;
+    },
+  },
+});
+
+export const {
+  openSnackbar,
+  closeSnackbar,
+  setDenseMode,
+  setMaxStack,
+  setIconVariant
+} = snackbarSlice.actions;
+
+
+export default snackbarSlice.reducer;
