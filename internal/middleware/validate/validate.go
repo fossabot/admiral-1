@@ -1,7 +1,7 @@
 package validate
 
 import (
-	"github.com/bufbuild/protovalidate-go"
+	"buf.build/go/protovalidate"
 	protovalidatemiddleware "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
@@ -13,11 +13,17 @@ import (
 
 const Name = "middleware.validate"
 
-func New(_ *config.Config, _ *zap.Logger, _ tally.Scope) (middleware.Middleware, error) {
-	return &mid{}, nil
+func New(_ *config.Config, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
+	return &mid{
+		logger: logger.Named("validate"),
+		scope:  scope.SubScope("validate"),
+	}, nil
 }
 
-type mid struct{}
+type mid struct {
+	logger *zap.Logger
+	scope  tally.Scope
+}
 
 func (m *mid) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	validator, err := protovalidate.New()

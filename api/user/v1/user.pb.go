@@ -468,10 +468,10 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\x0eGetUserRequest\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\"<\n" +
 	"\x0fGetUserResponse\x12)\n" +
-	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user2\xd0\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user2\xd1\x01\n" +
 	"\aUserAPI\x12\\\n" +
-	"\x05GetMe\x12\x1d.admiral.user.v1.GetMeRequest\x1a\x1e.admiral.user.v1.GetMeResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/user\x12g\n" +
-	"\aGetUser\x12\x1f.admiral.user.v1.GetUserRequest\x1a .admiral.user.v1.GetUserResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/api/v1/user/{id}B\xa8\x01\n" +
+	"\x05GetMe\x12\x1d.admiral.user.v1.GetMeRequest\x1a\x1e.admiral.user.v1.GetMeResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/user\x12h\n" +
+	"\aGetUser\x12\x1f.admiral.user.v1.GetUserRequest\x1a .admiral.user.v1.GetUserResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/users/{id}B\xa8\x01\n" +
 	"\x13com.admiral.user.v1B\tUserProtoP\x01Z(go.admiral.io/admiral/api/user/v1;userv1\xa2\x02\x03AUX\xaa\x02\x0fAdmiral.User.V1\xca\x02\x0fAdmiral\\User\\V1\xe2\x02\x1bAdmiral\\User\\V1\\GPBMetadata\xea\x02\x11Admiral::User::V1b\x06proto3"
 
 var (
