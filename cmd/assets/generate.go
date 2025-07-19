@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	
+
 	"github.com/shurcooL/vfsgen"
 )
 

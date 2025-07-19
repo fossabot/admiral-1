@@ -110,7 +110,7 @@ _Notes: Use the admin console to manage users, roles, or clients as needed._
 
 ### Minio (Object Storage)
 - **Purpose:** Provides S3-compatible object storage for application assets and artifacts.
-- **Port:** 
+- **Port:**
   - 9000 (API access)
   - 9001 (Web console)
 - **Credentials:**
@@ -168,6 +168,53 @@ docker compose -f deploy/docker-compose/docker-compose.yaml down -v
 - Docker Errors: Ensure Docker is running and you have permissions (e.g., add your user to the docker group on Linux).
 - Go Command Fails: Verify Go modules are downloaded (go mod download).
 - Port Conflicts: Check if ports (e.g., 9090, 5432, 8025) are in use (lsof -i :9090) and adjust configs if needed.
+
+## Pre-commit Hooks Setup
+
+Admiral uses [pre-commit hooks](https://pre-commit.com/) to ensure code quality and consistency. These hooks automatically run checks before each commit to catch issues early.
+
+### Quick Setup
+
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+# or
+brew install pre-commit
+
+# Setup hooks for this project
+./tools/precommit.sh
+```
+
+### What's Included
+
+- **Code formatting**: Go fmt, imports, YAML/JSON formatting
+- **Linting**: golangci-lint, Dockerfile linting, project-specific linters
+- **Testing**: Go unit tests  
+- **Security**: Private key detection, basic security checks
+- **Commit standards**: Conventional commit message formatting
+
+### Manual Usage
+
+```bash
+# Run all hooks on all files
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run go-fmt --all-files
+
+# Skip hooks for a commit (not recommended)
+git commit --no-verify
+```
+
+### Hooks Configuration
+
+The hooks are configured in `.pre-commit-config.yaml` and include:
+
+- **Basic checks**: Trailing whitespace, line endings, file format validation
+- **Go tools**: go fmt, go vet, go imports, golangci-lint, go mod tidy
+- **Tests**: Automated Go unit test execution
+- **Project integration**: Uses existing `make server-lint` and `make web-lint` commands
+- **Commit standards**: Enforces conventional commit message format
 
 ## Next Steps
 

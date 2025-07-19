@@ -20,11 +20,11 @@ func (c *stateClaims) Validate() error {
 		return errors.New("validation failed: redirect URL claim is required")
 	}
 
-	if c.RegisteredClaims.ExpiresAt != nil && !c.RegisteredClaims.ExpiresAt.After(time.Now()) {
+	if c.ExpiresAt != nil && !c.ExpiresAt.After(time.Now()) {
 		return errors.New("validation failed: token has expired")
 	}
 
-	if c.RegisteredClaims.IssuedAt != nil && c.RegisteredClaims.IssuedAt.After(time.Now()) {
+	if c.IssuedAt != nil && c.IssuedAt.After(time.Now()) {
 		return errors.New("validation failed: token issued in the future")
 	}
 

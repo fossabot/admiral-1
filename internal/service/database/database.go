@@ -101,7 +101,7 @@ func New(cfg *config.Config, logger *zap.Logger, scope tally.Scope) (service.Ser
 		PrepareStmt:            true,
 	})
 	if err != nil {
-		sqlDB.Close()
+		_ = sqlDB.Close()
 		return nil, fmt.Errorf("failed to open GORM connection: %w", err)
 	}
 

@@ -8,8 +8,8 @@ server:
     level: debug
   access_log:
     status_code_filters:
-      - 2  # Unknown
-      - 4  # DeadlineExceeded
+      - 2 # Unknown
+      - 4 # DeadlineExceeded
       - 12 # Unimplemented
       - 14 # Unavailable
   enable_pprof: true
@@ -39,10 +39,10 @@ services:
       use_ssl: ${STORAGE_USE_SSL}
       access_key: ${STORAGE_ACCESS_KEY}
       secret_key: ${STORAGE_SECRET_KEY}
-#    gcs:
-#      credentials_json: ${GCS_CREDENTIALS_JSON}
-#      bucket: ${GCS_BUCKET}
-#      project_id: ${GCS_PROJECT_ID}
+  #    gcs:
+  #      credentials_json: ${GCS_CREDENTIALS_JSON}
+  #      bucket: ${GCS_BUCKET}
+  #      project_id: ${GCS_PROJECT_ID}
   authn:
     name: ${OAUTH2_NAME}
     issuer: ${OAUTH2_ISSUER}

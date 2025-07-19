@@ -27,8 +27,8 @@ const (
 type Manifest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ApplicationId  string                 `protobuf:"bytes,3,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	VersionGroupId string                 `protobuf:"bytes,2,opt,name=version_group_id,json=versionGroupId,proto3" json:"version_group_id,omitempty"`
+	ApplicationId  string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	VersionGroupId string                 `protobuf:"bytes,3,opt,name=version_group_id,json=versionGroupId,proto3" json:"version_group_id,omitempty"`
 	Name           string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
 	Description    *string                `protobuf:"bytes,5,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	File           *ManifestFile          `protobuf:"bytes,6,opt,name=file,proto3,oneof" json:"file,omitempty"`
@@ -719,8 +719,8 @@ const file_manifest_v1_manifest_proto_rawDesc = "" +
 	"\x1amanifest/v1/manifest.proto\x12\x13admiral.manifest.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bbuf/validate/validate.proto\"\xdc\x03\n" +
 	"\bManifest\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
-	"\x0eapplication_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x122\n" +
-	"\x10version_group_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x0eversionGroupId\x12\x1e\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x122\n" +
+	"\x10version_group_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x0eversionGroupId\x12\x1e\n" +
 	"\x04name\x18\x04 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x04name\x12/\n" +
 	"\vdescription\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x00R\vdescription\x88\x01\x01\x12:\n" +

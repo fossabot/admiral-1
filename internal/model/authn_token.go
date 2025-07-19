@@ -1,11 +1,11 @@
 package model
 
 import (
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"time"
 
-	"database/sql/driver"
 	"github.com/google/uuid"
 )
 

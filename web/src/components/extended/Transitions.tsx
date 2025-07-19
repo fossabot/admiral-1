@@ -1,4 +1,4 @@
-import { forwardRef, ReactElement } from 'react';
+import { forwardRef, ReactNode } from 'react';
 import { Collapse, Fade, Box, Grow, Slide, Zoom, SxProps, Theme } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 
@@ -7,7 +7,7 @@ type TransitionPosition = 'top-left' | 'top-right' | 'top' | 'bottom-left' | 'bo
 type TransitionDirection = 'up' | 'right' | 'left' | 'down';
 
 interface TransitionsProps extends Omit<TransitionProps, 'children'> {
-  children?: ReactElement;
+  children?: ReactNode;
   position?: TransitionPosition;
   sx?: SxProps<Theme>;
   type?: TransitionType;

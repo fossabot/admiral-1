@@ -32,4 +32,3 @@ message CreateRevisionRequest {
 message CreateRevisionResponse {
   Revision revision = 1;
 }
-

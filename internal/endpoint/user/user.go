@@ -50,6 +50,7 @@ func (a *api) Register(r endpoint.Registrar) error {
 }
 
 func (a *api) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
+	// NO AUTHORIZATION CHECK - Any authenticated user can create new users
 	user := model.User{
 		Name: req.GetName(),
 	}

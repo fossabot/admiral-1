@@ -3,12 +3,12 @@ name: Misspell
 on:
   push:
     branches:
-      - 'master'
-      - 'release-[0-9]+.[0-9]+'
+      - "master"
+      - "release-[0-9]+.[0-9]+"
   pull_request:
     branches:
-      - 'master'
-      - 'release-[0-9]+.[0-9]+'
+      - "master"
+      - "release-[0-9]+.[0-9]+"
 
 jobs:
   misspell:

@@ -1,12 +1,13 @@
 package querybuilder
 
 import (
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils/tests"
-	"testing"
-	"time"
 )
 
 type object struct {

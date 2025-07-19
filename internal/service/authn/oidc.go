@@ -401,7 +401,7 @@ func (p *OIDCProvider) RefreshToken(ctx context.Context, token *oauth2.Token) (*
 			return nil, fmt.Errorf("failed to extract claims from token: %w", err)
 		}
 
-		if parentAt, err = p.store.StoreToken(httpCtx, oidcClaims.ID, nil, p.providerName, parentAt.ReferenceKind, parentAt.ReferenceId, parentToken); err != nil {
+		if _, err = p.store.StoreToken(httpCtx, oidcClaims.ID, nil, p.providerName, parentAt.ReferenceKind, parentAt.ReferenceId, parentToken); err != nil {
 			return nil, fmt.Errorf("failed to store new token: %w", err)
 		}
 	}

@@ -1,6 +1,6 @@
 import { AlertProps, SnackbarOrigin } from '@mui/material';
 
-export interface SnackbarProps {
+export interface SnackbarState {
   action: boolean;
   open: boolean;
   message: string;

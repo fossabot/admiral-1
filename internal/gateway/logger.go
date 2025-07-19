@@ -3,7 +3,7 @@ package gateway
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	
+
 	"go.admiral.io/admiral/internal/config"
 )
 

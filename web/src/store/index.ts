@@ -1,4 +1,4 @@
-import { type Action, configureStore, type ThunkAction } from '@reduxjs/toolkit';
+import { type Action, configureStore, type ThunkAction, type ConfigureStoreOptions } from '@reduxjs/toolkit';
 import { type TypedUseSelectorHook, useDispatch as useReduxDispatch, useSelector as useReduxSelector } from 'react-redux';
 import logger from 'redux-logger';
 import { persistStore } from 'redux-persist';
@@ -9,7 +9,7 @@ import rootReducer from '@/store/reducer';
 
 // Configure middleware to use Redux Toolkit defaults plus custom ones.
 // Disable serializable and immutable checks if performance or special use cases require it.
-const middleware = (getDefaultMiddleware: any) => {
+const middleware: ConfigureStoreOptions['middleware'] = (getDefaultMiddleware) => {
   return getDefaultMiddleware({
     serializableCheck: false,
     immutableCheck: false,

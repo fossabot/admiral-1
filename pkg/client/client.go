@@ -3,7 +3,9 @@ package client
 import (
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"sync/atomic"
 
 	"google.golang.org/grpc"
@@ -85,11 +87,11 @@ func (c *Client) dialGRPC(ctx context.Context, hostPort string) error {
 
 	for state := conn.GetState(); state != connectivity.Ready; state = conn.GetState() {
 		if !conn.WaitForStateChange(dialContext, state) {
-			conn.Close()
+			_ = conn.Close()
 			return fmt.Errorf("dialGRPC: connection to %s not ready after timeout: %w", hostPort, dialContext.Err())
 		}
 		if dialContext.Err() != nil {
-			conn.Close()
+			_ = conn.Close()
 			return fmt.Errorf("dialGRPC: context canceled or timed out: %w", dialContext.Err())
 		}
 	}
@@ -139,218 +141,215 @@ func (c *Client) setClosed() bool {
 	return atomic.CompareAndSwapInt32(&c.closedFlag, 0, 1)
 }
 
-func (c *Client) CreateApplication(ctx context.Context, request *applicationv1.CreateApplicationRequest) (*applicationv1.CreateApplicationResponse, error) {
-	response, err := c.grpc.CreateApplication(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateApplication: %w", err)
+// ValidateToken validates the current auth token for format and expiration.
+// This can be called periodically to check if the token needs to be refreshed.
+func (c *Client) ValidateToken() error {
+	if c.isClosed() {
+		return errors.New("client is closed")
 	}
-	return response, nil
+	return validateAuthToken(c.config.AuthToken)
+}
+
+// GetTokenInfo returns information about the current auth token.
+// Returns nil if the token is not a valid JWT.
+func (c *Client) GetTokenInfo() (*JWTClaims, error) {
+	if c.isClosed() {
+		return nil, errors.New("client is closed")
+	}
+
+	actualToken := strings.TrimPrefix(c.config.AuthToken, "Bearer ")
+	if !strings.Contains(actualToken, ".") {
+		return nil, errors.New("token is not a JWT")
+	}
+
+	return parseJWTToken(actualToken)
+}
+
+func (c *Client) CreateApplication(ctx context.Context, request *applicationv1.CreateApplicationRequest) (*applicationv1.CreateApplicationResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return c.grpc.CreateApplication(ctx, request)
 }
 
 func (c *Client) ListApplications(ctx context.Context, request *applicationv1.ListApplicationsRequest) (*applicationv1.ListApplicationsResponse, error) {
-	response, err := c.grpc.ListApplications(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("ListApplications: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.ListApplications(ctx, request)
 }
 
 func (c *Client) GetApplication(ctx context.Context, request *applicationv1.GetApplicationRequest) (*applicationv1.GetApplicationResponse, error) {
-	response, err := c.grpc.GetApplication(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("GetApplication: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.GetApplication(ctx, request)
 }
 
 func (c *Client) UpdateApplication(ctx context.Context, request *applicationv1.UpdateApplicationRequest) (*applicationv1.UpdateApplicationResponse, error) {
-	response, err := c.grpc.UpdateApplication(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateApplication: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.UpdateApplication(ctx, request)
 }
 
 func (c *Client) DeleteApplication(ctx context.Context, request *applicationv1.DeleteApplicationRequest) (*applicationv1.DeleteApplicationResponse, error) {
-	response, err := c.grpc.DeleteApplication(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteApplication: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.DeleteApplication(ctx, request)
 }
 
 func (c *Client) CreateCluster(ctx context.Context, request *clusterv1.CreateClusterRequest) (*clusterv1.CreateClusterResponse, error) {
-	response, err := c.grpc.CreateCluster(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateCluster: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.CreateCluster(ctx, request)
 }
 
 func (c *Client) ListClusters(ctx context.Context, request *clusterv1.ListClustersRequest) (*clusterv1.ListClustersResponse, error) {
-	response, err := c.grpc.ListClusters(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("ListClusters: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.ListClusters(ctx, request)
 }
 
 func (c *Client) GetCluster(ctx context.Context, request *clusterv1.GetClusterRequest) (*clusterv1.GetClusterResponse, error) {
-	response, err := c.grpc.GetCluster(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("GetCluster: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.GetCluster(ctx, request)
 }
 
 func (c *Client) UpdateCluster(ctx context.Context, request *clusterv1.UpdateClusterRequest) (*clusterv1.UpdateClusterResponse, error) {
-	response, err := c.grpc.UpdateCluster(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateCluster: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.UpdateCluster(ctx, request)
 }
 
 func (c *Client) DeleteCluster(ctx context.Context, request *clusterv1.DeleteClusterRequest) (*clusterv1.DeleteClusterResponse, error) {
-	response, err := c.grpc.DeleteCluster(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteCluster: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.DeleteCluster(ctx, request)
 }
 
 func (c *Client) CreateEnvironment(ctx context.Context, request *environmentv1.CreateEnvironmentRequest) (*environmentv1.CreateEnvironmentResponse, error) {
-	response, err := c.grpc.CreateEnvironment(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateEnvironment: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.CreateEnvironment(ctx, request)
 }
 
 func (c *Client) ListEnvironments(ctx context.Context, request *environmentv1.ListEnvironmentsRequest) (*environmentv1.ListEnvironmentsResponse, error) {
-	response, err := c.grpc.ListEnvironments(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("ListEnvironments: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.ListEnvironments(ctx, request)
 }
 
 func (c *Client) GetEnvironment(ctx context.Context, request *environmentv1.GetEnvironmentRequest) (*environmentv1.GetEnvironmentResponse, error) {
-	response, err := c.grpc.GetEnvironment(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("GetEnvironment: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.GetEnvironment(ctx, request)
 }
 
 func (c *Client) UpdateEnvironment(ctx context.Context, request *environmentv1.UpdateEnvironmentRequest) (*environmentv1.UpdateEnvironmentResponse, error) {
-	response, err := c.grpc.UpdateEnvironment(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateEnvironment: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.UpdateEnvironment(ctx, request)
 }
 
 func (c *Client) DeleteEnvironment(ctx context.Context, request *environmentv1.DeleteEnvironmentRequest) (*environmentv1.DeleteEnvironmentResponse, error) {
-	response, err := c.grpc.DeleteEnvironment(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteEnvironment: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.DeleteEnvironment(ctx, request)
 }
 
 func (c *Client) Healthcheck(ctx context.Context, request *healthcheckv1.HealthcheckRequest) (*healthcheckv1.HealthcheckResponse, error) {
-	response, err := c.grpc.Healthcheck(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("Healthcheck: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.Healthcheck(ctx, request)
 }
 
 func (c *Client) CreateManifest(ctx context.Context, request *manifestv1.CreateManifestRequest) (*manifestv1.CreateManifestResponse, error) {
-	response, err := c.grpc.CreateManifest(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateManifest: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.CreateManifest(ctx, request)
 }
 
 func (c *Client) ListManifests(ctx context.Context, request *manifestv1.ListManifestsRequest) (*manifestv1.ListManifestsResponse, error) {
-	response, err := c.grpc.ListManifests(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("ListManifests: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.ListManifests(ctx, request)
 }
 
 func (c *Client) GetManifest(ctx context.Context, request *manifestv1.GetManifestRequest) (*manifestv1.GetManifestResponse, error) {
-	response, err := c.grpc.GetManifest(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("GetManifest: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.GetManifest(ctx, request)
 }
 
 func (c *Client) UpdateManifest(ctx context.Context, request *manifestv1.UpdateManifestRequest) (*manifestv1.UpdateManifestResponse, error) {
-	response, err := c.grpc.UpdateManifest(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateManifest: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.UpdateManifest(ctx, request)
 }
 
 func (c *Client) DeleteManifest(ctx context.Context, request *manifestv1.DeleteManifestRequest) (*manifestv1.DeleteManifestResponse, error) {
-	response, err := c.grpc.DeleteManifest(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteManifest: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.DeleteManifest(ctx, request)
 }
 
 func (c *Client) CreateRevision(ctx context.Context, request *revisionv1.CreateRevisionRequest) (*revisionv1.CreateRevisionResponse, error) {
-	response, err := c.grpc.CreateRevision(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateRevision: %w", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.CreateRevision(ctx, request)
 }
 
-func (c *Client) CreateSetting(ctx context.Context, request *variablev1.CreateVariableRequest) (*variablev1.CreateVariableResponse, error) {
-	response, err := c.grpc.CreateVariable(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("CreateSetting: %w", err)
+func (c *Client) CreateVariable(ctx context.Context, request *variablev1.CreateVariableRequest) (*variablev1.CreateVariableResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.CreateVariable(ctx, request)
 }
 
-func (c *Client) ListSettings(ctx context.Context, request *variablev1.ListVariablesRequest) (*variablev1.ListVariablesResponse, error) {
-	response, err := c.grpc.ListVariables(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("ListSettings: %w", err)
+func (c *Client) ListVariables(ctx context.Context, request *variablev1.ListVariablesRequest) (*variablev1.ListVariablesResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.ListVariables(ctx, request)
 }
 
-func (c *Client) GetSetting(ctx context.Context, request *variablev1.GetVariableRequest) (*variablev1.GetVariableResponse, error) {
-	response, err := c.grpc.GetVariable(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("GetSetting: %w", err)
+func (c *Client) GetVariable(ctx context.Context, request *variablev1.GetVariableRequest) (*variablev1.GetVariableResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.GetVariable(ctx, request)
 }
 
-func (c *Client) UpdateSetting(ctx context.Context, request *variablev1.UpdateVariableRequest) (*variablev1.UpdateVariableResponse, error) {
-	response, err := c.grpc.UpdateVariable(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateSetting: %w", err)
+func (c *Client) UpdateVariable(ctx context.Context, request *variablev1.UpdateVariableRequest) (*variablev1.UpdateVariableResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.UpdateVariable(ctx, request)
 }
 
-func (c *Client) DeleteSetting(ctx context.Context, request *variablev1.DeleteVariableRequest) (*variablev1.DeleteVariableResponse, error) {
-	response, err := c.grpc.DeleteVariable(ctx, request)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteSetting: %w", err)
+func (c *Client) DeleteVariable(ctx context.Context, request *variablev1.DeleteVariableRequest) (*variablev1.DeleteVariableResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	return response, nil
+	return c.grpc.DeleteVariable(ctx, request)
 }

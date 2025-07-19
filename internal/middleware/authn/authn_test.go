@@ -3,10 +3,11 @@ package authn
 import (
 	"context"
 	"fmt"
-	"github.com/alexedwards/scs/v2"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/alexedwards/scs/v2"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
@@ -83,12 +84,6 @@ func TestGetToken(t *testing.T) {
 	sessionID := "session123"
 	ctx := context.Background()
 
-	m := &mid{
-		session: &MockSessionService{
-			accessToken: tokenVal,
-		},
-	}
-
 	tests := []struct {
 		name        string
 		md          metadata.MD
@@ -161,7 +156,13 @@ func TestGetToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			m.session.(*MockSessionService).loadErr = tt.sessionErr
+			m := &mid{
+				session: &MockSessionService{
+					accessToken: tokenVal,
+					loadErr:     tt.sessionErr,
+				},
+			}
+
 			result, err := m.getToken(tt.ctx, tt.md)
 			if tt.expectErr {
 				assert.Error(t, err)

@@ -85,11 +85,16 @@ func (c *Config) CheckAndSetDefaults() error {
 	if len(c.AuthToken) == 0 {
 		return errors.New("auth token is required")
 	}
+
+	// Validate token format and expiration
+	if err := validateAuthToken(c.AuthToken); err != nil {
+		return fmt.Errorf("auth token validation failed: %w", err)
+	}
 	c.ConnectionOptions.DialOptions = append(
 		c.ConnectionOptions.DialOptions,
 		grpc.WithPerRPCCredentials(tokenAuth{
 			token:               c.AuthToken,
-			requireTransportSec: !c.ConnectionOptions.Insecure, // Allow insecure auth if Insecure is true
+			requireTransportSec: !c.ConnectionOptions.Insecure,
 		}),
 	)
 

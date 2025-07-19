@@ -2,13 +2,14 @@ package stats
 
 import (
 	"context"
-	"go.admiral.io/admiral/internal/config"
-	"go.admiral.io/admiral/internal/middleware"
 
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
+
+	"go.admiral.io/admiral/internal/config"
+	"go.admiral.io/admiral/internal/middleware"
 )
 
 const Name = "middleware.stats"

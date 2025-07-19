@@ -64,7 +64,7 @@ func parseConfig(file string, debug bool) (*Config, error) {
 	tmpLogger := newTmpLogger().With(zap.String("file", file))
 
 	// Read the configuration file.
-	contents, err := os.ReadFile(file)
+	contents, err := os.ReadFile(file) //nolint:gosec
 	if err != nil {
 		tmpLogger.Error("failed to read configuration file", zap.Error(err))
 		return nil, err

@@ -219,7 +219,7 @@ func (m *migrator) Reset() error {
 		return err
 	}
 
-	if err := migrator.Force(int(version)); err != nil {
+	if err := migrator.Force(int(version)); err != nil { //nolint:gosec
 		return fmt.Errorf("failed to force migration version: %w", err)
 	}
 

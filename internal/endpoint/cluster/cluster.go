@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"gorm.io/datatypes"
-	"gorm.io/gorm/clause"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +12,9 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	authnv1 "go.admiral.io/admiral/api/authn/v1"
 	clusterv1 "go.admiral.io/admiral/api/cluster/v1"

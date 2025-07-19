@@ -29,7 +29,7 @@ export default ({ mode }: { mode: string }): UserConfig => {
       port: 8888,
       proxy: {
         '^/((auth|api|debug)/.*)|(meta|metrics|healthcheck)$': {
-          target: process.env.VITE_API_ENDPOINT || "http://localhost:8080",
+          target: process.env.VITE_API_ENDPOINT || 'http://localhost:8080',
           changeOrigin: true,
           xfwd: true,
           secure: false,

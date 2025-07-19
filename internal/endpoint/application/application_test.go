@@ -77,10 +77,10 @@ func TestCreateApplication(t *testing.T) {
 		Description: &desc,
 	}
 
-	expectedSQL := `INSERT INTO "applications" ("name","description","created_at","updated_at","deleted_at","id") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "id"`
+	expectedSQL := `INSERT INTO "applications" ("name","description","created_at","updated_at","deleted_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(expectedSQL)).
-		WithArgs(req.Name, *req.Description, sqlmock.AnyArg(), sqlmock.AnyArg(), nil, sqlmock.AnyArg()).
+		WithArgs(req.Name, *req.Description, sqlmock.AnyArg(), sqlmock.AnyArg(), nil).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("bbbfae6b-b1f1-483c-b45f-02ef5a3ac640"))
 	mock.ExpectCommit()
 

@@ -1,8 +1,8 @@
-name: 'Close Stale Issues'
+name: "Close Stale Issues"
 
 on:
   schedule:
-    - cron: '0 15,22 * * 1-5'
+    - cron: "0 15,22 * * 1-5"
 
 permissions:
   issues: write
@@ -18,7 +18,7 @@ jobs:
           days-before-stale: 7
           days-before-issue-stale: -1
           days-before-close: 3
-          exempt-pr-labels: 'on hold'
+          exempt-pr-labels: "on hold"
           stale-pr-message: >
             This PR has been marked as stale after 7 or more days of inactivity.
             Please have a maintainer add the `on hold` label if this PR should remain open.

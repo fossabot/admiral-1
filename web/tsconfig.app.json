@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -29,6 +30,6 @@
     "allowSyntheticDefaultImports": true,
 
     /* Type Declaration */
-    "typeRoots": ["./types"]
+    "typeRoots": ["./node_modules/@types"]
   }
 }

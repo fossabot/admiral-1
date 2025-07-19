@@ -1,11 +1,11 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"time"
 
-	"database/sql/driver"
-	"encoding/json"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"

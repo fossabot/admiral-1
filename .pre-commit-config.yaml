@@ -1,0 +1,101 @@
+# Pre-commit hooks configuration for Admiral project
+# See https://pre-commit.com for more information
+# Run `pre-commit install` to install the git hook scripts
+
+repos:
+  # General hooks for all file types
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        exclude: art.txt
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+        exclude: '^web/tsconfig.*\.json$'
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Go specific hooks
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-vet
+      - id: go-imports
+        exclude: "^api/.*$"
+      - id: go-mod-tidy
+      - id: go-unit-tests
+  #      - id: golangci-lint
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.13.1-beta
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+  # YAML formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml, json, markdown]
+        exclude: |
+          (?x)^(
+            web/.*\.json$|
+            .*\.md$
+          )$
+
+  # Protobuf linting (using project's buf tool)
+  - repo: local
+    hooks:
+      - id: buf-lint
+        name: buf lint
+        entry: ./tools/buf.sh
+        args: [lint]
+        language: system
+        files: '\.proto$'
+        pass_filenames: false
+
+      # # Use project's existing linting tools
+      # - id: server-lint
+      #   name: Go server lint
+      #   entry: make
+      #   args: [server-lint]
+      #   language: system
+      #   files: '\.go$'
+      #   exclude: "^web/"
+      #   pass_filenames: false
+
+      # - id: web-lint
+      #   name: Web lint
+      #   entry: make
+      #   args: [web-lint]
+      #   language: system
+      #   files: '^web/.*\.(ts|tsx|js|jsx|json)$'
+      #   pass_filenames: false
+
+  # Commit message formatting
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.2.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+# Configure which stages run which hooks
+default_stages: [pre-commit, pre-push]
+
+# Skip hooks for specific scenarios
+ci:
+  skip: [golangci-lint, go-unit-tests, server-lint, web-lint]

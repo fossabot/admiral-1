@@ -1,8 +1,8 @@
 import { Suspense, memo, type ComponentType, type ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { Alert, Box } from '@mui/material';
 
 import Loader from '@/components/Loader';
-import { Alert, Box } from '@mui/material';
 
 interface LoadableProps {
   fallback?: NonNullable<React.ReactNode>;
@@ -13,7 +13,7 @@ function Loadable<P extends object>(Component: ComponentType<P>) {
     const { fallback = <Loader />, ...restProps } = props;
 
     const componentProps = restProps as P;
-    const requiredProps = Object.entries(componentProps).filter(([_, value]) => value === undefined);
+    const requiredProps = Object.entries(componentProps).filter(([, value]) => value === undefined);
 
     if (requiredProps.length > 0) {
       throw new Error(

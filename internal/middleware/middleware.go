@@ -7,7 +7,7 @@ import (
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	
+
 	"go.admiral.io/admiral/internal/config"
 )
 

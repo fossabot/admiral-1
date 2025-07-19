@@ -64,7 +64,7 @@ func (s *gcsService) GetObject(ctx context.Context, bucket, path string) ([]byte
 	if err != nil {
 		return nil, fmt.Errorf("gcs: failed to read object %s/%s: %w", bucket, path, err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	return io.ReadAll(reader)
 }
@@ -81,7 +81,7 @@ func (s *gcsService) PutObject(ctx context.Context, bucket, path string, content
 	writer.ContentType = "application/octet-stream"
 
 	if _, err := writer.Write(content); err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return fmt.Errorf("gcs: failed to write object %s/%s: %w", bucket, path, err)
 	}
 

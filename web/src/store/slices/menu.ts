@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import storage from 'redux-persist/lib/storage';
 
 import { type RootState } from '@/store';
@@ -8,28 +8,28 @@ const initialState: MenuState = {
   selectedItem: ['dashboard'],
   selectedID: null,
   drawerOpen: false,
-  menu: {}
-};
+  menu: {},
+} as const;
 
 const menuSlice = createSlice({
   name: 'menu',
   initialState,
   reducers: {
-    activeItem(state, action) {
+    activeItem(state, action: PayloadAction<string[]>) {
       state.selectedItem = action.payload;
     },
 
-    activeID(state, action) {
+    activeID(state, action: PayloadAction<string | null>) {
       state.selectedID = action.payload;
     },
 
-    openDrawer(state, action) {
+    openDrawer(state, action: PayloadAction<boolean>) {
       state.drawerOpen = action.payload;
     },
 
-    getMenuSuccess(state, action) {
+    getMenuSuccess(state, action: PayloadAction<Record<string, unknown>>) {
       state.menu = action.payload;
-    }
+    },
   },
 });
 
@@ -40,6 +40,6 @@ export const persistConfig = {
 };
 
 export const menu = (state: RootState): MenuState => state.menu;
-export const { activeItem, openDrawer, activeID } = menuSlice.actions;
+export const { activeItem, activeID, openDrawer, getMenuSuccess } = menuSlice.actions;
 
 export default menuSlice.reducer;

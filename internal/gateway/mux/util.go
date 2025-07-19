@@ -35,7 +35,7 @@ func requestHeadersFromResponseWriter(w http.ResponseWriter) http.Header {
 			}
 		}
 	}
-	if !req.IsValid() {
+	if !req.IsValid() || req.IsNil() {
 		return nil
 	}
 

@@ -33,7 +33,7 @@ verify: server-verify web-verify proto-verify
 
 .PHONY: clean # Remove build and cache artifacts.
 clean:
-	rm -rf build cmd/assets/generated_assets.go web/build web/node_modules
+	rm -rf build cmd/assets/generated_assets.go node_modules web/build web/node_modules
 
 .PHONY: proto # Generate proto assets.
 proto:
@@ -106,7 +106,7 @@ web-lint-fix: bun-install
 
 .PHONY: web-test # Run unit tests for the web code.
 web-test: bun-install
-	bun test --cwd web
+	bun run --cwd web test:run
 
 .PHONY: web-verify # Verify web packages are sorted.
 web-verify: bun-install

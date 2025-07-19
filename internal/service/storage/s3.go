@@ -69,7 +69,7 @@ func (s *s3Service) GetObject(ctx context.Context, bucket, path string) ([]byte,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get object from %s/%s: %w", bucket, path, err)
 	}
-	defer out.Body.Close()
+	defer func() { _ = out.Body.Close() }()
 
 	return io.ReadAll(out.Body)
 }

@@ -1,7 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { SnackbarProps } from '@/types/snackbar';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-const initialState: SnackbarProps = {
+import { type RootState } from '@/store';
+import { type SnackbarState } from '@/types/snackbar';
+
+const initialState: SnackbarState = {
   action: false,
   open: false,
   message: 'Note archived',
@@ -20,14 +22,19 @@ const initialState: SnackbarProps = {
   dense: false,
   iconVariant: 'hide',
   actionButton: false,
-};
+} as const;
 
 const snackbarSlice = createSlice({
   name: 'snackbar',
   initialState,
   reducers: {
     // Opens the snackbar with specified configuration
-    openSnackbar(state, action) {
+    openSnackbar(
+      state,
+      action: PayloadAction<
+        Partial<Pick<SnackbarState, 'open' | 'message' | 'anchorOrigin' | 'variant' | 'alert' | 'transition' | 'close' | 'actionButton'>>
+      >,
+    ) {
       const { open, message, anchorOrigin, variant, alert, transition, close, actionButton } = action.payload;
 
       state.action = !state.action;
@@ -66,13 +73,7 @@ const snackbarSlice = createSlice({
   },
 });
 
-export const {
-  openSnackbar,
-  closeSnackbar,
-  setDenseMode,
-  setMaxStack,
-  setIconVariant
-} = snackbarSlice.actions;
-
+export const snackbar = (state: RootState): SnackbarState => state.snackbar;
+export const { openSnackbar, closeSnackbar, setDenseMode, setMaxStack, setIconVariant } = snackbarSlice.actions;
 
 export default snackbarSlice.reducer;

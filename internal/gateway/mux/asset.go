@@ -21,7 +21,7 @@ func (a *assetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		strings.HasSuffix(r.URL.Path, ".webp") {
 		if !strings.Contains(r.URL.Path[1:], "/") {
 			if f, err := a.FileSystem.Open(r.URL.Path); err == nil {
-				defer f.Close()
+				defer func() { _ = f.Close() }()
 				w.Header().Set("Cache-Control", "public, max-age=86400")
 				http.ServeContent(w, r, r.URL.Path, time.Time{}, f)
 				return

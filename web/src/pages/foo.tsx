@@ -1,9 +1,6 @@
 import {
-  Alert,
   Box,
   Button,
-  Chip,
-  Grid, IconButton,
   ListItem,
   ListItemText,
   Table,
@@ -16,7 +13,6 @@ import {
   useTheme,
 } from '@mui/material';
 import React from 'react';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const Foo: React.FC = () => {
   const theme = useTheme();
@@ -109,4 +105,4 @@ const Foo: React.FC = () => {
   );
 };
 
-export default Settings;
+export default Foo;

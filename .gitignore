@@ -49,3 +49,6 @@ completions/
 manpages/
 tmp/
 manifests/
+coverage/
+.claude
+CLAUDE.md
