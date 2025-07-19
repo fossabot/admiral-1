@@ -3,8 +3,8 @@ module go.admiral.io/admiral
 go 1.24.1
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250625184727-c923a0c2a132.1
-	buf.build/go/protovalidate v0.13.1
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717165733-d22d418d82d8.1
+	buf.build/go/protovalidate v0.14.0
 	cloud.google.com/go/storage v1.55.0
 	connectrpc.com/connect v1.18.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
