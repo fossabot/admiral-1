@@ -3,25 +3,16 @@ name: Manual Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Release version (e.g., v1.2.3)"
-        required: true
-        type: string
       version_type:
         description: "Version type"
         required: true
         type: choice
         options:
+          - next
           - patch
           - minor
           - major
-          - custom
-        default: patch
-      skip_tag:
-        description: "Skip tag creation (if tag already exists)"
-        required: false
-        type: boolean
-        default: false
+        default: next
 
 permissions:
   contents: write
@@ -30,10 +21,11 @@ permissions:
   attestations: write
 
 jobs:
-  validate-and-tag:
+  calculate-and-tag:
     runs-on: ubuntu-latest
+    environment: release
     outputs:
-      version: ${{ steps.validate.outputs.version }}
+      version: ${{ steps.calculate.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,51 +33,63 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
 
-      - name: Validate version format
-        id: validate
+      - name: Install svu
         run: |
-          VERSION="${{ inputs.version }}"
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Invalid version format. Use vX.Y.Z (e.g., v1.2.3)"
-            exit 1
-          fi
+          curl -sfL https://install.goreleaser.com/github.com/caarlos0/svu.sh | sh
+          sudo mv ./bin/svu /usr/local/bin/
+
+      - name: Calculate next version
+        id: calculate
+        run: |
+          case "${{ inputs.version_type }}" in
+            next)
+              VERSION=$(svu next)
+              ;;
+            patch)
+              VERSION=$(svu patch)
+              ;;
+            minor)
+              VERSION=$(svu minor)
+              ;;
+            major)
+              VERSION=$(svu major)
+              ;;
+          esac
+
+          echo "🔢 Calculated next ${{ inputs.version_type }} version: $VERSION"
 
           # Check if tag already exists
           if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            if [[ "${{ inputs.skip_tag }}" == "false" ]]; then
-              echo "❌ Tag $VERSION already exists. Use 'skip_tag: true' if you want to re-release."
-              exit 1
-            else
-              echo "⚠️ Tag $VERSION already exists, skipping tag creation as requested."
-            fi
+            echo "❌ Tag $VERSION already exists. Delete the tag first if you want to re-release."
+            exit 1
           fi
 
-          echo "✅ Version $VERSION is valid"
+          echo "✅ Version $VERSION ready for release"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create tag
-        if: ${{ !inputs.skip_tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          echo "🏷️ Creating tag ${{ steps.validate.outputs.version }}"
-          git tag ${{ steps.validate.outputs.version }}
-          git push origin ${{ steps.validate.outputs.version }}
+          echo "🏷️ Creating tag ${{ steps.calculate.outputs.version }}"
+          git tag ${{ steps.calculate.outputs.version }}
+          git push origin ${{ steps.calculate.outputs.version }}
           echo "✅ Tag created and pushed successfully"
 
   summary:
-    needs: validate-and-tag
+    needs: calculate-and-tag
     runs-on: ubuntu-latest
     steps:
       - name: Release Summary
         run: |
-          echo "🎉 **Manual release ${{ needs.validate-and-tag.outputs.version }} initiated!**" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Manual release ${{ needs.calculate-and-tag.outputs.version }} initiated!**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release Details:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: ${{ needs.validate-and-tag.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.calculate-and-tag.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- Type: ${{ inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag Created: ${{ !inputs.skip_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag Created: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Calculated by: svu (semantic version utility)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
           echo "- ⏳ The automatic release workflow will now trigger" >> $GITHUB_STEP_SUMMARY

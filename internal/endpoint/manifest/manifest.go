@@ -255,8 +255,8 @@ func (a *api) UpdateManifest(ctx context.Context, req *manifestv1.UpdateManifest
 		}
 
 		// Check version overflow
-		if existing.Version >= math.MaxUint32 {
-			return status.Error(codes.InvalidArgument, fmt.Sprintf("version for version group %s has reached maximum (%d)", versionGroupId, math.MaxUint32))
+		if existing.Version >= math.MaxInt32 {
+			return status.Error(codes.InvalidArgument, fmt.Sprintf("version for version group %s has reached maximum (%d)", versionGroupId, math.MaxInt32))
 		}
 
 		description := existing.Description
