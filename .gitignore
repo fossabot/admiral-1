@@ -51,4 +51,5 @@ tmp/
 manifests/
 coverage/
 .claude
+NOTES.md
 CLAUDE.md

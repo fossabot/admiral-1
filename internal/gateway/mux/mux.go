@@ -150,7 +150,17 @@ func customHeaderMatcher(key string) (string, bool) {
 func customErrorHandler(ctx context.Context, mux *runtime.ServeMux, m runtime.Marshaler, w http.ResponseWriter, req *http.Request, err error) {
 	if isBrowser(req.Header) { // Redirect if it's the browser (non-XHR).
 		if s, ok := status.FromError(err); ok && s.Code() == codes.Unauthenticated {
-			redirectPath := fmt.Sprintf("/v1/authn/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
+			redirectPath := fmt.Sprintf("/auth/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
+			http.Redirect(w, req, redirectPath, http.StatusFound)
+			return
+		}
+
+		if strings.HasPrefix(req.URL.Path, "/auth/") {
+			errorMessage := "Authentication error occurred"
+			if s, ok := status.FromError(err); ok {
+				errorMessage = s.Message()
+			}
+			redirectPath := fmt.Sprintf("/error?message=%s", url.QueryEscape(errorMessage))
 			http.Redirect(w, req, redirectPath, http.StatusFound)
 			return
 		}

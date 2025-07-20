@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS manifests (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS manifests_unique_application_name ON manifests(application_id, name) WHERE deleted_at IS NULL;
-CREATE INDEX idx_manifests_version_group_id ON manifests(version_group_id);
-CREATE INDEX idx_manifests_is_latest ON manifests(version_group_id, is_latest) WHERE is_latest = TRUE;
-CREATE INDEX idx_manifests_application_id ON manifests(application_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_manifests_version_group_id ON manifests(version_group_id);
+CREATE INDEX IF NOT EXISTS idx_manifests_is_latest ON manifests(version_group_id, is_latest) WHERE is_latest = TRUE;
+CREATE INDEX IF NOT EXISTS idx_manifests_application_id ON manifests(application_id) WHERE deleted_at IS NULL;

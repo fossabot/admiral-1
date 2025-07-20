@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS revisions (
     storage_bucket VARCHAR(255) NOT NULL,
     storage_key VARCHAR(1024) NOT NULL,
     checksum VARCHAR(255),
-    checksum_type VARCHAR(50) DEFAULT 'sha256',
+    checksum_type VARCHAR(50) DEFAULT 'sha256' CHECK (checksum_type IN ('sha256') OR checksum_type IS NULL),
     is_active BOOLEAN NOT NULL DEFAULT FALSE,
     status revision_status NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),

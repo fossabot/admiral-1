@@ -24,6 +24,9 @@ type AdmiralClient interface {
 	ValidateToken() error
 	GetTokenInfo() (*JWTClaims, error)
 
+	// Version information
+	Version() Version
+
 	// Application operations
 	CreateApplication(ctx context.Context, request *applicationv1.CreateApplicationRequest) (*applicationv1.CreateApplicationResponse, error)
 	ListApplications(ctx context.Context, request *applicationv1.ListApplicationsRequest) (*applicationv1.ListApplicationsResponse, error)

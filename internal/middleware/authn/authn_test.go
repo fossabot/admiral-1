@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 )
@@ -173,4 +172,56 @@ func TestGetToken(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Additional comprehensive test for getToken method edge cases
+func TestGetTokenEdgeCases(t *testing.T) {
+	tokenVal := "edge-case-token"
+	ctx := context.Background()
+
+	t.Run("bearer token with extra whitespace", func(t *testing.T) {
+		t.Parallel()
+
+		m := &mid{
+			session: &MockSessionService{accessToken: tokenVal},
+		}
+
+		md := metadata.Pairs("authorization", "Bearer   "+tokenVal+"   ")
+		result, err := m.getToken(ctx, md)
+
+		assert.NoError(t, err)
+		assert.Equal(t, tokenVal, result) // strings.Fields removes all whitespace
+	})
+
+	t.Run("empty authorization value", func(t *testing.T) {
+		t.Parallel()
+
+		m := &mid{
+			session: &MockSessionService{accessToken: tokenVal},
+		}
+
+		md := metadata.Pairs("authorization", "")
+		_, err := m.getToken(ctx, md)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "bad token format")
+	})
+
+	t.Run("session returns empty token", func(t *testing.T) {
+		t.Parallel()
+
+		m := &mid{
+			session: &MockSessionService{accessToken: ""}, // Empty token is valid
+		}
+
+		md := metadata.Pairs("grpcgateway-cookie", "session=session123")
+		result, err := m.getToken(ctx, md)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", result)
+	})
+}
+
+func TestNameConstant(t *testing.T) {
+	assert.Equal(t, "middleware.authn", Name, "Name constant should be correct")
 }

@@ -32,8 +32,14 @@ builds:
       - -s -w
       - -X main.version={{.Version}}
       - -X main.commit={{.FullCommit}}
+      - -X main.treeState={{if .IsGitDirty}}dirty{{else}}clean{{end}}
       - -X main.date={{.Date}}
       - -X main.builtBy=admiral
+      - -X go.admiral.io/admiral/pkg/client.version={{.Version}}
+      - -X go.admiral.io/admiral/pkg/client.commit={{.FullCommit}}
+      - -X go.admiral.io/admiral/pkg/client.treeState={{if .IsGitDirty}}dirty{{else}}clean{{end}}
+      - -X go.admiral.io/admiral/pkg/client.date={{.Date}}
+      - -X go.admiral.io/admiral/pkg/client.builtBy=admiral
 checksum:
   name_template: "checksums.txt"
 sboms:

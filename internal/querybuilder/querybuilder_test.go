@@ -297,3 +297,77 @@ func TestParseFilter(t *testing.T) {
 		}
 	}
 }
+
+// FuzzParseFilter tests the ParseFilter function with random inputs to find crashes
+func FuzzParseFilter(f *testing.F) {
+	qb := New([]string{"foo", "bar", "baz", "name", "value"})
+
+	// Seed the fuzzer with known good and bad inputs
+	testCases := []string{
+		"",
+		"field['foo'] = value",
+		"field['foo'] = 'value'",
+		`field["foo"] = "value"`,
+		"field['foo'] ~= 'test'",
+		"field['foo'] = 123",
+		"field['foo'] > 0",
+		"field['foo'] < 100",
+		"field['foo'] >= 50",
+		"field['foo'] <= 25",
+		"field['foo'] = 'value1' field['bar'] = 'value2'",
+		"field['nonexistent'] = 'test'", // Should error
+		"invalid syntax here",
+		"field[",
+		"field['unclosed",
+		"field['foo'] = ",
+		"field['foo'] invalid_op 'value'",
+		"field['foo'] = 'value' field['bar'] = 'value2' field['baz'] > 100",
+		"meta['nested.field'] = 'value'",
+		"meta['deeply.nested.field.path'] ~= 'search'",
+		"field['foo'] = '258e4d48-0369-4287-a375-4a496718d174'", // UUID
+	}
+
+	for _, tc := range testCases {
+		f.Add(tc)
+	}
+
+	f.Fuzz(func(t *testing.T, input string) {
+		// The function should never panic, regardless of input
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("ParseFilter panicked with input %q: %v", input, r)
+			}
+		}()
+
+		// Call the function - it may return an error, but should never panic
+		query, values, err := qb.ParseFilter(input)
+
+		// If no error occurred, the query and values should be valid
+		if err == nil {
+			// Query should be a string (may be empty)
+			if query != "" && values == nil {
+				t.Errorf("Non-empty query %q but nil values for input %q", query, input)
+			}
+
+			// Values should be a valid map if query is not empty
+			if query != "" && values != nil {
+				for k, v := range values {
+					if k == "" {
+						t.Errorf("Empty key in values map for input %q", input)
+					}
+					if v == nil {
+						t.Errorf("Nil value for key %q in values map for input %q", k, input)
+					}
+				}
+			}
+		}
+
+		// Length checks to prevent extremely large outputs that could cause DoS
+		if len(query) > 10000 {
+			t.Errorf("Query too long (%d chars) for input %q", len(query), input)
+		}
+		if len(values) > 100 {
+			t.Errorf("Too many values (%d) for input %q", len(values), input)
+		}
+	})
+}

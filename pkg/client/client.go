@@ -68,7 +68,7 @@ func (c *Client) dialGRPC(ctx context.Context, hostPort string) error {
 
 	var dialOpts []grpc.DialOption
 	dialOpts = append(dialOpts,
-		grpc.WithUserAgent(fmt.Sprintf("admiral-cli/%s", "0.0.0")),
+		grpc.WithUserAgent(ClientUserAgent()),
 	)
 
 	if c.config.ConnectionOptions.Insecure {
@@ -352,4 +352,9 @@ func (c *Client) DeleteVariable(ctx context.Context, request *variablev1.DeleteV
 		return nil, err
 	}
 	return c.grpc.DeleteVariable(ctx, request)
+}
+
+// Version returns the version information for this client instance
+func (c *Client) Version() Version {
+	return GetVersion()
 }
