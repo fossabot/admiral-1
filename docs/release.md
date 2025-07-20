@@ -6,7 +6,7 @@ This document describes the release process for Admiral, which uses semantic ver
 
 Admiral uses a tag-based release process where creating a version tag triggers the automated release pipeline. The process involves:
 
-1. **Manual Tag Creation**: Create and push a semantic version tag
+1. **Tag Creation**: Create a semantic version tag (manually via GitHub Actions or locally)
 2. **Automated Release**: GitHub Actions runs GoReleaser to build and publish the release
 3. **Artifact Publishing**: Binaries, Docker images, and documentation are published automatically
 
@@ -16,10 +16,49 @@ Before creating a release, ensure:
 
 - [ ] All desired changes are merged to `master` branch
 - [ ] CI tests are passing on `master`
-- [ ] You have push access to the repository
-- [ ] You have `svu` installed locally for version calculation (optional but recommended)
+- [ ] You have appropriate permissions for releases (see environment protection)
 
-### Installing svu
+## Release Methods
+
+### Method 1: Manual Release Workflow (Recommended)
+
+The preferred method uses GitHub's manual workflow with automatic version calculation:
+
+#### Steps
+
+1. **Navigate to Actions**
+   - Go to [GitHub Actions](https://github.com/mberwanger/admiral/actions)
+   - Select "Manual Release" workflow
+
+2. **Configure Release**
+   - Select version type:
+     - `next` - Auto-determine based on commits (recommended)
+     - `patch` - Bug fixes and small changes  
+     - `minor` - New features, backward compatible
+     - `major` - Breaking changes
+   - Click "Run workflow"
+
+3. **Monitor Progress**
+   - The workflow calculates the version using `svu`
+   - Creates and pushes the tag automatically
+   - Triggers the automatic release pipeline
+   - Monitor progress in the Actions tab
+
+#### Advantages
+
+- ✅ **Automatic version calculation** using conventional commits
+- ✅ **Access control** via environment protection rules
+- ✅ **Audit trail** in GitHub Actions
+- ✅ **No local setup required**
+- ✅ **Prevents duplicate tags**
+
+### Method 2: Local Tag Creation
+
+Alternative method for local development or when manual workflow is unavailable:
+
+#### Prerequisites
+
+Install `svu` for version calculation:
 
 ```bash
 # macOS
@@ -29,59 +68,67 @@ brew install caarlos0/tap/svu
 curl -sfL https://install.goreleaser.com/github.com/caarlos0/svu.sh | sh
 ```
 
-## Release Steps
+#### Steps
 
-### Step 1: Determine Next Version
+1. **Calculate Next Version**
+   ```bash
+   # Auto-determine next version
+   svu next
 
-Use `svu` to calculate the next semantic version based on conventional commits:
+   # Or specify version type
+   svu next --patch   # Bug fixes
+   svu next --minor   # New features  
+   svu next --major   # Breaking changes
+   ```
+
+2. **Create and Push Tag**
+   ```bash
+   # Get the next version (example output: v1.2.3)
+   NEXT_VERSION=$(svu next)
+
+   # Create and push the tag
+   git tag $NEXT_VERSION
+   git push origin $NEXT_VERSION
+   ```
+
+3. **Monitor Release**
+   - Go to [GitHub Actions](https://github.com/mberwanger/admiral/actions)
+   - Watch the "Release" workflow run
+   - Verify the release appears in [GitHub Releases](https://github.com/mberwanger/admiral/releases)
+
+## Version Strategy & Conventional Commits
+
+Admiral follows [Semantic Versioning](https://semver.org/) with automatic calculation based on conventional commits:
+
+### Commit Message Conventions
+
+- `feat:` → Minor version bump (new features)
+- `fix:` → Patch version bump (bug fixes)  
+- `feat!:` or `fix!:` → Major version bump (breaking changes)
+- `chore:`, `docs:`, `test:`, `ci:` → No version bump
+
+### Examples
 
 ```bash
-# Check what the next version would be
-svu next
+# Patch release (v1.0.1)
+git commit -m "fix: resolve authentication timeout issue"
 
-# Check what the next patch version would be
-svu next --patch
+# Minor release (v1.1.0)
+git commit -m "feat: add cluster health monitoring"
 
-# Check what the next minor version would be  
-svu next --minor
-
-# Check what the next major version would be
-svu next --major
+# Major release (v2.0.0)
+git commit -m "feat!: redesign API authentication system"
 ```
 
-**Commit Message Conventions:**
-- `feat:` → Minor version bump
-- `fix:` → Patch version bump  
-- `feat!:` or `fix!:` → Major version bump (breaking change)
-- `chore:`, `docs:`, `test:` → No version bump
+### Version Types
 
-### Step 2: Create and Push Tag
-
-```bash
-# Get the next version (example output: v1.2.3)
-NEXT_VERSION=$(svu next)
-
-# Create and push the tag
-git tag $NEXT_VERSION
-git push origin $NEXT_VERSION
-```
-
-**Alternative: Manual versioning**
-```bash
-# Create tag manually (replace with desired version)
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-### Step 3: Monitor Release
-
-1. Go to [GitHub Actions](https://github.com/mberwanger/admiral/actions)
-2. Watch the "Release" workflow run
-3. Verify the release appears in [GitHub Releases](https://github.com/mberwanger/admiral/releases)
+- **MAJOR** (`v2.0.0`): Breaking changes, incompatible API changes
+- **MINOR** (`v1.1.0`): New features, backward compatible additions
+- **PATCH** (`v1.0.1`): Bug fixes, backward compatible changes
 
 ## What Gets Published
 
-When a tag is pushed, the automated release process creates:
+When a tag is created (via either method), the automated release process creates:
 
 ### 🏗️ **Binary Artifacts**
 - Cross-platform binaries (Linux, macOS, Windows)
@@ -118,10 +165,24 @@ The release is triggered by the `.github/workflows/release.yaml` workflow which:
 5. **Publishing**: Uploads to GitHub Releases and Container Registry
 6. **Security**: Generates and signs attestations
 
+## Access Control
+
+The manual release workflow uses environment protection:
+
+- **Environment**: `release`
+- **Required reviewers**: Configured in repository settings
+- **Branch restrictions**: Only `master` branch allowed
+
+To configure:
+1. Go to **Settings** → **Environments**
+2. Create/edit `release` environment
+3. Add required reviewers or deployment protection rules
+
 ## Configuration Files
 
 - **`.goreleaser.yaml`**: GoReleaser configuration
-- **`.github/workflows/release.yaml`**: GitHub Actions workflow
+- **`.github/workflows/release.yaml`**: Automatic release workflow
+- **`.github/workflows/manual-release.yaml`**: Manual release workflow
 - **`.github/workflows/ci.yaml`**: CI workflow for testing
 
 ## Troubleshooting
@@ -133,24 +194,30 @@ The release is triggered by the `.github/workflows/release.yaml` workflow which:
    - Build failures (check `make web` and `make server-with-assets`)
    - Permission issues (check `GH_PAT` secret)
    - Docker build failures (check Dockerfile)
+   - Environment protection blocking release
 
-### Re-running a Release
+### Tag Already Exists
 
-If a release fails:
+If you get a "tag already exists" error:
 
 ```bash
 # Delete the tag locally and remotely
 git tag -d v1.2.3
 git push origin :refs/tags/v1.2.3
 
-# Fix the issue, then recreate the tag
-git tag v1.2.3
-git push origin v1.2.3
+# Then retry the release process
 ```
 
-### Manual Release
+### Re-running a Failed Release
 
-To create a snapshot release without tagging:
+If a release workflow fails but the tag was created:
+
+1. **Via Manual Workflow**: Re-run the failed workflow in Actions
+2. **Via Local**: Delete and recreate the tag as shown above
+
+### Snapshot Release (Development)
+
+To create a local snapshot release without tagging:
 
 ```bash
 # Install GoReleaser
@@ -160,26 +227,7 @@ brew install goreleaser
 goreleaser release --snapshot --clean
 ```
 
-## Version Strategy
-
-Admiral follows [Semantic Versioning](https://semver.org/):
-
-- **MAJOR** (`v2.0.0`): Breaking changes
-- **MINOR** (`v1.1.0`): New features, backward compatible
-- **PATCH** (`v1.0.1`): Bug fixes, backward compatible
-
-Use conventional commits to ensure proper automatic versioning:
-
-```bash
-# Patch release
-git commit -m "fix: resolve authentication timeout issue"
-
-# Minor release  
-git commit -m "feat: add cluster health monitoring"
-
-# Major release
-git commit -m "feat!: redesign API authentication system"
-```
+This creates artifacts in `./build/` without publishing or creating tags.
 
 ## Support
 
@@ -187,4 +235,5 @@ For questions about the release process:
 
 1. Check the [GitHub Actions documentation](https://docs.github.com/en/actions)
 2. Review [GoReleaser documentation](https://goreleaser.com/)
-3. Open an issue in this repository
+3. Review [svu documentation](https://github.com/caarlos0/svu)
+4. Open an issue in this repository

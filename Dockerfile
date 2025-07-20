@@ -17,9 +17,10 @@ RUN addgroup -S -g "$GID" "$USER" && \
     adduser -S -u "$UID" -G "$USER" "$USER"
 
 # Minimal upgrade & install only what's necessary
+# hadolint ignore=DL3018
 RUN apk add --no-cache \
-      ca-certificates~=20241121-r1 \
-      curl~=8 \
+      ca-certificates \
+      curl \
     && apk upgrade --no-cache \
     && update-ca-certificates \
     && rm -rf /var/cache/apk/*

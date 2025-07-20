@@ -9,9 +9,9 @@ on:
         type: choice
         options:
           - next
-          - patch
-          - minor
           - major
+          - minor
+          - patch
         default: next
 
 permissions:
