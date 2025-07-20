@@ -20,16 +20,26 @@ dev:
 	$(MAKE) -j2 server-dev web-dev
 
 .PHONY: lint # Lint all of the code.
-lint: server-lint web-lint proto-lint
+lint:
+	-$(MAKE) server-lint
+	-$(MAKE) web-lint
+	-$(MAKE) proto-lint
 
 .PHONY: lint-fix # Lint and fix all of the code.
-lint-fix: server-lint-fix web-lint-fix
+lint-fix:
+	-$(MAKE) server-lint-fix
+	-$(MAKE) web-lint-fix
 
 .PHONY: test # Unit test all of the code.
-test: server-test web-test
+test:
+	-$(MAKE) server-test
+	-$(MAKE) web-test
 
 .PHONY: verify # Verify all of the code.
-verify: server-verify web-verify proto-verify
+verify:
+	-$(MAKE) server-verify
+	-$(MAKE) web-verify
+	-$(MAKE) proto-verify
 
 .PHONY: clean # Remove build and cache artifacts.
 clean:

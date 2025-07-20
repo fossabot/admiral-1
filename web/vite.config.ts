@@ -23,6 +23,18 @@ export default ({ mode }: { mode: string }): UserConfig => {
       manifest: true,
       sourcemap: false,
       outDir: 'build',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor libraries
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            mui: ['@mui/material', '@mui/icons-material', '@mui/system'],
+            redux: ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+            // API and validation
+            api: ['axios', 'zod'],
+          },
+        },
+      },
     },
     server: {
       host: 'localhost',
