@@ -1,4 +1,4 @@
-name: Fuzzing
+name: "Fuzzing"
 
 on:
   schedule:
