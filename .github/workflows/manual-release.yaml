@@ -81,7 +81,7 @@ jobs:
           git push origin ${{ steps.calculate.outputs.version }}
           echo "✅ Tag created and pushed successfully"
 
-  summary:
+  final:
     needs: calculate-and-tag
     runs-on: ubuntu-latest
     steps:

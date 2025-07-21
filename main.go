@@ -32,7 +32,7 @@ func main() {
 
 func buildInfo(version, commit, date, builtBy, treeState string) goversion.Info {
 	return goversion.GetVersionInfo(
-		goversion.WithAppDetails("admiral-server", "Build faster, deploy smarter.", website),
+		goversion.WithAppDetails("admiral-server", "build faster, deploy smarter.", website),
 		goversion.WithASCIIName(asciiArt),
 		func(i *goversion.Info) {
 			if commit != "" {

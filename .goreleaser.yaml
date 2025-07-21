@@ -42,6 +42,29 @@ builds:
       - -X go.admiral.io/admiral/pkg/client.builtBy=admiral
 checksum:
   name_template: "checksums.txt"
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    artifacts: images
+    output: true
+    args:
+      - sign
+      - "${artifact}"
+      - "--yes"
 sboms:
   - artifacts: archive
 archives:
