@@ -66,14 +66,14 @@ jobs:
           scanners: "vuln"
 
       - name: Upload Go dependency scan results
-        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        uses: github/codeql-action/upload-sarif@d6bbdef45e766d081b84a2def353b0055f728d3e # v3.29.3
         if: always()
         with:
           sarif_file: "trivy-go-results.sarif"
           category: "go-dependencies"
 
       - name: Upload npm dependency scan results
-        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        uses: github/codeql-action/upload-sarif@d6bbdef45e766d081b84a2def353b0055f728d3e # v3.29.3
         if: always()
         with:
           sarif_file: "trivy-npm-results.sarif"
