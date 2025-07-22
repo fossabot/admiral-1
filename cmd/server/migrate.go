@@ -44,8 +44,23 @@ func newMigrateCmd() *migrateCmd {
 	root := &migrateCmd{}
 
 	cmd := &cobra.Command{
-		Use:           "migrate",
-		Short:         "Database migration tool",
+		Use:   "migrate",
+		Short: "Database migration management tool",
+		Long:  "Manage database schema migrations for Admiral.",
+		Example: `  # Apply all pending migrations
+  admiral-server migrate
+
+  # Apply migrations without confirmation prompts
+  admiral-server migrate --force
+
+  # Rollback the last migration
+  admiral-server migrate --down
+
+  # Reset dirty migration state
+  admiral-server migrate --reset
+
+  # Use custom configuration
+  admiral-server --config /path/to/config.yaml migrate`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
@@ -54,6 +69,7 @@ func newMigrateCmd() *migrateCmd {
 			if err != nil {
 				return fmt.Errorf("failed to initialize logger: %w", err)
 			}
+			defer func() { _ = logger.Sync() }()
 
 			cfg := config.Build(configFile, envVarFiles, debug)
 			m := &migrator{
@@ -62,19 +78,20 @@ func newMigrateCmd() *migrateCmd {
 				force:  root.opts.force,
 			}
 
-			if root.opts.reset {
+			switch {
+			case root.opts.reset:
 				return m.Reset()
-			}
-			if root.opts.down {
+			case root.opts.down:
 				return m.Down()
+			default:
+				return m.Up()
 			}
-			return m.Up()
 		},
 	}
 
-	cmd.Flags().BoolVarP(&root.opts.force, "force", "f", false, "do not ask user for confirmation")
-	cmd.Flags().BoolVar(&root.opts.down, "down", false, "migrates down by one version")
-	cmd.Flags().BoolVar(&root.opts.reset, "reset", false, "resets dirty migration state")
+	cmd.Flags().BoolVarP(&root.opts.force, "force", "f", false, "skip confirmation prompts")
+	cmd.Flags().BoolVar(&root.opts.down, "down", false, "rollback one migration")
+	cmd.Flags().BoolVar(&root.opts.reset, "reset", false, "reset dirty migration state")
 
 	root.Cmd = cmd
 	return root

@@ -11,6 +11,9 @@ DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 BUILT_BY ?= $(shell whoami)
 PROJECT_ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
+.PHONY: all # Build everything (default target).
+all: server web
+
 .PHONY: help # Print this help message.
 help:
 	@grep -E '^\.PHONY: [a-zA-Z_-]+ .*?# .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = "(: |#)"}; {printf "%-30s %s\n", $$2, $$3}'
@@ -58,7 +61,7 @@ proto-verify:
 	@$(MAKE) proto
 	tools/ensure-no-diff.sh server/api web/src/api
 
-.PHONE: pigeon # Generate PEG parser
+.PHONY: pigeon # Generate PEG parser
 pigeon:
 	 pigeon -o internal/querybuilder/parser.go internal/querybuilder/parser.peg
 
