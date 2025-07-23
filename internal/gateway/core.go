@@ -18,15 +18,15 @@ import (
 	"go.admiral.io/admiral/internal/service"
 	authnservice "go.admiral.io/admiral/internal/service/authn"
 	"go.admiral.io/admiral/internal/service/database"
+	"go.admiral.io/admiral/internal/service/objectstorage"
 	"go.admiral.io/admiral/internal/service/session"
-	"go.admiral.io/admiral/internal/service/storage"
 )
 
 var Services = service.Factory{
 	{Name: database.Name, Factory: database.New},
 	{Name: authnservice.Name, Factory: authnservice.New},
 	{Name: session.Name, Factory: session.New},
-	{Name: storage.Name, Factory: storage.New},
+	{Name: objectstorage.Name, Factory: objectstorage.New},
 }
 
 var Middleware = middleware.Factory{

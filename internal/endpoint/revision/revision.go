@@ -25,7 +25,7 @@ import (
 	"go.admiral.io/admiral/internal/querybuilder"
 	"go.admiral.io/admiral/internal/service"
 	"go.admiral.io/admiral/internal/service/database"
-	"go.admiral.io/admiral/internal/service/storage"
+	"go.admiral.io/admiral/internal/service/objectstorage"
 )
 
 const Name = "endpoint.revision"
@@ -34,7 +34,7 @@ type api struct {
 	sqlDb        *sql.DB
 	gormDB       *gorm.DB
 	queryBuilder querybuilder.QueryBuilder
-	storage      storage.Service
+	storage      objectstorage.Service
 	bucket       string
 	logger       *zap.Logger
 	scope        tally.Scope
@@ -50,7 +50,7 @@ func New(cfg *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpo
 		return nil, err
 	}
 
-	storageService, err := service.GetService[storage.Service]("service.storage")
+	storageService, err := service.GetService[objectstorage.Service]("service.objectstorage")
 	if err != nil {
 		return nil, err
 	}

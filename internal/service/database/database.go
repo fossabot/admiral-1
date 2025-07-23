@@ -119,7 +119,8 @@ func connString(cfg *config.Database) (string, error) {
 	if cfg == nil {
 		return "", errors.New("no connection information")
 	}
-	if strings.ContainsAny(cfg.Host, " \t\n") {
+
+	if cfg.Host == "" || strings.ContainsAny(cfg.Host, " \t\n\r'\"\\=") {
 		return "", fmt.Errorf("invalid host: %s", cfg.Host)
 	}
 	if cfg.DatabaseName == "" {
@@ -135,6 +136,8 @@ func connString(cfg *config.Database) (string, error) {
 	validSSLModes := map[config.SSLMode]string{
 		config.SSLModeUnspecified: "disable",
 		config.SSLModeDisable:     "disable",
+		config.SSLModeAllow:       "allow",
+		config.SSLModePrefer:      "prefer",
 		config.SSLModeRequire:     "require",
 		config.SSLModeVerifyCA:    "verify-ca",
 		config.SSLModeVerifyFull:  "verify-full",

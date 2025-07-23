@@ -24,25 +24,6 @@ handlers:
   revision:
     bucket_name: ${REVISION_BUCKET_NAME}
 services:
-  postgres:
-    host: ${POSTGRES_HOST}
-    port: ${POSTGRES_PORT}
-    database_name: ${POSTGRES_DATABASE_NAME}
-    user: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    ssl_mode: ${POSTGRES_SSL_MODE}
-  storage:
-    type: s3
-    s3:
-      endpoint: ${STORAGE_ENDPOINT}
-      region: ${STORAGE_REGION}
-      use_ssl: ${STORAGE_USE_SSL}
-      access_key: ${STORAGE_ACCESS_KEY}
-      secret_key: ${STORAGE_SECRET_KEY}
-  #    gcs:
-  #      credentials_json: ${GCS_CREDENTIALS_JSON}
-  #      bucket: ${GCS_BUCKET}
-  #      project_id: ${GCS_PROJECT_ID}
   authn:
     name: ${OAUTH2_NAME}
     issuer: ${OAUTH2_ISSUER}
@@ -50,21 +31,34 @@ services:
     client_secret: ${OAUTH2_CLIENT_SECRET}
     redirect_url: ${OAUTH2_REDIRECT_URL}
     nonce_secret: ${OAUTH2_NONCE_SECRET}
-    scopes: []
-#    claim_mapping:
-#      preferred_username: other_user_name
-#      email: mail
-#      groups: "cognito:groups"
+    scopes:
+      - openid
+      - offline_access
+      - email
+      - profile
+  #    claim_mapping:
+  #      preferred_username: other_user_name
+  #      email: mail
+  #      groups: "cognito:groups"
 
-#authn:
-#  provider:
-#    name: ${OAUTH2_NAME}
-#    issuer: ${OAUTH2_ISSUER}
-#    client_id: ${OAUTH2_CLIENT_ID}
-#    client_secret: ${OAUTH2_CLIENT_SECRET}
-#    redirect_url: ${OAUTH2_REDIRECT_URL}
-#    scopes: []
-#
-#  token_secret: ""
-#  nonce_secret: ${OAUTH2_NONCE_SECRET}
-#  encryption_passphrase: "" | optional
+  database:
+    host: ${DATABASE_HOST}
+    port: ${DATABASE_PORT}
+    database_name: ${DATABASE_NAME}
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    ssl_mode: ${DATABASE_SSL_MODE}
+  object_storage:
+    type: ${STORAGE_TYPE}
+    s3:
+      endpoint: ${STORAGE_ENDPOINT}
+      region: ${STORAGE_REGION}
+      use_ssl: ${STORAGE_USE_SSL}
+      access_key: ${STORAGE_ACCESS_KEY}
+      secret_key: ${STORAGE_SECRET_KEY}
+    gcs:
+      credentials_json: ${GCS_CREDENTIALS_JSON}
+      project_id: ${GCS_PROJECT_ID}
+  temporal:
+    host: ${TEMPORAL_HOST}
+    port: ${TEMPORAL_PORT}

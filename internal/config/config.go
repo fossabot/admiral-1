@@ -19,6 +19,13 @@ type Config struct {
 	Services Services `yaml:"services"`
 }
 
+type Services struct {
+	Authn         *Authn         `yaml:"authn"`
+	Database      *Database      `yaml:"database"`
+	ObjectStorage *ObjectStorage `yaml:"object_storage"`
+	Temporal      *Temporal      `yaml:"temporal"`
+}
+
 func Build(file string, envFiles []string, debug bool) *Config {
 	tmpLogger := newTmpLogger()
 
@@ -151,8 +158,21 @@ func (c *Config) validate() error {
 	}
 
 	// Validate storage config
-	if err := c.Services.Storage.Validate(); err != nil {
-		return fmt.Errorf("invalid services.storage config: %w", err)
+	if c.Services.ObjectStorage != nil {
+		if err := c.Services.ObjectStorage.Validate(); err != nil {
+			return fmt.Errorf("invalid services.object_storage config: %w", err)
+		}
+	} else {
+		return fmt.Errorf("services.object_storage config is nil")
+	}
+
+	// Validate temporal config
+	if c.Services.Temporal != nil {
+		if err := c.Services.Temporal.Validate(); err != nil {
+			return fmt.Errorf("invalid services.temporal config: %w", err)
+		}
+	} else {
+		return fmt.Errorf("services.temporal config is nil")
 	}
 
 	return nil
