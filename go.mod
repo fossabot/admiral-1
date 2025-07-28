@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717185734-6c6e0d3c608e.1
 	buf.build/go/protovalidate v0.14.0
-	cloud.google.com/go/storage v1.55.0
+	cloud.google.com/go/storage v1.56.0
 	connectrpc.com/connect v1.18.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/alexedwards/scs/gormstore v0.0.0-20250417082927-ab20b3feb5e9
@@ -38,8 +38,8 @@ require (
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.35.0
 	google.golang.org/api v0.243.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20250715232539-7130f93afb79
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250715232539-7130f93afb79
+	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250721164621-a45f3dfb1074
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
