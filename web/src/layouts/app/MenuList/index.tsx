@@ -45,14 +45,12 @@ const menuItems: { items: NavItemType[] } = {
               title: 'Users',
               type: 'item',
               url: '/settings/users',
-              breadcrumbs: false
             },
             {
               id: 'variables',
               title: 'Variables',
               type: 'item',
               url: '/settings/variables',
-              breadcrumbs: false
             },
           ]
         },

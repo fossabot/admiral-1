@@ -13,19 +13,14 @@ export interface BaseListResponse<T> {
   nextPageToken?: string;
 }
 
-export abstract class BaseService<
-  TModel,
-  TCreateOptions,
-  TUpdateOptions,
-  TListOptions extends BaseListOptions = BaseListOptions
-> {
+export abstract class BaseService<TModel, TCreateOptions, TUpdateOptions, TListOptions extends BaseListOptions = BaseListOptions> {
   protected constructor(
     protected readonly basePath: string,
     protected readonly itemSchema: z.ZodType<TModel>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected readonly listSchema: z.ZodType<any>,
     protected readonly itemResponseKey: string = 'item',
-    protected readonly listResponseKey: string = 'items'
+    protected readonly listResponseKey: string = 'items',
   ) {}
 
   public async create(options: TCreateOptions): Promise<TModel> {
@@ -66,8 +61,8 @@ export abstract class BaseService<
       const params: Record<string, any> = {};
 
       if (options?.filter) params.filter = options.filter;
-      if (options?.pageSize) params.page_size = options.pageSize;
-      if (options?.pageToken) params.page_token = options.pageToken;
+      if (options?.pageSize) params.pageSize = options.pageSize;
+      if (options?.pageToken) params.pageToken = options.pageToken;
 
       const res = await client.get(this.basePath, { params });
       const result = this.listSchema.safeParse(res.data);

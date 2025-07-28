@@ -24,7 +24,7 @@ export const useApplicationData = () => {
         pageToken: cursor || undefined,
       });
 
-      setApps((prev) => (cursor ? [...prev, ...resp.applications] : resp.applications));
+      setApps((prev) => (cursor ? [...prev, ...resp.items] : resp.items));
       setNextCursor(resp.nextPageToken ?? null);
     } catch {
       setError(true);
@@ -43,7 +43,7 @@ export const useApplicationData = () => {
   // Initial load
   useEffect(() => {
     fetchPage(null);
-  }, []); // Only run once on mount
+  }, [fetchPage]); // Include fetchPage dependency
 
   useEffect(() => {
     if (isInitialized) {

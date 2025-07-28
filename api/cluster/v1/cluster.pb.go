@@ -803,7 +803,7 @@ const file_cluster_v1_cluster_proto_rawDesc = "" +
 	"\n" +
 	"cluster_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\">\n" +
 	"\x19ResetClusterTokenResponse\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2\xb3\x06\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2\xdc\a\n" +
 	"\n" +
 	"ClusterAPI\x12\x81\x01\n" +
 	"\rCreateCluster\x12(.admiral.cluster.v1.CreateClusterRequest\x1a).admiral.cluster.v1.CreateClusterResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/api/v1/clusters\x12{\n" +
@@ -812,7 +812,8 @@ const file_cluster_v1_cluster_proto_rawDesc = "" +
 	"GetCluster\x12%.admiral.cluster.v1.GetClusterRequest\x1a&.admiral.cluster.v1.GetClusterResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/clusters/{id}\x12\x8e\x01\n" +
 	"\rUpdateCluster\x12(.admiral.cluster.v1.UpdateClusterRequest\x1a).admiral.cluster.v1.UpdateClusterResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\x1a\x1d/api/v1/clusters/{cluster.id}\x12\x83\x01\n" +
 	"\rDeleteCluster\x12(.admiral.cluster.v1.DeleteClusterRequest\x1a).admiral.cluster.v1.DeleteClusterResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/api/v1/clusters/{id}\x12\x90\x01\n" +
-	"\x0fRegisterCluster\x12*.admiral.cluster.v1.RegisterClusterRequest\x1a+.admiral.cluster.v1.RegisterClusterResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/clusters/registerB\xc0\x01\n" +
+	"\x0fRegisterCluster\x12*.admiral.cluster.v1.RegisterClusterRequest\x1a+.admiral.cluster.v1.RegisterClusterResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/clusters/register\x12\xa6\x01\n" +
+	"\x11ResetClusterToken\x12,.admiral.cluster.v1.ResetClusterTokenRequest\x1a-.admiral.cluster.v1.ResetClusterTokenResponse\"4\x82\xd3\xe4\x93\x02.:\x01*\")/api/v1/clusters/{cluster_id}/reset-tokenB\xc0\x01\n" +
 	"\x16com.admiral.cluster.v1B\fClusterProtoP\x01Z.go.admiral.io/admiral/api/cluster/v1;clusterv1\xa2\x02\x03ACX\xaa\x02\x12Admiral.Cluster.V1\xca\x02\x12Admiral\\Cluster\\V1\xe2\x02\x1eAdmiral\\Cluster\\V1\\GPBMetadata\xea\x02\x14Admiral::Cluster::V1b\x06proto3"
 
 var (
@@ -865,14 +866,16 @@ var file_cluster_v1_cluster_proto_depIdxs = []int32{
 	7,  // 13: admiral.cluster.v1.ClusterAPI.UpdateCluster:input_type -> admiral.cluster.v1.UpdateClusterRequest
 	9,  // 14: admiral.cluster.v1.ClusterAPI.DeleteCluster:input_type -> admiral.cluster.v1.DeleteClusterRequest
 	11, // 15: admiral.cluster.v1.ClusterAPI.RegisterCluster:input_type -> admiral.cluster.v1.RegisterClusterRequest
-	2,  // 16: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
-	4,  // 17: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
-	6,  // 18: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
-	8,  // 19: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
-	10, // 20: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
-	12, // 21: admiral.cluster.v1.ClusterAPI.RegisterCluster:output_type -> admiral.cluster.v1.RegisterClusterResponse
-	16, // [16:22] is the sub-list for method output_type
-	10, // [10:16] is the sub-list for method input_type
+	13, // 16: admiral.cluster.v1.ClusterAPI.ResetClusterToken:input_type -> admiral.cluster.v1.ResetClusterTokenRequest
+	2,  // 17: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
+	4,  // 18: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
+	6,  // 19: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
+	8,  // 20: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
+	10, // 21: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
+	12, // 22: admiral.cluster.v1.ClusterAPI.RegisterCluster:output_type -> admiral.cluster.v1.RegisterClusterResponse
+	14, // 23: admiral.cluster.v1.ClusterAPI.ResetClusterToken:output_type -> admiral.cluster.v1.ResetClusterTokenResponse
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name
 	10, // [10:10] is the sub-list for extension extendee
 	0,  // [0:10] is the sub-list for field type_name

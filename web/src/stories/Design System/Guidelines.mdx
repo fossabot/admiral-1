@@ -1,0 +1,211 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Design System/Guidelines" />
+
+# Admiral Design Guidelines
+
+Best practices and guidelines for using the Admiral Design System effectively.
+
+## Design Principles
+
+### Consistency
+Use design tokens consistently across all components and layouts. This ensures a cohesive user experience and makes the interface predictable for users.
+
+**Do's:**
+- Use spacing values from the design system (`theme.spacing()`)
+- Apply consistent color schemes for similar UI elements
+- Follow established typography hierarchy
+- Use standard elevation levels for depth
+
+**Don'ts:**
+- Create arbitrary spacing values
+- Use colors outside the defined palette
+- Mix different typography scales inconsistently
+- Apply random shadow effects
+
+### Accessibility First
+Design with accessibility as a primary consideration, not an afterthought.
+
+**Do's:**
+- Maintain WCAG 2.1 AA contrast ratios
+- Provide meaningful alt text for images and icons
+- Use semantic HTML elements
+- Include focus indicators for interactive elements
+- Support keyboard navigation
+- Test with screen readers
+
+**Don'ts:**
+- Rely solely on color to convey information
+- Use insufficient color contrast
+- Hide focus indicators
+- Create keyboard traps
+- Use placeholder text as labels
+
+### Progressive Enhancement
+Build interfaces that work for everyone, regardless of their device or capabilities.
+
+**Do's:**
+- Design mobile-first, then enhance for larger screens
+- Provide fallbacks for advanced features
+- Optimize for performance on slower devices
+- Support reduced motion preferences
+- Ensure content is readable without CSS
+
+## Color Usage
+
+### Primary Colors
+- **Primary Blue**: Main actions, links, and brand elements
+- **Secondary Teal**: Supporting actions and accents
+- Use primary colors sparingly to maintain hierarchy
+
+### Status Colors
+- **Green**: Success states, completed actions, healthy status
+- **Yellow**: Warnings, caution states, pending actions
+- **Red**: Errors, failures, destructive actions
+- **Blue**: Informational messages, neutral states
+
+### Neutral Colors
+- Use the grey scale for text, borders, and backgrounds
+- Maintain sufficient contrast for readability
+- Consider dark mode variations
+
+## Typography
+
+### Hierarchy
+Establish clear information hierarchy using typography:
+
+1. **H1**: Page titles (use sparingly, once per page)
+2. **H2**: Major section headings
+3. **H3**: Subsection headings
+4. **H4**: Component titles
+5. **H5-H6**: Small headings and labels
+6. **Body1**: Primary content text
+7. **Body2**: Secondary content text
+8. **Caption**: Supporting text and metadata
+
+### Line Length
+- Optimal line length: 45-75 characters
+- Use constraints for better readability
+- Consider responsive breakpoints
+
+## Spacing & Layout
+
+### Grid System
+- Use 8px base unit for all spacing
+- Follow the established spacing scale (XXS to XXXL)
+- Maintain consistent margins and padding
+
+### Component Spacing
+- **Tight spacing**: Related elements (4-8px)
+- **Medium spacing**: Component sections (16-24px)
+- **Loose spacing**: Major sections (32-48px)
+
+### Responsive Design
+- Mobile-first approach
+- Use breakpoints consistently
+- Test on multiple device sizes
+- Consider touch target sizes (minimum 44px)
+
+## Component Usage
+
+### Page Headers
+- Always include breadcrumbs for deep navigation
+- Provide clear, descriptive titles
+- Include relevant actions in the header area
+- Use loading states during data fetching
+
+### Status Indicators
+- Use semantic status values consistently
+- Provide tooltips for additional context
+- Consider colorblind accessibility
+- Include text labels when space allows
+
+### Loading States
+- Show loading indicators for operations > 1 second
+- Provide meaningful loading messages
+- Use skeleton screens for content areas
+- Indicate progress when possible
+
+### Empty States
+- Provide helpful guidance for next steps
+- Include relevant actions to resolve the empty state
+- Use appropriate illustrations or icons
+- Keep messaging concise but informative
+
+## Performance Guidelines
+
+### Bundle Size
+- Import only necessary components
+- Use tree-shaking to eliminate unused code
+- Lazy load components when appropriate
+
+### Rendering
+- Use React.memo for expensive components
+- Optimize re-renders with proper dependencies
+- Implement virtualization for large lists
+
+### Images & Icons
+- Use SVG icons for crisp rendering
+- Optimize image sizes and formats
+- Implement lazy loading for images
+- Provide appropriate alt text
+
+## Development Workflow
+
+### Code Quality
+- Run ESLint before committing changes
+- Use TypeScript for type safety
+- Write unit tests for complex components
+- Follow established naming conventions
+
+### Documentation
+- Document component APIs with TypeScript
+- Provide usage examples in Storybook
+- Update design system documentation
+- Include accessibility notes
+
+### Testing
+- Test keyboard navigation
+- Verify screen reader compatibility
+- Check color contrast ratios
+- Test on different devices and browsers
+
+## Common Patterns
+
+### Forms
+- Group related fields logically
+- Provide clear labels and validation
+- Use consistent spacing between fields
+- Include helpful error messages
+
+### Navigation
+- Maintain clear hierarchy
+- Highlight current location
+- Provide breadcrumbs for context
+- Use consistent interaction patterns
+
+### Data Display
+- Use tables for structured data
+- Implement sorting and filtering
+- Provide empty states for no data
+- Consider pagination for large datasets
+
+## Accessibility Checklist
+
+- [ ] Color contrast meets WCAG AA standards
+- [ ] All interactive elements are keyboard accessible
+- [ ] Focus indicators are visible and clear
+- [ ] Screen reader users can navigate effectively
+- [ ] Images have appropriate alt text
+- [ ] Form fields have proper labels
+- [ ] Error messages are clear and helpful
+- [ ] Motion can be reduced or disabled
+
+## Resources
+
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [Material-UI Documentation](https://mui.com/)
+- [Admiral Component Library](/?path=/docs/components-overview--docs)
+- [Design System Tokens](/?path=/docs/design-system-introduction--docs)
+
+Remember: Good design is invisible. Focus on creating interfaces that work seamlessly for all users.

@@ -68,3 +68,7 @@ const Theme = ({ children }: CustomThemeProviderProps): React.JSX.Element => {
 };
 
 export default Theme;
+
+// Export design tokens
+// eslint-disable-next-line react-refresh/only-export-components
+export * from './tokens';

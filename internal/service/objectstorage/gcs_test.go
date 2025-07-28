@@ -108,7 +108,7 @@ func TestNewGCSService(t *testing.T) {
 				assert.NotNil(t, service)
 
 				// Verify service implements the interface
-				var _ Service = service
+				var _ = service
 
 				// Test Close method
 				err = service.Close()

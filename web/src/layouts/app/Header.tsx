@@ -3,25 +3,22 @@ import {
   Box,
   Avatar,
   Menu,
-  MenuItem,
   IconButton,
   Typography,
-  ListItemIcon,
-  Divider,
   ToggleButtonGroup,
   ToggleButton,
   Stack,
+  useTheme,
 } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/PowerSettingsNew';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
-import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 import type { RootState } from '@/store';
 import { ThemeMode, setThemeMode } from '@/store/slices/user';
 
+// TODO: should this stay here, be moved to a global component, be moved to component in the layout?
 const ThemeSelector = ({
   value,
   onChange,
@@ -65,7 +62,7 @@ const ThemeSelector = ({
 );
 
 const Header: React.FC = () => {
-  const navigate = useNavigate();
+  const theme = useTheme();
   const dispatch = useDispatch();
   const { name, pictureUrl } = useSelector((s: RootState) => s.user);
   const themeMode = useSelector((s: RootState) => s.user.preferences.themeMode);
@@ -74,11 +71,6 @@ const Header: React.FC = () => {
 
   const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
-
-  const handleLogout = () => {
-    navigate('/auth/logout');
-    handleMenuClose();
-  };
 
   const handleThemeChange = (_: React.MouseEvent<HTMLElement>, newTheme: ThemeMode | null) => {
     if (newTheme !== null) {
@@ -95,17 +87,37 @@ const Header: React.FC = () => {
         p: 2,
         borderBottom: 1,
         borderColor: 'divider',
+        backdropFilter: 'blur(10px)',
+        background: theme.palette.mode === 'dark' ? 'rgba(10, 14, 22, 0.9)' : 'rgba(255, 255, 255, 0.8)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1100,
       }}
     >
       <Box />
-      <IconButton onClick={handleMenuOpen} size="small">
+      <IconButton
+        onClick={handleMenuOpen}
+        size="small"
+        sx={{
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.05)',
+          },
+          px: 2,
+        }}
+      >
         <Avatar
           alt={name}
           src={pictureUrl}
           sx={{
-            width: 32,
-            height: 32,
-            boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 0px',
+            width: 36,
+            height: 36,
+            boxShadow:
+              theme.palette.mode === 'dark'
+                ? '0px 4px 12px rgba(0, 0, 0, 0.4), 0px 0px 0px 2px rgba(255, 255, 255, 0.1)'
+                : '0px 4px 12px rgba(0, 0, 0, 0.15), 0px 0px 0px 2px rgba(255, 255, 255, 1)',
+            border: `2px solid ${theme.palette.background.paper}`,
+            transition: 'all 0.2s ease-in-out',
           }}
         />
       </IconButton>
@@ -129,13 +141,6 @@ const Header: React.FC = () => {
         disableAutoFocusItem
       >
         <ThemeSelector value={themeMode} onChange={handleThemeChange} />
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem onClick={handleLogout} sx={{ borderRadius: 1 }}>
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="inherit">Logout</Typography>
-        </MenuItem>
       </Menu>
     </Box>
   );

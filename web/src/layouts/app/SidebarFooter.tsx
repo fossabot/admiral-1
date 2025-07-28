@@ -24,7 +24,7 @@ const SidebarFooter = (): JSX.Element => {
   const dispatch = useDispatch();
 
   const { drawerOpen } = useSelector((state: RootState) => menu(state) as MenuState);
-  const isDrawerOpen = typeof drawerOpen === 'boolean' ? drawerOpen : false;
+  const isDrawerOpen = drawerOpen;
 
   const handleClick = useCallback((): void => {
     dispatch(openDrawer(!drawerOpen));
@@ -35,16 +35,22 @@ const SidebarFooter = (): JSX.Element => {
     height: 46,
     alignItems: 'center',
     justifyContent: drawerOpen ? 'initial' : 'center',
-    ...(drawerOpen
-      ? {}
+    mb: 0.5,
+    pl: drawerOpen ? 1.5 : 1.25,
+    ...(drawerOpen && theme.palette.mode !== 'dark'
+      ? {
+          '&:hover': {
+            backgroundColor: theme.palette.secondary.light,
+          },
+        }
       : {
           '&:hover': {
-            background: 'transparent',
+            backgroundColor: 'transparent',
           },
           '&.Mui-selected': {
-            background: 'transparent',
+            backgroundColor: 'transparent',
             '&:hover': {
-              background: 'transparent',
+              backgroundColor: 'transparent',
             },
           },
         }),
@@ -73,7 +79,8 @@ const SidebarFooter = (): JSX.Element => {
           height: 46,
           mr: 'auto',
           '&:hover': {
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : theme.palette.secondary.light,
+            backgroundColor:
+              theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : theme.palette.secondary.light,
           },
           '&.Mui-selected': {
             backgroundColor: theme.palette.secondary.light,
@@ -101,15 +108,9 @@ const SidebarFooter = (): JSX.Element => {
       {isDrawerOpen && (
         <ListItemText
           primary={
-            drawerOpen ? (
-              <Typography variant={'h5'} color="inherit">
-                Collapse
-              </Typography>
-            ) : (
-              <Typography variant={'h5'} color="inherit">
-                Expand
-              </Typography>
-            )
+            <Typography variant="body1" color="inherit">
+              Collapse
+            </Typography>
           }
         />
       )}
@@ -118,7 +119,23 @@ const SidebarFooter = (): JSX.Element => {
 
   return (
     <List>
-      <ListItem disablePadding sx={{ display: 'block', pt: '12px' }}>
+      <ListItem
+        disablePadding
+        sx={{
+          display: 'block',
+          pt: '12px',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: '10%',
+            right: '10%',
+            height: '1px',
+            background: `linear-gradient(90deg, transparent 0%, rgba(136, 136, 136, 0.2) 50%, transparent 100%)`,
+          },
+        }}
+      >
         {drawerOpen ? (
           Button
         ) : (

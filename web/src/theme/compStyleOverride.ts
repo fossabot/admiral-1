@@ -1,9 +1,7 @@
-// project imports
 import { Theme } from '@mui/material/styles';
 
 export default function componentStyleOverrides(theme: Theme) {
   const mode = theme.palette.mode;
-  const bgColor = mode === 'dark' ? theme.palette.dark[800] : theme.palette.grey[50];
   const menuSelectedBack = mode === 'dark' ? theme.palette.secondary.main + 15 : theme.palette.secondary.light;
   const menuSelected = mode === 'dark' ? theme.palette.secondary.main : theme.palette.secondary.dark;
 
@@ -11,8 +9,50 @@ export default function componentStyleOverrides(theme: Theme) {
     MuiButton: {
       styleOverrides: {
         root: {
-          fontWeight: 500,
-          borderRadius: '4px',
+          fontWeight: 600,
+          borderRadius: '6px',
+          textTransform: 'none' as const,
+          boxShadow: 'none',
+          '&.MuiButton-sizeSmall': {
+            padding: '6px 12px',
+            fontSize: '0.8125rem',
+            minHeight: '32px',
+          },
+          '&.MuiButton-sizeMedium': {
+            padding: '8px 16px',
+            fontSize: '0.875rem',
+            minHeight: '36px',
+          },
+          '&.MuiButton-sizeLarge': {
+            padding: '11px 22px',
+            fontSize: '0.9375rem',
+            minHeight: '42px',
+          },
+          '&.Mui-disabled': {
+            color: mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[500],
+            backgroundColor: mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+            borderColor: mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300],
+          },
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          },
+          '&.Mui-disabled': {
+            background: mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+            color: mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[500],
+          },
+        },
+        outlined: {
+          borderWidth: '2px',
+          '&:hover': {
+            borderWidth: '2px',
+          },
+          '&.Mui-disabled': {
+            borderColor: mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300],
+            color: mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[500],
+          },
         },
       },
     },
@@ -23,20 +63,39 @@ export default function componentStyleOverrides(theme: Theme) {
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+          border: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : theme.palette.grey[200]}`,
+          boxShadow:
+            mode === 'dark'
+              ? '0px 4px 20px rgba(0, 0, 0, 0.5), 0px 1px 3px rgba(0, 229, 255, 0.1)'
+              : '0px 4px 20px rgba(0, 0, 0, 0.08), 0px 1px 3px rgba(0, 0, 0, 0.04)',
+          transition: 'all 0.2s ease-in-out',
+          backgroundColor: mode === 'dark' ? theme.palette.background.paper : theme.palette.background.paper,
+          '&:hover': {
+            boxShadow:
+              mode === 'dark'
+                ? '0px 8px 30px rgba(0, 0, 0, 0.6), 0px 2px 6px rgba(0, 229, 255, 0.2)'
+                : '0px 8px 30px rgba(0, 0, 0, 0.12), 0px 2px 6px rgba(0, 0, 0, 0.08)',
+          },
         },
         rounded: {
-          borderRadius: `4px`,
+          borderRadius: '12px',
         },
       },
     },
     MuiCardHeader: {
       styleOverrides: {
         root: {
-          color: theme.palette.text.dark,
-          padding: '24px',
+          color: theme.palette.text.primary,
+          padding: '16px 20px 12px 20px',
+          borderBottom: `1px solid ${mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[100]}`,
         },
         title: {
-          fontSize: '1.125rem',
+          fontSize: '1.1rem',
+          fontWeight: 600,
+        },
+        subheader: {
+          marginTop: '2px',
+          fontSize: '0.8rem',
         },
       },
     },
@@ -44,13 +103,20 @@ export default function componentStyleOverrides(theme: Theme) {
       styleOverrides: {
         root: {
           padding: '24px',
+          '&:last-child': {
+            paddingBottom: '24px',
+          },
+          '&:first-of-type': {
+            paddingTop: '24px',
+          },
         },
       },
     },
     MuiCardActions: {
       styleOverrides: {
         root: {
-          padding: '24px',
+          padding: '12px 20px 16px 20px',
+          borderTop: `1px solid ${mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[100]}`,
         },
       },
     },
@@ -112,6 +178,8 @@ export default function componentStyleOverrides(theme: Theme) {
           '&::placeholder': {
             color: theme.palette.text.secondary,
             fontSize: '0.875rem',
+            opacity: 1,
+            lineHeight: 'inherit',
           },
         },
       },
@@ -119,25 +187,36 @@ export default function componentStyleOverrides(theme: Theme) {
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          background: bgColor,
-          borderRadius: `4px`,
+          background: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#ffffff',
+          borderRadius: '8px',
+          transition: 'all 0.2s ease-in-out',
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: mode === 'dark' ? theme.palette.text.primary + 28 : theme.palette.grey[400],
+            borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : theme.palette.grey[300],
+            borderWidth: '2px',
           },
-          '&:hover $notchedOutline': {
-            borderColor: theme.palette.primary.light,
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: theme.palette.primary.main,
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: theme.palette.primary.main,
+            boxShadow: `0 0 0 3px ${theme.palette.primary.main}20`,
           },
           '&.MuiInputBase-multiline': {
             padding: 1,
           },
         },
         input: {
-          fontWeight: 500,
-          background: bgColor,
-          padding: '15.5px 14px',
-          borderRadius: `4px`,
+          fontWeight: 400,
+          padding: '12px 14px',
+          borderRadius: '6px',
+          fontSize: '0.875rem',
+          '&::placeholder': {
+            transform: 'none',
+            lineHeight: 'inherit',
+          },
           '&.MuiInputBase-inputSizeSmall': {
-            padding: '10px 14px',
+            padding: '10px 12px',
+            fontSize: '0.8rem',
             '&.MuiInputBase-inputAdornedStart': {
               paddingLeft: 0,
             },
@@ -315,6 +394,33 @@ export default function componentStyleOverrides(theme: Theme) {
       styleOverrides: {
         root: {
           margin: '3px',
+        },
+      },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          color: mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[700],
+          fontSize: '0.75rem',
+          marginTop: '2px',
+          marginLeft: 0,
+          marginRight: 0,
+          lineHeight: 1.4,
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          color: mode === 'dark' ? theme.palette.grey[300] : theme.palette.grey[700],
+          fontSize: '0.875rem',
+          transform: 'translate(14px, 12px) scale(1)',
+          '&.MuiInputLabel-shrink': {
+            transform: 'translate(14px, -9px) scale(0.75)',
+          },
+          '&.Mui-focused': {
+            color: theme.palette.primary.main,
+          },
         },
       },
     },

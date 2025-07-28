@@ -6,11 +6,11 @@ export const clusterSchema = z.object({
     .string()
     .min(1, { message: 'Name is required' })
     .max(255, { message: 'Name must be 255 characters or less' })
-    .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/, {
-      message: 'Name must be lowercase alphanumeric with optional hyphens',
+    .regex(/^[a-z0-9]([-_a-z0-9]*[a-z0-9])?$/, {
+      message: 'Name must be lowercase alphanumeric with optional hyphens or underscores',
     }),
-  createdAt: z.string().datetime({ message: 'Created at must be a valid ISO 8601 date' }).optional(),
-  updatedAt: z.string().datetime({ message: 'Updated at must be a valid ISO 8601 date' }).optional(),
+  createdAt: z.string().datetime({ message: 'Created at must be a valid ISO 8601 date' }),
+  updatedAt: z.string().datetime({ message: 'Updated at must be a valid ISO 8601 date' }),
 });
 
 export const clusterArraySchema = z.array(clusterSchema);

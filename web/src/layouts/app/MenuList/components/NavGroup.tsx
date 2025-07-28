@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
-import {
-  Divider,
-  List,
-  Typography,
-} from '@mui/material';
+import { Divider, List, Typography } from '@mui/material';
 
 import NavCollapse from '../components/NavCollapse';
 import NavItem from '../components/NavItem';
@@ -14,7 +10,7 @@ import { NavItemType } from '../types';
 import { activeID } from '@/store/slices/menu';
 
 type VirtualElement = {
-  getBoundingClientRect: () =>  DOMRect;
+  getBoundingClientRect: () => DOMRect;
   contextElement?: Element;
 };
 

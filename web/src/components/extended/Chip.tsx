@@ -61,10 +61,10 @@ const Chip = ({ chipColor = 'primary', disabled, sx = {}, variant, ...others }: 
       };
     } else {
       return {
-        color: theme.palette.mode === 'dark' ? palette.light : palette.main,
+        color: theme.palette.mode === 'dark' ? palette.light : palette.dark,
         bgcolor: theme.palette.mode === 'dark' ? palette.main : alpha(palette.light, 0.6),
         ':hover': {
-          color: palette.light,
+          color: theme.palette.getContrastText(palette.dark),
           bgcolor: theme.palette.mode === 'dark' ? alpha(palette.dark, 0.9) : palette.dark,
         },
       };

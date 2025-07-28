@@ -25,9 +25,9 @@ const Palette = (paletteMode: PaletteMode): Theme => {
         800: paletteMode === 'dark' ? colors.darkSecondary800 : colors.secondary800,
       },
       error: {
-        light: colors.errorLight,
-        main: colors.errorMain,
-        dark: colors.errorDark,
+        light: paletteMode === 'dark' ? colors.darkErrorLight : colors.errorLight,
+        main: paletteMode === 'dark' ? colors.darkErrorMain : colors.errorMain,
+        dark: paletteMode === 'dark' ? colors.darkErrorDark : colors.errorDark,
       },
       orange: {
         light: colors.orangeLight,
@@ -35,15 +35,20 @@ const Palette = (paletteMode: PaletteMode): Theme => {
         dark: colors.orangeDark,
       },
       warning: {
-        light: colors.warningLight,
-        main: colors.warningMain,
-        dark: colors.warningDark,
+        light: paletteMode === 'dark' ? colors.darkWarningLight : colors.warningLight,
+        main: paletteMode === 'dark' ? colors.darkWarningMain : colors.warningMain,
+        dark: paletteMode === 'dark' ? colors.darkWarningDark : colors.warningDark,
+      },
+      info: {
+        light: paletteMode === 'dark' ? colors.darkInfoLight : colors.infoLight,
+        main: paletteMode === 'dark' ? colors.darkInfoMain : colors.infoMain,
+        dark: paletteMode === 'dark' ? colors.darkInfoDark : colors.infoDark,
       },
       success: {
-        light: colors.successLight,
+        light: paletteMode === 'dark' ? colors.darkSuccessLight : colors.successLight,
         200: colors.success200,
-        main: colors.successMain,
-        dark: colors.successDark,
+        main: paletteMode === 'dark' ? colors.darkSuccessMain : colors.successMain,
+        dark: paletteMode === 'dark' ? colors.darkSuccessDark : colors.successDark,
       },
       grey: {
         50: colors.grey50,
@@ -68,8 +73,8 @@ const Palette = (paletteMode: PaletteMode): Theme => {
       },
       divider: paletteMode === 'dark' ? colors.grey700 : colors.grey200,
       background: {
-        paper: paletteMode === 'dark' ? colors.darkLevel2 : colors.paper,
-        default: paletteMode === 'dark' ? colors.darkPaper : colors.paper,
+        paper: paletteMode === 'dark' ? colors.darkPaper : colors.paper,
+        default: paletteMode === 'dark' ? colors.darkBackground : colors.paper,
       },
     },
   });

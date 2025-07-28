@@ -49,6 +49,9 @@ const (
 	// ClusterAPIRegisterClusterProcedure is the fully-qualified name of the ClusterAPI's
 	// RegisterCluster RPC.
 	ClusterAPIRegisterClusterProcedure = "/admiral.cluster.v1.ClusterAPI/RegisterCluster"
+	// ClusterAPIResetClusterTokenProcedure is the fully-qualified name of the ClusterAPI's
+	// ResetClusterToken RPC.
+	ClusterAPIResetClusterTokenProcedure = "/admiral.cluster.v1.ClusterAPI/ResetClusterToken"
 )
 
 // ClusterAPIClient is a client for the admiral.cluster.v1.ClusterAPI service.
@@ -59,6 +62,7 @@ type ClusterAPIClient interface {
 	UpdateCluster(context.Context, *connect.Request[v1.UpdateClusterRequest]) (*connect.Response[v1.UpdateClusterResponse], error)
 	DeleteCluster(context.Context, *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error)
 	RegisterCluster(context.Context, *connect.Request[v1.RegisterClusterRequest]) (*connect.Response[v1.RegisterClusterResponse], error)
+	ResetClusterToken(context.Context, *connect.Request[v1.ResetClusterTokenRequest]) (*connect.Response[v1.ResetClusterTokenResponse], error)
 }
 
 // NewClusterAPIClient constructs a client for the admiral.cluster.v1.ClusterAPI service. By
@@ -108,17 +112,24 @@ func NewClusterAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(clusterAPIMethods.ByName("RegisterCluster")),
 			connect.WithClientOptions(opts...),
 		),
+		resetClusterToken: connect.NewClient[v1.ResetClusterTokenRequest, v1.ResetClusterTokenResponse](
+			httpClient,
+			baseURL+ClusterAPIResetClusterTokenProcedure,
+			connect.WithSchema(clusterAPIMethods.ByName("ResetClusterToken")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // clusterAPIClient implements ClusterAPIClient.
 type clusterAPIClient struct {
-	createCluster   *connect.Client[v1.CreateClusterRequest, v1.CreateClusterResponse]
-	listClusters    *connect.Client[v1.ListClustersRequest, v1.ListClustersResponse]
-	getCluster      *connect.Client[v1.GetClusterRequest, v1.GetClusterResponse]
-	updateCluster   *connect.Client[v1.UpdateClusterRequest, v1.UpdateClusterResponse]
-	deleteCluster   *connect.Client[v1.DeleteClusterRequest, v1.DeleteClusterResponse]
-	registerCluster *connect.Client[v1.RegisterClusterRequest, v1.RegisterClusterResponse]
+	createCluster     *connect.Client[v1.CreateClusterRequest, v1.CreateClusterResponse]
+	listClusters      *connect.Client[v1.ListClustersRequest, v1.ListClustersResponse]
+	getCluster        *connect.Client[v1.GetClusterRequest, v1.GetClusterResponse]
+	updateCluster     *connect.Client[v1.UpdateClusterRequest, v1.UpdateClusterResponse]
+	deleteCluster     *connect.Client[v1.DeleteClusterRequest, v1.DeleteClusterResponse]
+	registerCluster   *connect.Client[v1.RegisterClusterRequest, v1.RegisterClusterResponse]
+	resetClusterToken *connect.Client[v1.ResetClusterTokenRequest, v1.ResetClusterTokenResponse]
 }
 
 // CreateCluster calls admiral.cluster.v1.ClusterAPI.CreateCluster.
@@ -151,6 +162,11 @@ func (c *clusterAPIClient) RegisterCluster(ctx context.Context, req *connect.Req
 	return c.registerCluster.CallUnary(ctx, req)
 }
 
+// ResetClusterToken calls admiral.cluster.v1.ClusterAPI.ResetClusterToken.
+func (c *clusterAPIClient) ResetClusterToken(ctx context.Context, req *connect.Request[v1.ResetClusterTokenRequest]) (*connect.Response[v1.ResetClusterTokenResponse], error) {
+	return c.resetClusterToken.CallUnary(ctx, req)
+}
+
 // ClusterAPIHandler is an implementation of the admiral.cluster.v1.ClusterAPI service.
 type ClusterAPIHandler interface {
 	CreateCluster(context.Context, *connect.Request[v1.CreateClusterRequest]) (*connect.Response[v1.CreateClusterResponse], error)
@@ -159,6 +175,7 @@ type ClusterAPIHandler interface {
 	UpdateCluster(context.Context, *connect.Request[v1.UpdateClusterRequest]) (*connect.Response[v1.UpdateClusterResponse], error)
 	DeleteCluster(context.Context, *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error)
 	RegisterCluster(context.Context, *connect.Request[v1.RegisterClusterRequest]) (*connect.Response[v1.RegisterClusterResponse], error)
+	ResetClusterToken(context.Context, *connect.Request[v1.ResetClusterTokenRequest]) (*connect.Response[v1.ResetClusterTokenResponse], error)
 }
 
 // NewClusterAPIHandler builds an HTTP handler from the service implementation. It returns the path
@@ -204,6 +221,12 @@ func NewClusterAPIHandler(svc ClusterAPIHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(clusterAPIMethods.ByName("RegisterCluster")),
 		connect.WithHandlerOptions(opts...),
 	)
+	clusterAPIResetClusterTokenHandler := connect.NewUnaryHandler(
+		ClusterAPIResetClusterTokenProcedure,
+		svc.ResetClusterToken,
+		connect.WithSchema(clusterAPIMethods.ByName("ResetClusterToken")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.cluster.v1.ClusterAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ClusterAPICreateClusterProcedure:
@@ -218,6 +241,8 @@ func NewClusterAPIHandler(svc ClusterAPIHandler, opts ...connect.HandlerOption) 
 			clusterAPIDeleteClusterHandler.ServeHTTP(w, r)
 		case ClusterAPIRegisterClusterProcedure:
 			clusterAPIRegisterClusterHandler.ServeHTTP(w, r)
+		case ClusterAPIResetClusterTokenProcedure:
+			clusterAPIResetClusterTokenHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -249,4 +274,8 @@ func (UnimplementedClusterAPIHandler) DeleteCluster(context.Context, *connect.Re
 
 func (UnimplementedClusterAPIHandler) RegisterCluster(context.Context, *connect.Request[v1.RegisterClusterRequest]) (*connect.Response[v1.RegisterClusterResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.cluster.v1.ClusterAPI.RegisterCluster is not implemented"))
+}
+
+func (UnimplementedClusterAPIHandler) ResetClusterToken(context.Context, *connect.Request[v1.ResetClusterTokenRequest]) (*connect.Response[v1.ResetClusterTokenResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.cluster.v1.ClusterAPI.ResetClusterToken is not implemented"))
 }

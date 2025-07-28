@@ -15,7 +15,18 @@ const SidebarHeader = (): JSX.Element => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: 2,
-      minHeight: 64,
+      minHeight: 72,
+      borderBottom: `1px solid ${drawerOpen ? 'transparent' : 'transparent'}`,
+      position: 'relative',
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: '10%',
+        right: '10%',
+        height: '1px',
+        background: `linear-gradient(90deg, transparent 0%, rgba(136, 136, 136, 0.2) 50%, transparent 100%)`,
+      },
     },
   };
 

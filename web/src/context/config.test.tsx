@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import React, { useContext } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 
 import { ConfigProvider, Config } from '@/context/config';
 import { services } from '@/services';
@@ -40,7 +40,7 @@ describe('Config Context', () => {
   });
 
   describe('ConfigProvider Rendering', () => {
-    it('should render children correctly', () => {
+    it('should render children correctly', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -51,9 +51,14 @@ describe('Config Context', () => {
 
       expect(screen.getByTestId('child')).toBeInTheDocument();
       expect(screen.getByText('Test Child')).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should render multiple children', () => {
+    it('should render multiple children', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -67,27 +72,42 @@ describe('Config Context', () => {
       expect(screen.getByTestId('child-1')).toBeInTheDocument();
       expect(screen.getByTestId('child-2')).toBeInTheDocument();
       expect(screen.getByTestId('child-3')).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should handle empty children', () => {
+    it('should handle empty children', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       const { container } = render(<ConfigProvider>{null}</ConfigProvider>);
 
       expect(container).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should handle string children', () => {
+    it('should handle string children', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(<ConfigProvider>Simple text content</ConfigProvider>);
 
       expect(screen.getByText('Simple text content')).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
   describe('Config Context Value', () => {
-    it('should provide default config initially', () => {
+    it('should provide default config initially', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -98,9 +118,14 @@ describe('Config Context', () => {
 
       const configContent = screen.getByTestId('config-content');
       expect(configContent).toHaveTextContent(JSON.stringify(defaultConfig));
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should provide config context to consumers', () => {
+    it('should provide config context to consumers', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -111,9 +136,14 @@ describe('Config Context', () => {
 
       expect(screen.getByTestId('config-consumer')).toBeInTheDocument();
       expect(screen.getByTestId('config-content')).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should provide context to nested consumers', () => {
+    it('should provide context to nested consumers', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -128,11 +158,16 @@ describe('Config Context', () => {
 
       expect(screen.getByTestId('nested-consumer')).toBeInTheDocument();
       expect(screen.getByTestId('config-content')).toBeInTheDocument();
+
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
   describe('Config Fetching', () => {
-    it('should call config service on mount', () => {
+    it('should call config service on mount', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       render(
@@ -141,18 +176,23 @@ describe('Config Context', () => {
         </ConfigProvider>,
       );
 
-      expect(services.config.get).toHaveBeenCalledTimes(1);
+      // Wait for the async config fetch to complete
+      await waitFor(() => {
+        expect(services.config.get).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('should update config when service returns data', async () => {
       const fetchedConfig: ConfigType = {};
       vi.mocked(services.config.get).mockResolvedValue(fetchedConfig);
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -166,11 +206,13 @@ describe('Config Context', () => {
       const fetchedConfig: ConfigType = {};
       vi.mocked(services.config.get).mockResolvedValue(fetchedConfig);
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -184,11 +226,13 @@ describe('Config Context', () => {
     it('should handle empty config from service', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -204,11 +248,13 @@ describe('Config Context', () => {
       const error = new Error('Network error');
       vi.mocked(services.config.get).mockRejectedValue(error);
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(mockConsoleWarn).toHaveBeenCalledWith('Failed to fetch config, using default:', error);
@@ -224,11 +270,13 @@ describe('Config Context', () => {
         throw new Error('Sync error');
       });
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(mockConsoleWarn).toHaveBeenCalledWith('Failed to fetch config, using default:', expect.any(Error));
@@ -241,11 +289,13 @@ describe('Config Context', () => {
     it('should handle service returning null/undefined', async () => {
       vi.mocked(services.config.get).mockResolvedValue(null as unknown as ConfigType);
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -260,11 +310,13 @@ describe('Config Context', () => {
       vi.mocked(services.config.get).mockRejectedValue(new Error('Fetch failed'));
 
       expect(() => {
-        render(
-          <ConfigProvider>
-            <div data-testid="content">Content should render</div>
-          </ConfigProvider>,
-        );
+        act(() => {
+          render(
+            <ConfigProvider>
+              <div data-testid="content">Content should render</div>
+            </ConfigProvider>,
+          );
+        });
       }).not.toThrow();
 
       expect(screen.getByTestId('content')).toBeInTheDocument();
@@ -283,20 +335,26 @@ describe('Config Context', () => {
 
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      const { rerender } = render(
-        <ConfigProvider>
-          <TestComponent />
-        </ConfigProvider>,
-      );
+      let rerender: ReturnType<typeof render>['rerender'];
+      act(() => {
+        const result = render(
+          <ConfigProvider>
+            <TestComponent />
+          </ConfigProvider>,
+        );
+        rerender = result.rerender;
+      });
 
       expect(screen.getByTestId('render-count')).toHaveTextContent('1');
 
       // Re-render with same children (this will create a new provider instance)
-      rerender(
-        <ConfigProvider>
-          <TestComponent />
-        </ConfigProvider>,
-      );
+      act(() => {
+        rerender(
+          <ConfigProvider>
+            <TestComponent />
+          </ConfigProvider>,
+        );
+      });
 
       // Will re-render because it's a new provider instance
       expect(screen.getByTestId('render-count')).toHaveTextContent('2');
@@ -307,11 +365,15 @@ describe('Config Context', () => {
 
       vi.mocked(services.config.get).mockImplementation(() => Promise.resolve(configValue));
 
-      const { rerender } = render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      let rerender: ReturnType<typeof render>['rerender'];
+      act(() => {
+        const result = render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+        rerender = result.rerender;
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -322,11 +384,13 @@ describe('Config Context', () => {
       // Change the config value and re-render
       configValue = {};
 
-      rerender(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        rerender(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       // Config should remain the same since useEffect only runs on mount
       expect(screen.getByTestId('config-content')).toHaveTextContent(initialConfig!);
@@ -337,13 +401,15 @@ describe('Config Context', () => {
     it('should handle nested providers correctly', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      render(
-        <ConfigProvider>
+      act(() => {
+        render(
           <ConfigProvider>
-            <TestConsumer testId="nested-consumer" />
-          </ConfigProvider>
-        </ConfigProvider>,
-      );
+            <ConfigProvider>
+              <TestConsumer testId="nested-consumer" />
+            </ConfigProvider>
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(2);
@@ -355,16 +421,18 @@ describe('Config Context', () => {
     it('should handle sibling providers independently', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      render(
-        <div>
-          <ConfigProvider>
-            <TestConsumer testId="provider-1" />
-          </ConfigProvider>
-          <ConfigProvider>
-            <TestConsumer testId="provider-2" />
-          </ConfigProvider>
-        </div>,
-      );
+      act(() => {
+        render(
+          <div>
+            <ConfigProvider>
+              <TestConsumer testId="provider-1" />
+            </ConfigProvider>
+            <ConfigProvider>
+              <TestConsumer testId="provider-2" />
+            </ConfigProvider>
+          </div>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(2);
@@ -383,11 +451,17 @@ describe('Config Context', () => {
         <ConfigProvider>{show && <TestConsumer testId="conditional" />}</ConfigProvider>
       );
 
-      const { rerender } = render(<ConditionalConsumer show={false} />);
+      let rerender: ReturnType<typeof render>['rerender'];
+      act(() => {
+        const result = render(<ConditionalConsumer show={false} />);
+        rerender = result.rerender;
+      });
 
       expect(screen.queryByTestId('conditional')).not.toBeInTheDocument();
 
-      rerender(<ConditionalConsumer show={true} />);
+      act(() => {
+        rerender(<ConditionalConsumer show={true} />);
+      });
 
       expect(screen.getByTestId('conditional')).toBeInTheDocument();
     });
@@ -403,12 +477,18 @@ describe('Config Context', () => {
         </ConfigProvider>
       );
 
-      const { rerender } = render(<DynamicProvider childrenCount={1} />);
+      let rerender: ReturnType<typeof render>['rerender'];
+      act(() => {
+        const result = render(<DynamicProvider childrenCount={1} />);
+        rerender = result.rerender;
+      });
 
       expect(screen.getByTestId('dynamic-0')).toBeInTheDocument();
       expect(screen.queryByTestId('dynamic-1')).not.toBeInTheDocument();
 
-      rerender(<DynamicProvider childrenCount={3} />);
+      act(() => {
+        rerender(<DynamicProvider childrenCount={3} />);
+      });
 
       expect(screen.getByTestId('dynamic-0')).toBeInTheDocument();
       expect(screen.getByTestId('dynamic-1')).toBeInTheDocument();
@@ -420,11 +500,15 @@ describe('Config Context', () => {
     it('should not cause memory leaks on unmount', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      const { unmount } = render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      let unmount: ReturnType<typeof render>['unmount'] | undefined;
+      act(() => {
+        const result = render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+        unmount = result.unmount;
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -432,7 +516,7 @@ describe('Config Context', () => {
 
       expect(screen.getByTestId('config-consumer')).toBeInTheDocument();
 
-      unmount();
+      unmount?.();
 
       // Should clean up without errors
       expect(screen.queryByTestId('config-consumer')).not.toBeInTheDocument();
@@ -442,14 +526,18 @@ describe('Config Context', () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
       for (let i = 0; i < 5; i++) {
-        const { unmount } = render(
-          <ConfigProvider>
-            <TestConsumer testId={`cycle-${i}`} />
-          </ConfigProvider>,
-        );
+        let unmount: ReturnType<typeof render>['unmount'] | undefined;
+        act(() => {
+          const result = render(
+            <ConfigProvider>
+              <TestConsumer testId={`cycle-${i}`} />
+            </ConfigProvider>,
+          );
+          unmount = result.unmount;
+        });
 
         expect(screen.getByTestId(`cycle-${i}`)).toBeInTheDocument();
-        unmount();
+        unmount?.();
       }
 
       expect(services.config.get).toHaveBeenCalledTimes(5);
@@ -458,15 +546,17 @@ describe('Config Context', () => {
     it('should handle multiple consumers efficiently', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      render(
-        <ConfigProvider>
-          <TestConsumer testId="consumer-1" />
-          <TestConsumer testId="consumer-2" />
-          <TestConsumer testId="consumer-3" />
-          <TestConsumer testId="consumer-4" />
-          <TestConsumer testId="consumer-5" />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer testId="consumer-1" />
+            <TestConsumer testId="consumer-2" />
+            <TestConsumer testId="consumer-3" />
+            <TestConsumer testId="consumer-4" />
+            <TestConsumer testId="consumer-5" />
+          </ConfigProvider>,
+        );
+      });
 
       // Should only fetch config once despite multiple consumers
       expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -489,11 +579,13 @@ describe('Config Context', () => {
         return {};
       });
 
-      render(
-        <ConfigProvider>
-          <TestConsumer />
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <TestConsumer />
+          </ConfigProvider>,
+        );
+      });
 
       // Should show default config immediately
       expect(screen.getByTestId('config-content')).toHaveTextContent(JSON.stringify(defaultConfig));
@@ -514,16 +606,18 @@ describe('Config Context', () => {
         return {};
       });
 
-      render(
-        <div>
-          <ConfigProvider>
-            <TestConsumer testId="concurrent-1" />
-          </ConfigProvider>
-          <ConfigProvider>
-            <TestConsumer testId="concurrent-2" />
-          </ConfigProvider>
-        </div>,
-      );
+      act(() => {
+        render(
+          <div>
+            <ConfigProvider>
+              <TestConsumer testId="concurrent-1" />
+            </ConfigProvider>
+            <ConfigProvider>
+              <TestConsumer testId="concurrent-2" />
+            </ConfigProvider>
+          </div>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(2);
@@ -561,7 +655,9 @@ describe('Config Context', () => {
         </ConfigProvider>
       );
 
-      render(<ComplexHierarchy />);
+      act(() => {
+        render(<ComplexHierarchy />);
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -575,16 +671,18 @@ describe('Config Context', () => {
     it('should work with React.Fragment wrappers', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      render(
-        <ConfigProvider>
-          <React.Fragment>
-            <TestConsumer testId="fragment-1" />
+      act(() => {
+        render(
+          <ConfigProvider>
             <React.Fragment>
-              <TestConsumer testId="fragment-2" />
+              <TestConsumer testId="fragment-1" />
+              <React.Fragment>
+                <TestConsumer testId="fragment-2" />
+              </React.Fragment>
             </React.Fragment>
-          </React.Fragment>
-        </ConfigProvider>,
-      );
+          </ConfigProvider>,
+        );
+      });
 
       await waitFor(() => {
         expect(services.config.get).toHaveBeenCalledTimes(1);
@@ -599,7 +697,11 @@ describe('Config Context', () => {
     it('should handle undefined children gracefully', async () => {
       vi.mocked(services.config.get).mockResolvedValue({});
 
-      const { container } = render(<ConfigProvider>{undefined}</ConfigProvider>);
+      let container: ReturnType<typeof render>['container'] | undefined;
+      act(() => {
+        const result = render(<ConfigProvider>{undefined}</ConfigProvider>);
+        container = result.container;
+      });
 
       expect(container).toBeInTheDocument();
       await waitFor(() => {
@@ -612,7 +714,9 @@ describe('Config Context', () => {
 
       const children = [<TestConsumer key="1" testId="array-1" />, <TestConsumer key="2" testId="array-2" />];
 
-      render(<ConfigProvider>{children}</ConfigProvider>);
+      act(() => {
+        render(<ConfigProvider>{children}</ConfigProvider>);
+      });
 
       expect(screen.getByTestId('array-1')).toBeInTheDocument();
       expect(screen.getByTestId('array-2')).toBeInTheDocument();
@@ -626,13 +730,15 @@ describe('Config Context', () => {
         return <>{children(config)}</>;
       };
 
-      render(
-        <ConfigProvider>
-          <RenderPropProvider>
-            {(config) => <div data-testid="render-prop-child">Config: {JSON.stringify(config)}</div>}
-          </RenderPropProvider>
-        </ConfigProvider>,
-      );
+      act(() => {
+        render(
+          <ConfigProvider>
+            <RenderPropProvider>
+              {(config) => <div data-testid="render-prop-child">Config: {JSON.stringify(config)}</div>}
+            </RenderPropProvider>
+          </ConfigProvider>,
+        );
+      });
 
       expect(screen.getByTestId('render-prop-child')).toBeInTheDocument();
     });

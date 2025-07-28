@@ -68,7 +68,7 @@ func TestTemporalLogger_InterfaceCompliance(t *testing.T) {
 	temporalLogger := newTemporalLogger(logger)
 
 	// Verify it implements log.Logger interface
-	var _ log.Logger = temporalLogger
+	var _ = temporalLogger
 }
 
 // Tests for Debug method

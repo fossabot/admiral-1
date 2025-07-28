@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import axios from 'axios';
 
@@ -20,7 +19,7 @@ interface HttpStatus {
 interface AdmiralError extends Error {
   status: HttpStatus;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 const successInterceptor = (response: AxiosResponse): AxiosResponse => response;
@@ -47,7 +46,12 @@ const errorInterceptor = (error: AxiosError): Promise<AdmiralError> => {
     window.location.href = `/auth/login?redirect_url=${encodeURIComponent(redirectUrl)}`;
   }
 
-  const message = typeof data === 'string' ? data : error.message || statusText || 'An error occurred';
+  const message =
+    data && typeof data === 'object' && 'message' in data && typeof data.message === 'string'
+      ? data.message
+      : data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : (typeof data === 'string' ? data : error.message) || statusText || 'An error occurred';
 
   const err: AdmiralError = {
     status: {
@@ -72,12 +76,8 @@ const createClient = (): AxiosInstance => {
 };
 
 function isAdmiralError(error: unknown): error is AdmiralError {
-  return error !== null &&
-    typeof error === 'object' &&
-    'status' in error &&
-    'message' in error;
+  return error !== null && typeof error === 'object' && 'status' in error && 'message' in error;
 }
-
 
 const client: AxiosInstance = createClient();
 

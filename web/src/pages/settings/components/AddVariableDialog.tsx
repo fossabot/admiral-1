@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 
 import { services } from '@/services';
-import type { VariableCreateOptions } from '@/services/variable';
+import type { CreateOptions } from '@/services/variable';
 
 interface AddVariableDialogProps {
   open: boolean;
@@ -23,7 +23,7 @@ interface AddVariableDialogProps {
 }
 
 const AddVariableDialog: React.FC<AddVariableDialogProps> = ({ open, onClose, onSuccess }) => {
-  const [newVariable, setNewVariable] = useState<VariableCreateOptions & { description?: string }>({
+  const [newVariable, setNewVariable] = useState<CreateOptions>({
     key: '',
     value: '',
     description: '',
@@ -34,7 +34,7 @@ const AddVariableDialog: React.FC<AddVariableDialogProps> = ({ open, onClose, on
 
   const handleVariableChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = field === 'isSensitive' ? event.target.checked : event.target.value;
-    setNewVariable((prev) => ({
+    setNewVariable((prev: CreateOptions) => ({
       ...prev,
       [field]: value,
     }));
@@ -137,7 +137,7 @@ const AddVariableDialog: React.FC<AddVariableDialogProps> = ({ open, onClose, on
             rows={2}
             value={newVariable.description}
             onChange={handleVariableChange('description')}
-            helperText="A brief description of what this variable is used for"
+            helperText="A brief description of the purpose for which this variable is used"
             disabled={saving}
           />
 

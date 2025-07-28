@@ -23,7 +23,6 @@ permissions:
 jobs:
   calculate-and-tag:
     runs-on: ubuntu-latest
-    environment: release
     outputs:
       version: ${{ steps.calculate.outputs.version }}
     steps:

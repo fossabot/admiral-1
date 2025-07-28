@@ -14,16 +14,26 @@ function ConfigProvider({ children }: ConfigProviderProps): ReactElement {
   const [config, setConfig] = useState<Config>(defaultConfig);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async (): Promise<void> => {
       try {
         const fetchedConfig: Config = await services.config.get();
-        setConfig({ ...defaultConfig, ...fetchedConfig });
+        if (isMounted) {
+          setConfig({ ...defaultConfig, ...fetchedConfig });
+        }
       } catch (err) {
-        console.warn('Failed to fetch config, using default:', err);
+        if (isMounted) {
+          console.warn('Failed to fetch config, using default:', err);
+        }
       }
     };
 
     void fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const contextValue = useMemo(() => config, [config]);

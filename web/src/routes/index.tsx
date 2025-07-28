@@ -9,9 +9,10 @@ import Loadable from '@/components/Loadable';
 
 const ApplicationsPage = Loadable(lazy(() => import('@/pages/applications')));
 const ApplicationDetails = Loadable(lazy(() => import('@/pages/application-details')));
-const Cluster = Loadable(lazy(() => import('@/pages/cluster')));
+const ClusterPage = Loadable(lazy(() => import('@/pages/clusters')));
 const SettingsPage = Loadable(lazy(() => import('@/pages/settings')));
-const NotFound = Loadable(lazy(() => import('@/pages/not-found')));
+const NotFound = Loadable(lazy(() => import('@/pages/errors/not-found')));
+const AuthError = Loadable(lazy(() => import('@/pages/errors/auth')));
 
 const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(createBrowserRouter);
 
@@ -36,31 +37,31 @@ const router = sentryCreateBrowserRouter([
       {
         path: '/applications/:slug',
         element: <ApplicationDetails />,
-        handle: { title: 'Applications' },
+        handle: { title: 'Application Details' },
       },
       {
         path: '/applications/:slug/envs/:env',
         element: <ApplicationDetails />,
-        handle: { title: 'Applications' },
+        handle: { title: 'Environment Details' },
       },
       {
         path: '/applications/:slug/envs/:env/drafts',
         element: <ApplicationDetails />,
-        handle: { title: 'Applications' },
+        handle: { title: 'Drafts' },
       },
       {
         path: '/applications/:slug/envs/:env/drafts/:id',
         element: <ApplicationDetails />,
-        handle: { title: 'Applications' },
+        handle: { title: 'Draft Details' },
       },
       {
         path: '/applications/:slug/envs/:env/diff/:a/:b',
         element: <ApplicationDetails />,
-        handle: { title: 'Applications' },
+        handle: { title: 'Compare Revisions' },
       },
       {
         path: '/clusters',
-        element: <Cluster />,
+        element: <ClusterPage />,
         handle: { title: 'Clusters' },
       },
       {
@@ -78,6 +79,11 @@ const router = sentryCreateBrowserRouter([
   {
     element: <ErrorLayout />,
     children: [
+      {
+        path: '/error',
+        element: <AuthError />,
+        handle: { title: 'Authentication Error' },
+      },
       {
         path: '*',
         element: <NotFound />,

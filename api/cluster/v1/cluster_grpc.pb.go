@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ClusterAPI_CreateCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/CreateCluster"
-	ClusterAPI_ListClusters_FullMethodName    = "/admiral.cluster.v1.ClusterAPI/ListClusters"
-	ClusterAPI_GetCluster_FullMethodName      = "/admiral.cluster.v1.ClusterAPI/GetCluster"
-	ClusterAPI_UpdateCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/UpdateCluster"
-	ClusterAPI_DeleteCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/DeleteCluster"
-	ClusterAPI_RegisterCluster_FullMethodName = "/admiral.cluster.v1.ClusterAPI/RegisterCluster"
+	ClusterAPI_CreateCluster_FullMethodName     = "/admiral.cluster.v1.ClusterAPI/CreateCluster"
+	ClusterAPI_ListClusters_FullMethodName      = "/admiral.cluster.v1.ClusterAPI/ListClusters"
+	ClusterAPI_GetCluster_FullMethodName        = "/admiral.cluster.v1.ClusterAPI/GetCluster"
+	ClusterAPI_UpdateCluster_FullMethodName     = "/admiral.cluster.v1.ClusterAPI/UpdateCluster"
+	ClusterAPI_DeleteCluster_FullMethodName     = "/admiral.cluster.v1.ClusterAPI/DeleteCluster"
+	ClusterAPI_RegisterCluster_FullMethodName   = "/admiral.cluster.v1.ClusterAPI/RegisterCluster"
+	ClusterAPI_ResetClusterToken_FullMethodName = "/admiral.cluster.v1.ClusterAPI/ResetClusterToken"
 )
 
 // ClusterAPIClient is the client API for ClusterAPI service.
@@ -37,6 +38,7 @@ type ClusterAPIClient interface {
 	UpdateCluster(ctx context.Context, in *UpdateClusterRequest, opts ...grpc.CallOption) (*UpdateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error)
 	RegisterCluster(ctx context.Context, in *RegisterClusterRequest, opts ...grpc.CallOption) (*RegisterClusterResponse, error)
+	ResetClusterToken(ctx context.Context, in *ResetClusterTokenRequest, opts ...grpc.CallOption) (*ResetClusterTokenResponse, error)
 }
 
 type clusterAPIClient struct {
@@ -107,6 +109,16 @@ func (c *clusterAPIClient) RegisterCluster(ctx context.Context, in *RegisterClus
 	return out, nil
 }
 
+func (c *clusterAPIClient) ResetClusterToken(ctx context.Context, in *ResetClusterTokenRequest, opts ...grpc.CallOption) (*ResetClusterTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResetClusterTokenResponse)
+	err := c.cc.Invoke(ctx, ClusterAPI_ResetClusterToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ClusterAPIServer is the server API for ClusterAPI service.
 // All implementations should embed UnimplementedClusterAPIServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type ClusterAPIServer interface {
 	UpdateCluster(context.Context, *UpdateClusterRequest) (*UpdateClusterResponse, error)
 	DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error)
 	RegisterCluster(context.Context, *RegisterClusterRequest) (*RegisterClusterResponse, error)
+	ResetClusterToken(context.Context, *ResetClusterTokenRequest) (*ResetClusterTokenResponse, error)
 }
 
 // UnimplementedClusterAPIServer should be embedded to have
@@ -143,6 +156,9 @@ func (UnimplementedClusterAPIServer) DeleteCluster(context.Context, *DeleteClust
 }
 func (UnimplementedClusterAPIServer) RegisterCluster(context.Context, *RegisterClusterRequest) (*RegisterClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterCluster not implemented")
+}
+func (UnimplementedClusterAPIServer) ResetClusterToken(context.Context, *ResetClusterTokenRequest) (*ResetClusterTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetClusterToken not implemented")
 }
 func (UnimplementedClusterAPIServer) testEmbeddedByValue() {}
 
@@ -272,6 +288,24 @@ func _ClusterAPI_RegisterCluster_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterAPI_ResetClusterToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetClusterTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterAPIServer).ResetClusterToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ClusterAPI_ResetClusterToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterAPIServer).ResetClusterToken(ctx, req.(*ResetClusterTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ClusterAPI_ServiceDesc is the grpc.ServiceDesc for ClusterAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -302,6 +336,10 @@ var ClusterAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterCluster",
 			Handler:    _ClusterAPI_RegisterCluster_Handler,
+		},
+		{
+			MethodName: "ResetClusterToken",
+			Handler:    _ClusterAPI_ResetClusterToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

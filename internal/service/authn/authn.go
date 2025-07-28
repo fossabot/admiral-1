@@ -29,15 +29,13 @@ type Provider interface {
 	GetAuthCodeURL(ctx context.Context, state string) (string, error)
 	Exchange(ctx context.Context, code string) (*oauth2.Token, error)
 	Verify(ctx context.Context, raw string) (*Claims, error)
-
-	//GetLogoutURL(ctx context.Context, idToken string) string
-	//RevokeToken(token *oauth2.Token) error
-	//IntrospectToken(ctx context.Context, token *oauth2.Token) (*IntrospectionToken, error)
 }
 
 type Issuer interface {
+	// TODO: i don't want proto to bleed through to the interface, this needs to change
 	CreateToken(ctx context.Context, subjectId string, tokenType authnv1.CreateTokenRequest_TokenType, expiry *time.Duration) (*model.AuthnToken, error)
 	RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error)
+	//RevokeToken(token *oauth2.Token) error
 }
 
 type Service interface {

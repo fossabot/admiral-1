@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -34,49 +34,83 @@ const ApplicationDialog: React.FC<ApplicationDialogProps> = ({
   creating,
   handleCreate,
 }) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus name input when dialog opens
+  useEffect(() => {
+    if (open && nameInputRef.current) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && e.metaKey && newName.trim() && !creating) {
+      e.preventDefault();
+      handleCreate();
+    }
+  };
+
+  const handleClose = () => {
+    if (!creating) {
+      onClose();
+    }
+  };
+
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       fullWidth
       maxWidth="sm"
-      slotProps={{
-        paper: {
-          sx: {
-            overflowX: 'hidden',
-          },
-        },
-      }}
     >
-      <DialogTitle sx={{ typography: 'h4', fontWeight: 'bold' }}>Add new application</DialogTitle>
-      <DialogContent dividers sx={{ overflowX: 'hidden' }}>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {createError && <Alert severity="error">{createError}</Alert>}
+      <DialogTitle>Create Application</DialogTitle>
+
+      <DialogContent>
+        {createError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {createError}
+          </Alert>
+        )}
+
+        <Stack spacing={2} sx={{ mt: 1 }} onKeyDown={handleKeyDown}>
           <TextField
-            label="Name"
-            required
-            fullWidth
+            inputRef={nameInputRef}
             autoFocus
+            label="Application Name"
+            fullWidth
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            error={Boolean(createError)}
+            disabled={creating}
+            error={!newName.trim() && newName.length > 0}
+            helperText={!newName.trim() && newName.length > 0 ? 'Application name is required' : ''}
           />
+
           <TextField
-            label="Description"
+            label="Description (optional)"
             fullWidth
             multiline
             rows={3}
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
+            disabled={creating}
           />
         </Stack>
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onClose} disabled={creating}>
+        <Button onClick={handleClose} disabled={creating}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={handleCreate} disabled={!newName.trim() || creating}>
-          {creating ? <CircularProgress size={20} /> : 'Create'}
+        <Button
+          onClick={handleCreate}
+          disabled={!newName.trim() || creating}
+          variant="contained"
+          startIcon={creating ? <CircularProgress size={16} /> : null}
+        >
+          {creating ? 'Creating...' : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>

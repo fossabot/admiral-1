@@ -37,12 +37,15 @@ const (
 	UserAPIGetMeProcedure = "/admiral.user.v1.UserAPI/GetMe"
 	// UserAPIGetUserProcedure is the fully-qualified name of the UserAPI's GetUser RPC.
 	UserAPIGetUserProcedure = "/admiral.user.v1.UserAPI/GetUser"
+	// UserAPIListUsersProcedure is the fully-qualified name of the UserAPI's ListUsers RPC.
+	UserAPIListUsersProcedure = "/admiral.user.v1.UserAPI/ListUsers"
 )
 
 // UserAPIClient is a client for the admiral.user.v1.UserAPI service.
 type UserAPIClient interface {
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
 	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
 }
 
 // NewUserAPIClient constructs a client for the admiral.user.v1.UserAPI service. By default, it uses
@@ -68,13 +71,20 @@ func NewUserAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...con
 			connect.WithSchema(userAPIMethods.ByName("GetUser")),
 			connect.WithClientOptions(opts...),
 		),
+		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
+			httpClient,
+			baseURL+UserAPIListUsersProcedure,
+			connect.WithSchema(userAPIMethods.ByName("ListUsers")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // userAPIClient implements UserAPIClient.
 type userAPIClient struct {
-	getMe   *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
-	getUser *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
+	getMe     *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
+	getUser   *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
+	listUsers *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
 }
 
 // GetMe calls admiral.user.v1.UserAPI.GetMe.
@@ -87,10 +97,16 @@ func (c *userAPIClient) GetUser(ctx context.Context, req *connect.Request[v1.Get
 	return c.getUser.CallUnary(ctx, req)
 }
 
+// ListUsers calls admiral.user.v1.UserAPI.ListUsers.
+func (c *userAPIClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return c.listUsers.CallUnary(ctx, req)
+}
+
 // UserAPIHandler is an implementation of the admiral.user.v1.UserAPI service.
 type UserAPIHandler interface {
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
 	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
 }
 
 // NewUserAPIHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -112,12 +128,20 @@ func NewUserAPIHandler(svc UserAPIHandler, opts ...connect.HandlerOption) (strin
 		connect.WithSchema(userAPIMethods.ByName("GetUser")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userAPIListUsersHandler := connect.NewUnaryHandler(
+		UserAPIListUsersProcedure,
+		svc.ListUsers,
+		connect.WithSchema(userAPIMethods.ByName("ListUsers")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.user.v1.UserAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserAPIGetMeProcedure:
 			userAPIGetMeHandler.ServeHTTP(w, r)
 		case UserAPIGetUserProcedure:
 			userAPIGetUserHandler.ServeHTTP(w, r)
+		case UserAPIListUsersProcedure:
+			userAPIListUsersHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -133,4 +157,8 @@ func (UnimplementedUserAPIHandler) GetMe(context.Context, *connect.Request[v1.Ge
 
 func (UnimplementedUserAPIHandler) GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.user.v1.UserAPI.GetUser is not implemented"))
+}
+
+func (UnimplementedUserAPIHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.user.v1.UserAPI.ListUsers is not implemented"))
 }

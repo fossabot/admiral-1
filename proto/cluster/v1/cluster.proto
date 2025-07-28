@@ -48,11 +48,12 @@ service ClusterAPI {
     };
   }
 
-//  rpc ResetClusterToken(ResetClusterTokenRequest) returns (ResetClusterTokenResponse) {
-//    option (google.api.http) = {
-//      post: "/api/v1/clusters/{cluster_id}/reset-token"
-//      body: "*"
-//    };
+  rpc ResetClusterToken(ResetClusterTokenRequest) returns (ResetClusterTokenResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/clusters/{cluster_id}/reset-token"
+      body: "*"
+    };
+  }
 }
 
 message Cluster {
@@ -61,6 +62,8 @@ message Cluster {
     (buf.validate.field).string.min_len = 1,
     (buf.validate.field).string.max_len = 255
   ];
+
+  // TODO: Cluster needs a status, last sync, maybe metadata about the cluster
 
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;

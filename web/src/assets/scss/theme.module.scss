@@ -1,40 +1,45 @@
 // paper & background
 $paper: #ffffff;
 
-// primary
-$primaryLight: #e3ebeb;
-$primaryMain: #16595a;
-$primaryDark: #135152;
-$primary200: #8bacad;
-$primary800: #0c3e3f;
+// primary - Modern blue-teal gradient
+$primaryLight: #e0f2f1;
+$primaryMain: #00695c;
+$primaryDark: #004d40;
+$primary200: #80cbc4;
+$primary800: #00251a;
 
-// secondary
-$secondaryLight: #f8f0e5;
-$secondaryMain: #c77e23;
-$secondaryDark: #c1761f;
-$secondary200: #e3bf91;
-$secondary800: #b36115;
+// secondary - Deep orange for white text contrast
+$secondaryLight: #fff3e0;
+$secondaryMain: #e65100;
+$secondaryDark: #bf360c;
+$secondary200: #ff8a65;
+$secondary800: #bf360c;
 
-// success Colors
-$successLight: #b9f6ca;
-$success200: #69f0ae;
-$successMain: #00e676;
-$successDark: #00c853;
+// success Colors - more distinct green
+$successLight: #e8f5e8;
+$success200: #66bb6a;
+$successMain: #388e3c;
+$successDark: #1b5e20;
 
-// error
+// error - deeper red for distinction
 $errorLight: #ef9a9a;
-$errorMain: #f44336;
-$errorDark: #c62828;
+$errorMain: #d32f2f;
+$errorDark: #b71c1c;
 
-// orange
+// orange - improved contrast
 $orangeLight: #fbe9e7;
-$orangeMain: #ffab91;
+$orangeMain: #ff7043;
 $orangeDark: #d84315;
 
-// warning
-$warningLight: #fff8e1;
-$warningMain: #ffe57f;
-$warningDark: #ffc107;
+// warning - golden yellow, clearly distinct from secondary orange
+$warningLight: #fffde7;
+$warningMain: #fbc02d;
+$warningDark: #f57f17;
+
+// info - distinct blue
+$infoLight: #e3f2fd;
+$infoMain: #1976d2;
+$infoDark: #0d47a1;
 
 // grey
 $grey50: #f8fafc;
@@ -48,32 +53,49 @@ $grey900: #121926;
 
 // ==============================|| DARK THEME VARIANTS ||============================== //
 
-// paper & background
-$darkBackground: #151b23; // level 3
-$darkPaper: #02040a; // level 4
+// paper & background - Modern dark theme with proper contrast
+$darkBackground: #0a0e16; // Deep dark blue-gray background
+$darkPaper: #1a1f2e; // Elevated surface color
 
-// dark 800 & 900
-$darkLevel1: #02131d; // level 1
-$darkLevel2: #0e1117; // level 2
+// dark levels for elevation
+$darkLevel1: #242b3d; // Subtle elevation
+$darkLevel2: #2d3449; // Medium elevation
 
-// primary dark
-$darkPrimaryLight: #eceff1;
-$darkPrimaryMain: #1f7778;
-$darkPrimaryDark: #1b6f70;
-$darkPrimary200: #8fbbbc;
-$darkPrimary800: #125a5b;
+// primary dark - GitHub blue inspired
+$darkPrimaryLight: #4493f8;
+$darkPrimaryMain: #0969da;
+$darkPrimaryDark: #0550ae;
+$darkPrimary200: #79c0ff;
+$darkPrimary800: #0a3069;
 
-// secondary dark
-$darkSecondaryLight: #f8f0e5;
-$darkSecondaryMain: #c77e23;
-$darkSecondaryDark: #c1761f;
-$darkSecondary200: #e3bf91;
-$darkSecondary800: #b36115;
+// secondary dark - GitHub purple to complement blue primary
+$darkSecondaryLight: #a475f9;
+$darkSecondaryMain: #8250df;
+$darkSecondaryDark: #6639ba;
+$darkSecondary200: #b4a7f8;
+$darkSecondary800: #3e1f79;
 
-// text variants
-$darkTextTitle: #ffffff;
-$darkTextPrimary: #ffffff;
-$darkTextSecondary: #8492c4;
+// dark mode status colors - Electric theme to complement GitHub blue primary
+$darkSuccessLight: #81c784;
+$darkSuccessMain: #00e676;
+$darkSuccessDark: #00c853;
+
+$darkErrorLight: #ff5983;
+$darkErrorMain: #ff1744;
+$darkErrorDark: #d50000;
+
+$darkWarningLight: #ffcc02;
+$darkWarningMain: #ffab00;
+$darkWarningDark: #ff8f00;
+
+$darkInfoLight: #64b5f6;
+$darkInfoMain: #2979ff;
+$darkInfoDark: #2962ff;
+
+// text variants - Better readability
+$darkTextTitle: #f8fafc;
+$darkTextPrimary: #e2e8f0;
+$darkTextSecondary: #94a3b8;
 
 // ==============================|| JAVASCRIPT ||============================== //
 
@@ -116,6 +138,11 @@ $darkTextSecondary: #8492c4;
   warningMain: $warningMain;
   warningDark: $warningDark;
 
+  // info
+  infoLight: $infoLight;
+  infoMain: $infoMain;
+  infoDark: $infoDark;
+
   // grey
   grey50: $grey50;
   grey100: $grey100;
@@ -154,4 +181,21 @@ $darkTextSecondary: #8492c4;
   darkSecondaryDark: $darkSecondaryDark;
   darkSecondary200: $darkSecondary200;
   darkSecondary800: $darkSecondary800;
+
+  // dark mode status colors
+  darkSuccessLight: $darkSuccessLight;
+  darkSuccessMain: $darkSuccessMain;
+  darkSuccessDark: $darkSuccessDark;
+
+  darkErrorLight: $darkErrorLight;
+  darkErrorMain: $darkErrorMain;
+  darkErrorDark: $darkErrorDark;
+
+  darkWarningLight: $darkWarningLight;
+  darkWarningMain: $darkWarningMain;
+  darkWarningDark: $darkWarningDark;
+
+  darkInfoLight: $darkInfoLight;
+  darkInfoMain: $darkInfoMain;
+  darkInfoDark: $darkInfoDark;
 }

@@ -1,0 +1,74 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Design System/Introduction" />
+
+# Admiral Design System
+
+Welcome to the Admiral Design System - a comprehensive design system and component library built with Material-UI and custom design tokens.
+
+## Overview
+
+The Admiral Design System provides a unified approach to UI design across the platform, ensuring consistency, accessibility, and maintainability. It includes:
+
+- **Design Tokens**: Colors, typography, spacing, shadows, and breakpoints
+- **Component Library**: Reusable React components with consistent styling
+- **Layout System**: Grid-based responsive design patterns
+- **Documentation**: Interactive component examples and usage guidelines
+
+## Quick Start
+
+### Using the Theme
+
+```typescript
+import Theme from '@/theme';
+
+function App() {
+  return (
+    <Theme>
+      {/* Your app content */}
+    </Theme>
+  );
+}
+```
+
+### Using Shared Components
+
+```typescript
+import { PageHeader, StatusChip, DataTable } from '@/components/shared';
+
+function MyPage() {
+  return (
+    <>
+      <PageHeader
+        title="My Page"
+        description="Page description"
+        breadcrumbs={[{ label: 'Section', href: '/section' }]}
+      />
+      <StatusChip status="running" />
+    </>
+  );
+}
+```
+
+## Design Principles
+
+### Consistency
+All components follow the same design patterns, spacing rules, and interaction behaviors.
+
+### Accessibility
+WCAG 2.1 AA compliant with proper focus management, semantic markup, and screen reader support.
+
+### Scalability
+Modular components that can be composed together to build complex interfaces.
+
+### Performance
+Optimized components with minimal bundle impact and efficient re-renders.
+
+## Getting Started
+
+1. Explore the **Design Tokens** section to understand our foundational elements
+2. Browse **Components** to see our reusable UI components
+3. Check **Layout** for responsive design patterns
+4. Review **Guidelines** for best practices and usage examples
+
+Let's build something amazing together! 🚀

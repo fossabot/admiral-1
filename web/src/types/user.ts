@@ -1,10 +1,14 @@
 import { z } from 'zod';
 
 export const userSchema = z.object({
-  id: z.string(),
+  id: z.string().uuid({ message: 'ID must be a valid UUID' }),
   email: z.string().email(),
   emailVerified: z.boolean().default(false).optional(),
-  name: z.string().optional(),
+  name: z
+    .string()
+    .min(1, { message: 'Name must be at least 1 character' })
+    .max(255, { message: 'Name must be 255 characters or less' })
+    .optional(),
   givenName: z.string().optional(),
   familyName: z.string().optional(),
   pictureUrl: z.string().url().optional(),

@@ -1,15 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
-import {
-  Avatar,
-  ButtonBase,
-  Chip,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from '@mui/material';
+import { Avatar, ButtonBase, Chip, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 import { useDispatch, useSelector } from '@/store';
@@ -23,7 +15,7 @@ interface NavItemProps {
   parentId?: string;
 }
 
-const NavItem = ({ item, level, parentId}: NavItemProps) => {
+const NavItem = ({ item, level, parentId }: NavItemProps) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { pathname } = useLocation();

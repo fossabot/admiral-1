@@ -203,7 +203,6 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
         {...(!drawerOpen && { onMouseEnter: handleClickMini, onMouseLeave: handleClosePopper })}
         onClick={handleClickMini}
       >
-
         {menuIcon && (
           <ListItemIcon
             sx={{
@@ -273,6 +272,7 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
                   sx={{
                     overflow: 'hidden',
                     mt: 1.5,
+                    p: 1,
                     boxShadow: theme.shadows[8],
                     backgroundImage: 'none',
                   }}
@@ -311,7 +311,6 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
           )}
         </Collapse>
       )}
-
     </>
   );
 };

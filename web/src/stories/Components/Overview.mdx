@@ -1,0 +1,113 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Components/Overview" />
+
+# Admiral Components
+
+A comprehensive library of reusable React components built with Material-UI and the Admiral Design System.
+
+## Component Categories
+
+### Layout Components
+- **PageHeader** - Consistent page headers with breadcrumbs, titles, and actions
+- **DataTable** - Feature-rich data tables with sorting, pagination, and selection
+- **EmptyState** - Consistent empty states with actions and messaging
+
+### Feedback Components
+- **StatusChip** - Semantic status indicators with automatic color and icon mapping
+- **LoadingState** - Flexible loading indicators with multiple variants
+- **Alerts & Notifications** - User feedback and status messages
+
+### Form Components
+All Material-UI form components are themed with Admiral styling:
+- TextFields with consistent styling
+- Buttons with proper elevation and interaction states
+- Switches, checkboxes, and other controls
+
+## Design Principles
+
+### Consistency
+All components follow the same design patterns, spacing rules, and interaction behaviors defined in the Admiral Design System.
+
+### Accessibility
+Components are built with accessibility in mind:
+- WCAG 2.1 AA compliance
+- Proper ARIA labels and roles
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+
+### Composability
+Components are designed to work together seamlessly:
+- Consistent prop interfaces
+- Shared design tokens
+- Compatible spacing and sizing
+- Unified theming approach
+
+### Performance
+Optimized for production use:
+- Minimal bundle impact
+- Efficient re-renders
+- Lazy loading support
+- Tree-shaking friendly
+
+## Usage Guidelines
+
+### Import Pattern
+```typescript
+import { PageHeader, StatusChip, LoadingState } from '@/components/shared';
+```
+
+### Theming
+All components automatically inherit the Admiral theme when wrapped in the ThemeProvider:
+
+```typescript
+import { ThemeProvider } from '@mui/material/styles';
+import Theme from '@/theme';
+
+function App() {
+  return (
+    <Theme>
+      <YourComponents />
+    </Theme>
+  );
+}
+```
+
+### Styling
+Components support Material-UI's `sx` prop for custom styling while maintaining theme consistency:
+
+```typescript
+<StatusChip
+  status="running"
+  sx={{
+    mx: 2,
+    borderRadius: 2,
+  }}
+/>
+```
+
+## Best Practices
+
+### Do's ✅
+- Use semantic status values for StatusChip
+- Provide meaningful loading messages
+- Include breadcrumbs for deep navigation
+- Use appropriate empty state messaging
+- Follow accessibility guidelines
+
+### Don'ts ❌
+- Override component styles unnecessarily
+- Use custom colors outside the design system
+- Ignore loading and error states
+- Forget to provide alt text for icons
+- Mix different design patterns
+
+## Getting Help
+
+- Check component stories for usage examples
+- Review the Design System tokens for available values
+- Test with screen readers and keyboard navigation
+- Validate against accessibility standards
+
+Happy building! 🚀

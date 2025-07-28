@@ -1,0 +1,97 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Material-UI Components/Overview" />
+
+# Material-UI Components
+
+A comprehensive showcase of Material-UI components styled with the Admiral Design System theme. These are the foundation components that power the Admiral interface.
+
+## Component Categories
+
+### Form Components
+Essential form elements for user input and interaction:
+- **Button** - Primary, secondary, and text buttons with Admiral styling
+- **TextField** - Text inputs with validation and theming
+- **Select** - Dropdown selections with consistent styling
+- **Checkbox & Radio** - Selection controls with Admiral colors
+- **Switch** - Toggle controls for settings and preferences
+- **Autocomplete** - Enhanced select with search capabilities
+
+### Display Components
+Components for presenting information and content:
+- **Typography** - Text hierarchy with Admiral font scales
+- **Chip** - Compact elements for tags and status indicators
+- **Badge** - Notification indicators and counters
+- **Avatar** - User profile images and initials
+- **Card** - Content containers with elevation
+- **List** - Structured content presentation
+
+### Navigation Components
+Elements for site navigation and user flow:
+- **Tabs** - Content organization and switching
+- **Breadcrumbs** - Hierarchical navigation
+- **Stepper** - Process flow indication
+- **Menu** - Contextual action menus
+
+### Feedback Components
+Components for user feedback and system status:
+- **Alert** - Important messages and notifications
+- **Snackbar** - Temporary feedback messages
+- **Progress** - Loading and progress indicators
+- **Skeleton** - Content loading placeholders
+
+### Layout Components
+Structural components for page organization:
+- **Grid** - Responsive layout system
+- **Stack** - Flexible layout with spacing
+- **Box** - Generic container with styling
+- **Container** - Content width management
+- **Paper** - Elevated surface component
+
+### Data Display Components
+Components for presenting structured data:
+- **Table** - Tabular data presentation
+- **Pagination** - Data navigation controls
+- **Tooltip** - Contextual help and information
+
+## Design Integration
+
+All components are automatically styled with the Admiral Design System:
+
+- **Colors**: Teal primary (#00695c), orange secondary (#ff9800)
+- **Typography**: Consistent font scales and hierarchy
+- **Spacing**: 8px grid system for consistent layouts
+- **Elevation**: Material Design shadows for depth
+- **Accessibility**: WCAG 2.1 AA compliant implementations
+
+## Usage Guidelines
+
+### Theming
+Components automatically inherit Admiral styling when wrapped in the ThemeProvider:
+
+```typescript
+import Theme from '@/theme';
+
+function App() {
+  return (
+    <Theme>
+      <YourComponents />
+    </Theme>
+  );
+}
+```
+
+### Best Practices
+- Use semantic color props (primary, secondary, error, warning, info, success)
+- Follow established spacing patterns with theme.spacing()
+- Maintain consistent component sizing across the application
+- Provide proper accessibility attributes and labels
+
+## Custom Extensions
+
+Some Material-UI components have been extended for Admiral-specific needs:
+- **DataTable** - Enhanced table with sorting, pagination, and selection
+- **StatusChip** - Semantic status indicators with automatic color mapping
+- **PageHeader** - Consistent page headers with breadcrumbs and actions
+
+Explore each category to see how Material-UI components look and behave with the Admiral theme applied.

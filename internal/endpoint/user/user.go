@@ -3,7 +3,11 @@ package user
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
+	"fmt"
+
+	"go.admiral.io/admiral/internal/querybuilder"
 
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
@@ -23,10 +27,11 @@ import (
 const Name = "endpoint.user"
 
 type api struct {
-	sqlDb  *sql.DB
-	gormDB *gorm.DB
-	logger *zap.Logger
-	scope  tally.Scope
+	sqlDb        *sql.DB
+	gormDB       *gorm.DB
+	queryBuilder querybuilder.QueryBuilder
+	logger       *zap.Logger
+	scope        tally.Scope
 }
 
 func New(_ *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpoint, error) {
@@ -36,10 +41,11 @@ func New(_ *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpoin
 	}
 
 	api := &api{
-		sqlDb:  dbService.DB(),
-		gormDB: dbService.GormDB(),
-		logger: log.Named("user"),
-		scope:  scope.SubScope("user"),
+		sqlDb:        dbService.DB(),
+		gormDB:       dbService.GormDB(),
+		queryBuilder: querybuilder.New([]string{"email", "name", "given_name", "family_name"}),
+		logger:       log.Named("user"),
+		scope:        scope.SubScope("user"),
 	}
 	return api, nil
 }
@@ -47,20 +53,6 @@ func New(_ *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpoin
 func (a *api) Register(r endpoint.Registrar) error {
 	userv1.RegisterUserAPIServer(r.GRPCServer(), a)
 	return r.RegisterJSONGateway(userv1.RegisterUserAPIHandler)
-}
-
-func (a *api) CreateUser(ctx context.Context, req *userv1.CreateUserRequest) (*userv1.CreateUserResponse, error) {
-	// NO AUTHORIZATION CHECK - Any authenticated user can create new users
-	user := model.User{
-		Name: req.GetName(),
-	}
-
-	result := a.gormDB.WithContext(ctx).Create(&user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return &userv1.CreateUserResponse{User: model.ConvertUserToProto(&user)}, nil
 }
 
 func (a *api) GetMe(ctx context.Context, _ *userv1.GetMeRequest) (*userv1.GetMeResponse, error) {
@@ -95,4 +87,38 @@ func (a *api) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*userv1.
 	}
 
 	return &userv1.GetUserResponse{User: model.ConvertUserToProto(&user)}, nil
+}
+
+func (a *api) ListUsers(ctx context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
+	var users []*model.User
+	var nextPageToken string
+
+	effectiveLimit := req.PageSize
+	if req.PageSize > 0 {
+		effectiveLimit = req.PageSize + 1
+	}
+
+	if err := a.gormDB.WithContext(ctx).
+		Scopes(a.queryBuilder.PaginatedQuery(req.Filter, effectiveLimit, req.PageToken)).
+		Find(&users).Error; err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if req.PageSize > 0 && len(users) > int(req.PageSize) {
+		rawToken := fmt.Sprintf("%d|%s", users[req.PageSize].CreatedAt.Unix(), users[req.PageSize].Id.String())
+		nextPageToken = base64.RawURLEncoding.EncodeToString([]byte(rawToken))
+		users = users[:req.PageSize]
+	} else {
+		nextPageToken = ""
+	}
+
+	var pb []*userv1.User
+	for _, v := range users {
+		pb = append(pb, model.ConvertUserToProto(v))
+	}
+
+	return &userv1.ListUsersResponse{
+		Users:         pb,
+		NextPageToken: nextPageToken,
+	}, nil
 }

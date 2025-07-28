@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserAPI_GetMe_FullMethodName   = "/admiral.user.v1.UserAPI/GetMe"
-	UserAPI_GetUser_FullMethodName = "/admiral.user.v1.UserAPI/GetUser"
+	UserAPI_GetMe_FullMethodName     = "/admiral.user.v1.UserAPI/GetMe"
+	UserAPI_GetUser_FullMethodName   = "/admiral.user.v1.UserAPI/GetUser"
+	UserAPI_ListUsers_FullMethodName = "/admiral.user.v1.UserAPI/ListUsers"
 )
 
 // UserAPIClient is the client API for UserAPI service.
@@ -29,6 +30,7 @@ const (
 type UserAPIClient interface {
 	GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*GetMeResponse, error)
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 }
 
 type userAPIClient struct {
@@ -59,12 +61,23 @@ func (c *userAPIClient) GetUser(ctx context.Context, in *GetUserRequest, opts ..
 	return out, nil
 }
 
+func (c *userAPIClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, UserAPI_ListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserAPIServer is the server API for UserAPI service.
 // All implementations should embed UnimplementedUserAPIServer
 // for forward compatibility.
 type UserAPIServer interface {
 	GetMe(context.Context, *GetMeRequest) (*GetMeResponse, error)
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 }
 
 // UnimplementedUserAPIServer should be embedded to have
@@ -79,6 +92,9 @@ func (UnimplementedUserAPIServer) GetMe(context.Context, *GetMeRequest) (*GetMeR
 }
 func (UnimplementedUserAPIServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
+}
+func (UnimplementedUserAPIServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedUserAPIServer) testEmbeddedByValue() {}
 
@@ -136,6 +152,24 @@ func _UserAPI_GetUser_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserAPI_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserAPIServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserAPI_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserAPIServer).ListUsers(ctx, req.(*ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserAPI_ServiceDesc is the grpc.ServiceDesc for UserAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -150,6 +184,10 @@ var UserAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUser",
 			Handler:    _UserAPI_GetUser_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _UserAPI_ListUsers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

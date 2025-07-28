@@ -47,7 +47,7 @@ const EditVariableDialog: React.FC<EditVariableDialogProps> = ({ open, onClose, 
   }, [variable]);
 
   const handleVariableChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = field === 'is_sensitive' ? event.target.checked : event.target.value;
+    const value = field === 'isSensitive' ? event.target.checked : event.target.value;
     setEditedVariable((prev) => ({
       ...prev,
       [field]: value,
@@ -76,12 +76,14 @@ const EditVariableDialog: React.FC<EditVariableDialogProps> = ({ open, onClose, 
     try {
       setSaving(true);
 
-      await services.variable.update(variable.id, { variable: {
-        key: editedVariable.key,
-        value: editedVariable.value,
-        description: editedVariable.description || undefined,
-        isSensitive: variable.isSensitive,
-      }});
+      await services.variable.update(variable.id, {
+        variable: {
+          key: editedVariable.key,
+          value: editedVariable.value,
+          description: editedVariable.description || undefined,
+          isSensitive: variable.isSensitive,
+        },
+      });
 
       await onSuccess();
       handleClose();
@@ -106,9 +108,7 @@ const EditVariableDialog: React.FC<EditVariableDialogProps> = ({ open, onClose, 
     >
       <DialogTitle>Edit Variable</DialogTitle>
       <DialogContent>
-        <DialogContentText sx={{ mb: 2 }}>
-          Update the variable details.
-        </DialogContentText>
+        <DialogContentText sx={{ mb: 2 }}>Update the variable details.</DialogContentText>
 
         {dialogError && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -132,7 +132,9 @@ const EditVariableDialog: React.FC<EditVariableDialogProps> = ({ open, onClose, 
             fullWidth
             value={editedVariable.value}
             onChange={handleVariableChange('value')}
-            helperText={variable?.isSensitive ? "Leave empty to keep the current sensitive value" : "The variable value"}
+            helperText={
+              variable?.isSensitive ? 'Leave empty to keep the current sensitive value' : 'The variable value'
+            }
             disabled={saving}
             type={editedVariable.isSensitive ? 'password' : 'text'}
           />
@@ -144,7 +146,7 @@ const EditVariableDialog: React.FC<EditVariableDialogProps> = ({ open, onClose, 
             rows={2}
             value={editedVariable.description}
             onChange={handleVariableChange('description')}
-            helperText="A brief description of what this variable is used for"
+            helperText="A brief description of the purpose for which this variable is used"
             disabled={saving}
           />
         </Stack>

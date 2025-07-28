@@ -14,7 +14,7 @@ import (
 type Cluster struct {
 	Id                uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Name              string
-	TokenId           *uuid.UUID
+	TokenId           *uuid.UUID `gorm:"column:authn_token_id"`
 	ClusterIdentifier *uuid.UUID
 	Metadata          datatypes.JSONMap
 	CreatedAt         time.Time

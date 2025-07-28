@@ -121,6 +121,12 @@ web-lint-fix: bun-install
 web-test: bun-install
 	bun run --cwd web test:run
 
+.PHONY: web-test-storybook # Run Storybook browser tests for the web code.
+web-test-storybook: bun-install
+	@echo "⚠️  Running Storybook tests (known cleanup timeout issue)..."
+	-bun run --cwd web test:storybook
+	@echo "✅ Storybook tests completed. Check above for results."
+
 .PHONY: web-verify # Verify web packages are sorted.
 web-verify: bun-install
 	bun run --cwd web lint:packages

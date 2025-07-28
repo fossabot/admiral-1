@@ -3,12 +3,12 @@ import { SvgIconTypeMap, ChipProps } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 
 export type OverrideIcon =
-  | (OverridableComponent<SvgIconTypeMap<{}, 'svg'>> & {
+  | (OverridableComponent<SvgIconTypeMap<Record<string, unknown>, 'svg'>> & {
   muiName: string;
 })
-  | React.ComponentClass<any>
-  | FunctionComponent<any>
-  | any;
+  | React.ComponentClass<Record<string, unknown>>
+  | FunctionComponent<Record<string, unknown>>
+  | React.ComponentType;
 
 export interface GenericCardProps {
   title?: string;

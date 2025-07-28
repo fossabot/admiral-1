@@ -4,187 +4,342 @@ import {
   Tabs,
   Tab,
   Typography,
-  Button,
-  Stack,
   Paper,
-  List,
-  ListItem,
+  Alert,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
   ListItemText,
   Divider,
+  Tooltip,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
+import {
+  Home as HomeIcon,
+  Apps as AppsIcon,
+  Refresh as RefreshIcon,
+  MoreVert as MoreIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Launch as LaunchIcon,
+  History as HistoryIcon,
+  Wifi as RealTimeIcon,
+  WifiOff as RealTimeOffIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
-const ApplicationDetailPage: React.FC = () => {
-  const [tab, setTab] = useState(0);        // 0=Overview,1=Manifests,2=Values,3=Settings,4=Envs
-  const [env, setEnv] = useState('dev');    // current environment
+import { useApplicationDetails } from './hooks/use-application-details';
+import ApplicationOverview from './components/ApplicationOverview';
+import EnvironmentManager from './components/EnvironmentManager';
+import VariableManager from './components/VariableManager';
+import ManifestManager from './components/ManifestManager';
+import RevisionHistory from './components/RevisionHistory';
+import { PageContainer, PageHeader, LoadingState, EmptyState } from '@/components';
 
-  const handleTab = (_: React.SyntheticEvent, idx: number) => setTab(idx);
-  const envs = ['dev','staging','prod'];
+import styles from './styles.module.scss';
+
+type TabValue = 'overview' | 'environments' | 'variables' | 'manifests' | 'revisions';
+
+const ApplicationDetailsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabValue>('overview');
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+
+  const {
+    application,
+    environments,
+    variables,
+    manifests,
+    revisions,
+    selectedEnvironment,
+    loading,
+    error,
+    initialized,
+    realTimeEnabled,
+    lastUpdated,
+    selectEnvironment,
+    refreshAll,
+    toggleRealTime,
+  } = useApplicationDetails();
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: TabValue) => {
+    console.log('Switching to tab:', newValue);
+    setActiveTab(newValue);
+  };
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+  };
+
+  const handleRefresh = () => {
+    refreshAll();
+  };
+
+  const handleEditApplication = () => {
+    // TODO: Open edit dialog
+    handleMenuClose();
+  };
+
+  const handleDeleteApplication = () => {
+    // TODO: Open delete confirmation
+    handleMenuClose();
+  };
+
+  if (loading && !initialized) {
+    return (
+      <PageContainer maxWidth="xl" variant="simple">
+        <LoadingState message="Loading application details..." />
+      </PageContainer>
+    );
+  }
+
+  if (error && !application) {
+    return (
+      <PageContainer maxWidth="xl" variant="simple">
+        <EmptyState
+          title="Failed to Load Application"
+          description={error || "Something went wrong while loading the application."}
+          actions={
+            <IconButton color="inherit" size="small" onClick={handleRefresh}>
+              <RefreshIcon />
+            </IconButton>
+          }
+        />
+      </PageContainer>
+    );
+  }
+
+  if (!application) {
+    return (
+      <PageContainer maxWidth="xl" variant="simple">
+        <EmptyState
+          title="Application Not Found"
+          description="The requested application could not be found. It may have been deleted or you may not have access to it."
+        />
+      </PageContainer>
+    );
+  }
+
+  const tabConfigs = [
+    {
+      value: 'overview',
+      label: 'Overview',
+      icon: <AppsIcon fontSize="small" />,
+      component: ApplicationOverview
+    },
+    {
+      value: 'environments',
+      label: `Environments${environments.length > 0 ? ` (${environments.length})` : ''}`,
+      icon: undefined,
+      component: EnvironmentManager
+    },
+    {
+      value: 'variables',
+      label: `Variables${variables.length > 0 ? ` (${variables.length})` : ''}`,
+      icon: undefined,
+      component: VariableManager
+    },
+    {
+      value: 'manifests',
+      label: `Manifests${manifests.length > 0 ? ` (${manifests.length})` : ''}`,
+      icon: undefined,
+      component: ManifestManager
+    },
+    {
+      value: 'revisions',
+      label: `Revisions${revisions.length > 0 ? ` (${revisions.length})` : ''}`,
+      icon: <HistoryIcon fontSize="small" />,
+      component: RevisionHistory
+    },
+  ] as const;
+
+  const ActiveComponent = tabConfigs.find(tab => tab.value === activeTab)?.component || ApplicationOverview;
+
+  console.log('Active tab:', activeTab, 'Component:', ActiveComponent?.name || 'Unknown');
+  console.log('Data counts - manifests:', manifests.length, 'environments:', environments.length, 'variables:', variables.length);
 
   return (
-    <Box>
-      {/* Tabs */}
-      <Tabs value={tab} onChange={handleTab} variant="scrollable" scrollButtons>
-        {['Overview','Manifests','Values','Foo','Envs'].map((label, i) => (
-          <Tab
-            key={i}
-            label={label === 'Envs'
-              ? `Envs: ${env}`       // show env selector inline
-              : label
-            }
-            // optionally add a dropdown for envs
-            {...(label==='Envs'
-              ? { onClick: () => {/* open menu to pick env */} }
-              : {})}
-          />
-        ))}
-      </Tabs>
+    <PageContainer maxWidth="xl" variant="simple">
+      <Box className={styles.pageContent}>
+        <PageHeader
+          title={application.name}
+          description={application.description || undefined}
+          loading={loading}
+          breadcrumbs={[
+            { label: 'Home', href: '/', icon: <HomeIcon fontSize="small" /> },
+            { label: 'Applications', href: '/applications', icon: <AppsIcon fontSize="small" /> },
+          ]}
+          badge={selectedEnvironment && (
+            <Chip
+              label={`Current: ${selectedEnvironment.name}`}
+              color="primary"
+              variant="outlined"
+              size="small"
+            />
+          )}
+          actions={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Real-time monitoring toggle */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={realTimeEnabled}
+                    onChange={toggleRealTime}
+                    size="small"
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {realTimeEnabled ? <RealTimeIcon fontSize="small" /> : <RealTimeOffIcon fontSize="small" />}
+                    <Typography variant="caption">
+                      Real-time
+                    </Typography>
+                  </Box>
+                }
+                sx={{
+                  mr: 1,
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: '0.75rem',
+                    color: 'text.secondary',
+                  },
+                }}
+              />
 
-      <Paper sx={{ mt:2, p:2 }}>
-        {tab === 0 && (
-          <Box>
-            <Typography variant="h6">Overview</Typography>
-            <Typography paragraph>
-              <strong>Slug:</strong> 17c87cd3-52bf-4aa4-8df7-122f681a8aeb
-            </Typography>
-            <Typography paragraph>
-              <strong>Description:</strong> Atlantis is an open-source…
-            </Typography>
-          </Box>
-        )}
+              {/* Last updated indicator */}
+              {lastUpdated && (
+                <Tooltip title={`Last updated: ${lastUpdated.toLocaleString()}`}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+                    Updated {lastUpdated.toLocaleTimeString()}
+                  </Typography>
+                </Tooltip>
+              )}
 
-        {tab === 1 && (
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="h6">Manifests</Typography>
-              <Button variant="outlined">Add New Chart</Button>
-            </Stack>
-            <List>
-              <ListItem secondaryAction={<Button size="small">Edit</Button>}>
-                <ListItemText primary="Chart.yaml" secondary="atlantis-chart/Chart.yaml" />
-              </ListItem>
-              <Divider/>
-              <ListItem secondaryAction={<Button size="small">Edit</Button>}>
-                <ListItemText primary="values.dev.yaml" secondary="atlantis-chart/values.dev.yaml" />
-              </ListItem>
-              {/* …more items… */}
-            </List>
-          </Box>
-        )}
+              <IconButton
+                onClick={handleRefresh}
+                disabled={loading}
+                title="Refresh data"
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { color: 'primary.main' },
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
 
-        {tab === 2 && (
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="h6">Values</Typography>
-              <Button variant="outlined">Edit Default</Button>
-            </Stack>
-            {/* Could embed a code editor, or JSON viewer… */}
-            <Typography variant="body2" color="text.secondary">
-              {`{
-  replicas: 2,
-  image:
-    repository: ghcr.io/…
-}`}
-            </Typography>
-          </Box>
-        )}
+              <IconButton
+                onClick={handleMenuClick}
+                title="Application actions"
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { color: 'primary.main' },
+                }}
+              >
+                <MoreIcon />
+              </IconButton>
 
-        {tab === 3 && (
-          <Box>
-            <Typography variant="h6" mb={1}>Settings</Typography>
-            <Typography><strong>Repository URL:</strong> github.com/…</Typography>
-            <Typography><strong>Webhook Enabled:</strong> Yes</Typography>
-            {/* …more key/value settings… */}
-          </Box>
-        )}
-
-        {tab === 4 && (
-          <Box>
-            <Stack direction="row" spacing={1} mb={1}>
-              {envs.map(e => (
-                <Button
-                  key={e}
-                  size="small"
-                  variant={e===env?'contained':'outlined'}
-                  onClick={() => setEnv(e)}
+              {/* Action Menu */}
+              <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={handleMenuClose}
+                PaperProps={{ sx: { minWidth: 180 } }}
+              >
+                <MenuItem onClick={() => navigate(`/applications/${application.id}/deploy`)}>
+                  <ListItemIcon><LaunchIcon fontSize="small" /></ListItemIcon>
+                  <ListItemText primary="Deploy" />
+                </MenuItem>
+                <MenuItem onClick={handleEditApplication}>
+                  <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                  <ListItemText primary="Edit Application" />
+                </MenuItem>
+                <Divider />
+                <MenuItem
+                  onClick={handleDeleteApplication}
+                  sx={{ color: 'error.main' }}
                 >
-                  {e}
-                </Button>
+                  <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+                  <ListItemText primary="Delete Application" />
+                </MenuItem>
+              </Menu>
+            </Box>
+          }
+        />
+
+        {/* Navigation Tabs */}
+        <Box className={styles.tabsSection}>
+          <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              aria-label="Application details tabs"
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  minHeight: 48,
+                },
+              }}
+            >
+              {tabConfigs.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={tab.label}
+                  {...(tab.icon && { icon: tab.icon, iconPosition: "start" as const })}
+                  sx={{
+                    '& .MuiTab-iconWrapper': {
+                      marginRight: 1,
+                      marginBottom: 0,
+                    },
+                  }}
+                />
               ))}
-            </Stack>
-            <Typography variant="body2">
-              Here you can override settings per-environment.
-            </Typography>
-            {/* e.g. list of overrides */}
-          </Box>
-        )}
-      </Paper>
-    </Box>
+            </Tabs>
+          </Paper>
+        </Box>
+
+        {/* Tab Content */}
+        <Box className={styles.contentSection}>
+          <Paper elevation={0} sx={{ mt: 2, p: 3, borderRadius: 2 }}>
+            {loading && (
+              <LoadingState
+                variant="linear"
+                message="Refreshing data..."
+                size="small"
+                sx={{ mb: 2 }}
+              />
+            )}
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            <ActiveComponent
+              application={application}
+              environments={environments}
+              variables={variables}
+              manifests={manifests}
+              revisions={revisions}
+              selectedEnvironment={selectedEnvironment}
+              onEnvironmentChange={selectEnvironment}
+              onRefresh={refreshAll}
+            />
+          </Paper>
+        </Box>
+      </Box>
+    </PageContainer>
   );
 };
 
-export default ApplicationDetailPage;
-
-//
-// const ApplicationDetails: React.FC = () => {
-//   const [application, setApplication] = useState<Application | null>(null);
-//   const [isLoading, setLoading] = useState<boolean>(true);
-//   const [error, setError] = useState<string | null>(null);
-//
-//   const { slug } = useParams<{ slug?: string }>();
-//
-//   useEffect(() => {
-//     const fetchData = async (): Promise<void> => {
-//       if (!slug) {
-//         setError('Invalid application ID');
-//         setLoading(false);
-//         return;
-//       }
-//
-//       try {
-//         const app = await services.application.get(slug);
-//         setApplication(app);
-//         setLoading(false);
-//       } catch (err: unknown) {
-//         const errorMessage = err instanceof Error ? err.message : 'Failed to load application';
-//         setError(errorMessage);
-//         setLoading(false);
-//         console.error('Fetch error:', err);
-//       }
-//     };
-//
-//     void fetchData();
-//   }, [slug]);
-//
-//   if (isLoading) {
-//     return (
-//       <div>
-//         <p>Loading...</p>
-//       </div>
-//     );
-//   }
-//
-//   if (error) {
-//     return (
-//       <div>
-//         <p>Error: {error}</p>
-//       </div>
-//     );
-//   }
-//
-//   if (!application) {
-//     return (
-//       <div>
-//         <p>No application found.</p>
-//       </div>
-//     );
-//   }
-//
-//   return (
-//     <div>
-//       <p>Application: {application.name}</p>
-//       <p>Slug: {slug}</p>
-//     </div>
-//   );
-// };
-//
-// export default ApplicationDetails;
+export default ApplicationDetailsPage;

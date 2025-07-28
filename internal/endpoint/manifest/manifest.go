@@ -96,7 +96,7 @@ func (a *api) CreateManifest(ctx context.Context, req *manifestv1.CreateManifest
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("file content is not valid YAML: %v", err))
 	}
 
-	// Check for existing active manifest
+	// Check for the existing active manifest
 	var existing model.Manifest
 	if err := a.gormDB.WithContext(ctx).
 		Where("application_id = ? AND name = ? AND is_latest = ? AND deleted_at IS NULL", applicationId, req.GetName(), true).

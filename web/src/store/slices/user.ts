@@ -73,7 +73,7 @@ const userSlice = createSlice({
     },
     setThemeMode(state, action: PayloadAction<ThemeMode>) {
       state.preferences.themeMode = action.payload || initialState.preferences.themeMode;
-    }
+    },
   },
 });
 

@@ -2,19 +2,14 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Button,
   IconButton,
   Chip,
   MenuItem,
-  Menu, CircularProgress, Alert,
+  Menu,
 } from '@mui/material';
+import { PageHeader, LoadingState, EmptyState, DataTable } from '@/components';
+import type { Column } from '@/components';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import { useVariableData } from '../hooks/use-variable-data';
@@ -24,7 +19,6 @@ import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 import type { Variable } from '@/types/variable';
 import { services } from '@/services';
 
-import styles from '../styles.module.scss';
 
 const VariablesPage = () => {
   const { variables, fetchAllVariables, loading, error, isInitialized } = useVariableData();
@@ -51,7 +45,7 @@ const VariablesPage = () => {
 
   const handleEdit = () => {
     if (selectedVariableId) {
-      const variable = variables.find(v => v.id === selectedVariableId);
+      const variable = variables.find((v) => v.id === selectedVariableId);
       if (variable) {
         setSelectedVariable(variable);
         setEditDialogOpen(true);
@@ -62,7 +56,7 @@ const VariablesPage = () => {
 
   const handleDelete = () => {
     if (selectedVariableId) {
-      const variable = variables.find(v => v.id === selectedVariableId);
+      const variable = variables.find((v) => v.id === selectedVariableId);
       if (variable) {
         setSelectedVariable(variable);
         setDeleteDialogOpen(true);
@@ -90,110 +84,84 @@ const VariablesPage = () => {
   };
 
   if (!isInitialized || loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <CircularProgress />
-      </div>
-    );
+    return <LoadingState message="Loading variables..." />;
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="error">Failed to load variables.</Alert>
-      </Box>
+      <EmptyState
+        title="Failed to load variables"
+        description="Something went wrong while loading your variables. Please try again."
+      />
     );
   }
 
-  const sortedVariables = [...variables].sort((a, b) =>
-    a.key.toLowerCase().localeCompare(b.key.toLowerCase())
-  );
+  const sortedVariables = [...variables].sort((a, b) => a.key.toLowerCase().localeCompare(b.key.toLowerCase()));
+
+  const columns: Column<Variable>[] = [
+    {
+      id: 'key',
+      label: 'Key',
+      format: (_, variable) => (
+        <Box>
+          <Typography variant="body2" component="div" sx={{ fontWeight: 500 }}>
+            {variable.key}{' '}
+            {variable.isSensitive && (
+              <Chip label="Sensitive" size="small" color="secondary" variant="outlined" sx={{ ml: 1 }} />
+            )}
+          </Typography>
+          {variable.description && (
+            <Typography variant="caption" color="text.secondary">
+              {variable.description}
+            </Typography>
+          )}
+        </Box>
+      ),
+    },
+    {
+      id: 'value',
+      label: 'Value',
+      format: (_, variable) => (
+        <Typography variant="body2" fontStyle={variable.isSensitive ? 'italic' : 'normal'}>
+          {variable.isSensitive ? 'Sensitive - write only' : variable.value}
+        </Typography>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      align: 'center' as const,
+      format: (_, variable) => (
+        <IconButton size="small" onClick={(event) => handleMenuOpen(event, variable.id)}>
+          <MoreVertIcon />
+        </IconButton>
+      ),
+    },
+  ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 1 }}>
-        Organization variables
-      </Typography>
+    <Box>
+      <PageHeader
+        title="Organization variables"
+        description="Add any number of variables for Admiral to use across all your applications."
+        actions={
+          <Button variant="contained" startIcon={<span>+</span>} onClick={handleAddVariable}>
+            Add variable
+          </Button>
+        }
+      />
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Add any number of variables for Admiral to use across all your applications.
-      </Typography>
-
-      <Button
-        variant="contained"
-        startIcon={<span>+</span>}
-        onClick={handleAddVariable}
-        sx={{ mb: 3 }}
-      >
-        Add variable
-      </Button>
-
-      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-        <Table sx={{ tableLayout: 'fixed' }}>
-          <colgroup>
-            <col style={{ width: 'calc(50% - 40px)' }} />
-            <col style={{ width: 'calc(50% - 40px)' }} />
-            <col style={{ width: '80px' }} />
-          </colgroup>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell sx={{ borderRight: '1px solid #e0e0e0' }}>
-                <Typography fontWeight="bold">Key</Typography>
-              </TableCell>
-              <TableCell sx={{ borderRight: '1px solid #e0e0e0' }}>
-                <Typography fontWeight="bold">Value</Typography>
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: 'center',
-                  width: '80px',
-                }}
-              >
-                <Typography fontWeight="bold">Actions</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedVariables.length > 0 ? (
-              sortedVariables.map((variable) => (
-                <TableRow key={variable.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                  <TableCell sx={{ borderRight: '1px solid #e0e0e0' }}>
-                    <Box>
-                      <Typography variant="body1" component="div" sx={{ fontWeight: 500}}>
-                        {variable.key}{' '}
-                        {variable.isSensitive && (
-                          <Chip label="Sensitive" size="small" color="secondary" variant="outlined" sx={{ ml: 1 }} />
-                        )}
-                      </Typography>
-                      {variable.description && (
-                        <Typography variant="body2" color="text.secondary">
-                          {variable.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ borderRight: '1px solid #e0e0e0' }}>
-                    {variable.isSensitive ? (
-                      <Typography fontStyle="italic">Sensitive - write only</Typography>
-                    ) : variable.value}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: 'center' }}>
-                    <IconButton size="small" onClick={(event) => handleMenuOpen(event, variable.id)}>
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={3} sx={{ textAlign: 'center', py: 3 }}>
-                  No variables found. Add a variable to get started.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataTable
+        columns={columns}
+        rows={sortedVariables}
+        keyField="id"
+        loading={!isInitialized || loading}
+        error={error ? 'Failed to load variables' : null}
+        emptyState={{
+          title: 'No variables found',
+          description: 'Add a variable to get started.',
+        }}
+      />
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -213,11 +181,7 @@ const VariablesPage = () => {
           Delete
         </MenuItem>
       </Menu>
-      <AddVariableDialog
-        open={addDialogOpen}
-        onClose={handleAddDialogClose}
-        onSuccess={fetchAllVariables}
-      />
+      <AddVariableDialog open={addDialogOpen} onClose={handleAddDialogClose} onSuccess={fetchAllVariables} />
       <EditVariableDialog
         open={editDialogOpen}
         onClose={handleEditDialogClose}
@@ -230,7 +194,11 @@ const VariablesPage = () => {
         onSuccess={fetchAllVariables}
         itemId={selectedVariable?.id || null}
         title="Delete Variable"
-        message={selectedVariable ? `Are you sure you want to delete the variable "${selectedVariable.key}"? This action cannot be undone.` : ''}
+        message={
+          selectedVariable
+            ? `Are you sure you want to delete the variable "${selectedVariable.key}"? This action cannot be undone.`
+            : ''
+        }
         deleteFunction={services.variable.delete.bind(services.variable)}
       />
     </Box>

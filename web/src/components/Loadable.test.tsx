@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, render } from '@testing-library/react';
 
 import Loadable from '@/components/Loadable';

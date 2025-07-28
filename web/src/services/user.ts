@@ -2,7 +2,7 @@ import client from '@/services/client';
 import { BaseService } from '@/services/base';
 import { User, userSchema, listUsersSchema } from '@/types/user';
 
-export interface UserCreateOptions {
+export interface CreateOptions {
   email: string;
   emailVerified: boolean;
   name?: string | undefined;
@@ -13,7 +13,7 @@ export interface UserCreateOptions {
   updatedAt?: string | undefined;
 }
 
-export interface UserUpdateOptions {
+export interface UpdateOptions {
   email: string;
   emailVerified: boolean;
   name?: string | undefined;
@@ -22,7 +22,7 @@ export interface UserUpdateOptions {
   pictureUrl?: string | undefined;
 }
 
-export class UserService extends BaseService<User, UserCreateOptions, UserUpdateOptions> {
+export class UserService extends BaseService<User, CreateOptions, UpdateOptions> {
   constructor() {
     super('/api/v1/users', userSchema, listUsersSchema, 'user', 'users');
   }

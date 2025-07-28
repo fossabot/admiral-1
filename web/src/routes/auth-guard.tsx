@@ -77,12 +77,14 @@ const AuthGuard = ({ children }: AuthGuardProps): ReactElement => {
       try {
         const user = await services.user.me();
         dispatch(setUser(user));
-        setLoading(false);
       } catch (error: unknown) {
         // Display the fallback component unless the error is a 401 Unauthorized
         if (isAdmiralError(error) && error?.status?.code !== 401) {
           setErrorMessage('Failed to retrieve user information. Please try again later.');
         }
+        // For 401 errors, the client interceptor will handle redirect to login
+      } finally {
+        setLoading(false);
       }
     };
 
