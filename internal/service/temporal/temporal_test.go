@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/uber-go/tally/v4"
 	temporalclient "go.temporal.io/sdk/client"
@@ -15,15 +14,6 @@ import (
 
 	"go.admiral.io/admiral/internal/config"
 )
-
-// Simplified mock that only implements the Close method which is commonly used
-type mockTemporalClient struct {
-	mock.Mock
-}
-
-func (m *mockTemporalClient) Close() {
-	m.Called()
-}
 
 // Test helpers
 func createTestConfig() *config.Config {
@@ -324,7 +314,8 @@ func TestErrorHandling(t *testing.T) {
 		assert.NotPanics(t, func() {
 			defer func() {
 				if r := recover(); r != nil {
-					// Expected to panic with nil config
+					// Expected to panic with nil config - handle gracefully in test
+					t.Logf("Recovered from panic as expected: %v", r)
 				}
 			}()
 			_, _ = New(nil, createTestLogger(), createTestScope())

@@ -43,7 +43,7 @@ export class ManifestService extends BaseService<Manifest, CreateOptions, Update
 
       const result = manifestSchema.safeParse(res.data.manifest);
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error('Received invalid manifest data from the API after update.');
       }
 

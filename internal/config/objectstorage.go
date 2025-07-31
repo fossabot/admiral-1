@@ -51,7 +51,7 @@ func (s *ObjectStorageType) Validate() error {
 type S3StorageConfig struct {
 	Endpoint     string `yaml:"endpoint"`
 	Region       string `yaml:"region"`
-	UseSSL       bool   `yaml:"use_ssl"`
+	UseSSL       *bool  `yaml:"use_ssl"`
 	AccessKey    string `yaml:"access_key"`
 	SecretKey    string `yaml:"secret_key"`
 	RoleARN      string `yaml:"role_arn"`

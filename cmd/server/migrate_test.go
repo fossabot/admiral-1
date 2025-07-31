@@ -168,8 +168,7 @@ func TestMigrator_SetupSqlClient(t *testing.T) {
 				":",
 				"5432",
 			}, "")
-			expectedFormatted := strings.Replace(expectedHostInfo, "@", "@", 1)
-			expectedFormatted = strings.Replace(expectedFormatted, ":", ":", 1)
+			_ = strings.Replace(expectedHostInfo, "@", "@", 1) // Not used in current test implementation
 
 			assert.Contains(t, actualHostInfo, cfg.Services.Database.User)
 			assert.Contains(t, actualHostInfo, cfg.Services.Database.Host)

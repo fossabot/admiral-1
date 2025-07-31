@@ -44,7 +44,7 @@ func TestNewS3Service(t *testing.T) {
 			name: "S3 config with SSL disabled",
 			config: &config.S3StorageConfig{
 				Region: "us-east-1",
-				UseSSL: false,
+				UseSSL: func() *bool { b := false; return &b }(),
 			},
 			expectError: false,
 		},
@@ -458,7 +458,7 @@ func TestS3Service_Configuration(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				cfg := &config.S3StorageConfig{
 					Region: "us-east-1",
-					UseSSL: tc.useSSL,
+					UseSSL: &tc.useSSL,
 				}
 
 				service, err := newS3Service(cfg, logger, scope)

@@ -93,11 +93,11 @@ func TestStartCmd_PreRunE(t *testing.T) {
 				if err != nil {
 					return func() {}
 				}
-				tempFile.Close()
+				_ = tempFile.Close()
 
 				configFile = tempFile.Name()
 				return func() {
-					os.Remove(tempFile.Name())
+					_ = os.Remove(tempFile.Name())
 				}
 			},
 			expectError: false,
@@ -113,7 +113,7 @@ func TestStartCmd_PreRunE(t *testing.T) {
 
 				configFile = tempDir
 				return func() {
-					os.RemoveAll(tempDir)
+					_ = os.RemoveAll(tempDir)
 				}
 			},
 			expectError: false, // os.Stat succeeds for directories
@@ -153,15 +153,15 @@ func TestStartCmd_PreRunE_FilePermissions(t *testing.T) {
 		// Create a temporary config file
 		tempFile, err := os.CreateTemp("", "test-config-*.yaml")
 		require.NoError(t, err)
-		tempFile.Close()
-		defer os.Remove(tempFile.Name())
+		_ = tempFile.Close()
+		defer func() { _ = os.Remove(tempFile.Name()) }()
 
 		// Make file unreadable (this might not work on all systems)
 		err = os.Chmod(tempFile.Name(), 0000)
 		if err != nil {
 			t.Skip("Cannot modify file permissions on this system")
 		}
-		defer os.Chmod(tempFile.Name(), 0644) // Restore permissions for cleanup
+		defer func() { _ = os.Chmod(tempFile.Name(), 0600) }() // Restore permissions for cleanup
 
 		configFile = tempFile.Name()
 
@@ -213,12 +213,12 @@ func TestStartCmd_Integration(t *testing.T) {
 		// Create a temporary config file
 		tempFile, err := os.CreateTemp("", "test-config-*.yaml")
 		require.NoError(t, err)
-		defer os.Remove(tempFile.Name())
+		defer func() { _ = os.Remove(tempFile.Name()) }()
 
 		// Write minimal config content
 		_, err = tempFile.WriteString("# Test configuration\n")
 		require.NoError(t, err)
-		tempFile.Close()
+		_ = tempFile.Close()
 
 		// Set up global variables
 		configFile = tempFile.Name()
@@ -335,12 +335,12 @@ func TestStartCmd_EdgeCases(t *testing.T) {
 				if err != nil {
 					return func() {}
 				}
-				tempFile.Close()
+				_ = tempFile.Close()
 
 				// Use just the filename (relative path)
 				configFile = filepath.Base(tempFile.Name())
 				return func() {
-					os.Remove(tempFile.Name())
+					_ = os.Remove(tempFile.Name())
 				}
 			},
 			expectError: false,
@@ -352,11 +352,11 @@ func TestStartCmd_EdgeCases(t *testing.T) {
 				if err != nil {
 					return func() {}
 				}
-				tempFile.Close()
+				_ = tempFile.Close()
 
 				configFile = tempFile.Name()
 				return func() {
-					os.Remove(tempFile.Name())
+					_ = os.Remove(tempFile.Name())
 				}
 			},
 			expectError: false,
@@ -441,8 +441,8 @@ func BenchmarkStartCmd_PreRunE_ValidConfig(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.Remove(tempFile.Name())
-	tempFile.Close()
+	defer func() { _ = os.Remove(tempFile.Name()) }()
+	_ = tempFile.Close()
 
 	configFile = tempFile.Name()
 	startCmd := newStartCmd()
@@ -477,10 +477,10 @@ func createTempConfigFile(t *testing.T, content string) (string, func()) {
 		require.NoError(t, err)
 	}
 
-	tempFile.Close()
+	_ = tempFile.Close()
 
 	return tempFile.Name(), func() {
-		os.Remove(tempFile.Name())
+		_ = os.Remove(tempFile.Name())
 	}
 }
 

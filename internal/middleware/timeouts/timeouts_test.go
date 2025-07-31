@@ -82,11 +82,6 @@ func contextAwareHandler(duration time.Duration) grpc.UnaryHandler {
 	}
 }
 
-// Mock handler that panics
-func panicHandler(ctx context.Context, req interface{}) (interface{}, error) {
-	panic("test panic")
-}
-
 func TestNew(t *testing.T) {
 	testCases := []struct {
 		name                  string

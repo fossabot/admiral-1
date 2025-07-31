@@ -169,7 +169,8 @@ func TestMid_UnaryInterceptor_ContextPropagation(t *testing.T) {
 		}
 
 		// Create context with value
-		ctx := context.WithValue(context.Background(), "test-key", "test-value")
+		type testKey string
+		ctx := context.WithValue(context.Background(), testKey("test"), "test-value")
 
 		// Create handler that checks context
 		var receivedCtx context.Context
@@ -189,7 +190,7 @@ func TestMid_UnaryInterceptor_ContextPropagation(t *testing.T) {
 
 		// Verify context was passed correctly
 		require.NoError(t, err)
-		assert.Equal(t, "test-value", receivedCtx.Value("test-key"))
+		assert.Equal(t, "test-value", receivedCtx.Value(testKey("test")))
 	})
 }
 

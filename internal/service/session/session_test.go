@@ -146,7 +146,7 @@ func TestNew(t *testing.T) {
 					service.Registry["service.database"] = dbService
 				}
 				if mock != nil {
-					defer mock.ExpectationsWereMet()
+					defer func() { _ = mock.ExpectationsWereMet() }()
 				}
 			}
 
@@ -247,7 +247,7 @@ func TestService_Load(t *testing.T) {
 // Tests for LoadAndSave middleware
 func TestService_LoadAndSave(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -289,7 +289,7 @@ func TestService_LoadAndSave(t *testing.T) {
 // Tests for session data manipulation methods
 func TestService_SessionDataMethods(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -438,7 +438,7 @@ func TestService_SessionDataMethods(t *testing.T) {
 // Tests for session management methods
 func TestService_SessionManagement(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -469,11 +469,11 @@ func TestService_SessionManagement(t *testing.T) {
 		})
 
 		assert.Panics(t, func() {
-			sessionService.Clear(ctx)
+			_ = sessionService.Clear(ctx)
 		})
 
 		assert.Panics(t, func() {
-			sessionService.RenewToken(ctx)
+			_ = sessionService.RenewToken(ctx)
 		})
 
 		assert.Panics(t, func() {
@@ -501,7 +501,7 @@ func TestService_SessionManagement(t *testing.T) {
 // Tests for Commit method
 func TestService_Commit(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -520,7 +520,7 @@ func TestService_Commit(t *testing.T) {
 	t.Run("commit session without proper context", func(t *testing.T) {
 		// Commit should panic without proper session context
 		assert.Panics(t, func() {
-			sessionService.Commit(ctx)
+			_, _, _ = sessionService.Commit(ctx)
 		})
 	})
 }
@@ -528,7 +528,7 @@ func TestService_Commit(t *testing.T) {
 // Tests for Destroy method
 func TestService_Destroy(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -547,7 +547,7 @@ func TestService_Destroy(t *testing.T) {
 	t.Run("destroy session without proper context", func(t *testing.T) {
 		// Destroy should panic without proper session context
 		assert.Panics(t, func() {
-			sessionService.Destroy(ctx)
+			_ = sessionService.Destroy(ctx)
 		})
 	})
 }
@@ -555,7 +555,7 @@ func TestService_Destroy(t *testing.T) {
 // Tests for MergeSession method
 func TestService_MergeSession(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -574,7 +574,7 @@ func TestService_MergeSession(t *testing.T) {
 	t.Run("merge session without proper context", func(t *testing.T) {
 		// MergeSession should panic without proper session context
 		assert.Panics(t, func() {
-			sessionService.MergeSession(ctx, "token")
+			_ = sessionService.MergeSession(ctx, "token")
 		})
 	})
 }
@@ -582,7 +582,7 @@ func TestService_MergeSession(t *testing.T) {
 // Tests for Iterate method
 func TestService_Iterate(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -623,7 +623,7 @@ func TestService_Iterate(t *testing.T) {
 // Tests for WriteSessionCookie method
 func TestService_WriteSessionCookie(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -660,7 +660,7 @@ func TestService_WriteSessionCookie(t *testing.T) {
 // Integration tests
 func TestService_Integration(t *testing.T) {
 	gormDB, mock := setupMockGormDB(t)
-	defer mock.ExpectationsWereMet()
+	defer func() { _ = mock.ExpectationsWereMet() }()
 
 	// Mock gormstore initialization
 	mockGormstoreInit(mock)
@@ -725,7 +725,7 @@ func TestConstants(t *testing.T) {
 func TestService_ErrorHandling(t *testing.T) {
 	t.Run("nil context handling", func(t *testing.T) {
 		gormDB, mock := setupMockGormDB(t)
-		defer mock.ExpectationsWereMet()
+		defer func() { _ = mock.ExpectationsWereMet() }()
 
 		// Mock gormstore initialization
 		mockGormstoreInit(mock)
@@ -741,17 +741,17 @@ func TestService_ErrorHandling(t *testing.T) {
 
 		// Test methods with nil context - should panic as expected
 		assert.Panics(t, func() {
-			sessionService.Put(nil, "key", "value")
+			sessionService.Put(context.TODO(), "key", "value")
 		})
 
 		assert.Panics(t, func() {
-			sessionService.Get(nil, "key")
+			sessionService.Get(context.TODO(), "key")
 		})
 	})
 
 	t.Run("empty key handling", func(t *testing.T) {
 		gormDB, mock := setupMockGormDB(t)
-		defer mock.ExpectationsWereMet()
+		defer func() { _ = mock.ExpectationsWereMet() }()
 
 		// Mock gormstore initialization
 		mockGormstoreInit(mock)

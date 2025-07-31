@@ -599,11 +599,11 @@ func TestCryptographer_StructProperties(t *testing.T) {
 
 		// These should panic or fail gracefully
 		assert.Panics(t, func() {
-			crypto.Encrypt([]byte("test"))
+			_, _ = crypto.Encrypt([]byte("test"))
 		})
 
 		assert.Panics(t, func() {
-			crypto.Decrypt([]byte("test"))
+			_, _ = crypto.Decrypt([]byte("test"))
 		})
 	})
 }

@@ -3,8 +3,8 @@ testdata_dir = "testdata"
 tmp_dir = "build"
 
 [build]
-args_bin = []
-bin = "./build/admiral-server start -c config.yaml --env .env.dev"
+bin = "./build/admiral-server"
+args_bin = ["start", "-c", "config.yaml", "--env", ".env.dev"]
 cmd = "make server"
 delay = 0
 exclude_dir = ["build", "depoy", "docs", "pkg", "proto", "tools", "web"]

@@ -465,7 +465,7 @@ func TestNew_EdgeCases(t *testing.T) {
 		}
 		if service != nil {
 			if closer, ok := service.(Service); ok {
-				closer.Close()
+				_ = closer.Close()
 			}
 		}
 	})

@@ -118,7 +118,7 @@ func (h *mockNextHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(h.statusCode)
 	}
 	if h.response != "" {
-		w.Write([]byte(h.response))
+		_, _ = w.Write([]byte(h.response))
 	}
 }
 
@@ -135,7 +135,7 @@ func (h *mockFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(h.statusCode)
 	}
 	if h.response != "" {
-		w.Write([]byte(h.response))
+		_, _ = w.Write([]byte(h.response))
 	}
 }
 
@@ -393,7 +393,7 @@ func TestAssetHandler_ServeHTTP_SPAFallback(t *testing.T) {
 			fileServer := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				requestedPath = r.URL.Path
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("SPA content"))
+				_, _ = w.Write([]byte("SPA content"))
 			})
 
 			handler := &assetHandler{

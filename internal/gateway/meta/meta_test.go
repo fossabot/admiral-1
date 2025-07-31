@@ -3,7 +3,7 @@ package meta
 import (
 	"testing"
 
-	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/desc" //nolint:staticcheck // Required for gRPC reflection test functionality
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

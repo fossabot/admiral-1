@@ -298,7 +298,7 @@ spec:
 		assert.Equal(t, manifest.VersionGroupId.String(), proto.VersionGroupId)
 		assert.Equal(t, manifest.Name, proto.Name)
 		assert.Equal(t, manifest.Description, proto.Description)
-		assert.Equal(t, uint32(manifest.Version), proto.Version)
+		assert.Equal(t, uint32(manifest.Version), proto.Version) //nolint:gosec // Version is non-negative test value
 		assert.Equal(t, manifest.IsLatest, proto.IsLatest)
 		assert.Equal(t, timestamppb.New(manifest.CreatedAt), proto.CreatedAt)
 		assert.Equal(t, timestamppb.New(manifest.UpdatedAt), proto.UpdatedAt)
@@ -335,7 +335,7 @@ spec:
 		assert.Equal(t, manifest.VersionGroupId.String(), proto.VersionGroupId)
 		assert.Equal(t, manifest.Name, proto.Name)
 		assert.Nil(t, proto.Description)
-		assert.Equal(t, uint32(manifest.Version), proto.Version)
+		assert.Equal(t, uint32(manifest.Version), proto.Version) //nolint:gosec // Version is non-negative test value
 		assert.Equal(t, manifest.IsLatest, proto.IsLatest)
 
 		// Verify file content is not included

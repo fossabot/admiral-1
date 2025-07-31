@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -38,6 +39,22 @@ type Logger struct {
 	Level     zapcore.Level `yaml:"level"`
 	Namespace string        `yaml:"namespace"`
 	Pretty    bool          `yaml:"pretty"`
+}
+
+// UnmarshalYAML implements custom unmarshaling to handle empty level values
+func (l *Logger) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// Define a type alias to avoid recursion
+	type rawLogger Logger
+	raw := rawLogger{
+		Level: zap.ErrorLevel, // Default to error level
+	}
+
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*l = Logger(raw)
+	return nil
 }
 
 type AccessLog struct {

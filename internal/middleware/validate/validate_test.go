@@ -217,8 +217,11 @@ func TestMid_UnaryInterceptor_ContextHandling(t *testing.T) {
 			description: "Should work with background context",
 		},
 		{
-			name:        "handles context with values",
-			setupCtx:    func() context.Context { return context.WithValue(context.Background(), "key", "value") },
+			name: "handles context with values",
+			setupCtx: func() context.Context {
+				type testKey string
+				return context.WithValue(context.Background(), testKey("key"), "value")
+			},
 			description: "Should work with context containing values",
 		},
 		{

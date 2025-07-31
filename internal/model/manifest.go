@@ -34,7 +34,7 @@ func ConvertManifestToProto(m *Manifest, c *[]byte) *manifestv1.Manifest {
 		VersionGroupId: m.VersionGroupId.String(),
 		Name:           m.Name,
 		Description:    m.Description,
-		Version:        uint32(m.Version),
+		Version:        uint32(m.Version), //nolint:gosec // Version is non-negative integer from database
 		IsLatest:       m.IsLatest,
 		CreatedAt:      timestamppb.New(m.CreatedAt),
 		UpdatedAt:      timestamppb.New(m.UpdatedAt),

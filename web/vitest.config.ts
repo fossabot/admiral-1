@@ -8,7 +8,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
-  // @ts-ignore - vitest has conflicting vite types
+  // @ts-expect-error - vitest has conflicting vite types
   plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'jsdom',

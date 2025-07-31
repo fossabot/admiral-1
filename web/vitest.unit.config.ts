@@ -4,7 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Unit tests only - fast and reliable for CI
 export default defineConfig({
-  // @ts-ignore - vitest has conflicting vite types
+  // @ts-expect-error - vitest has conflicting vite types
   plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'jsdom',

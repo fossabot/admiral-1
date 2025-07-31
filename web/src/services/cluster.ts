@@ -74,7 +74,7 @@ export class ClusterService extends BaseService<Cluster, CreateOptions, UpdateOp
       // Validate cluster data
       const clusterResult = clusterSchema.safeParse(res.data.cluster);
       if (!clusterResult.success) {
-        console.error('Validation error:', clusterResult.error.errors);
+        console.error('Validation error:', clusterResult.error.issues);
         throw new Error('Received invalid cluster data from the API after creation.');
       }
 
@@ -122,7 +122,7 @@ export class ClusterService extends BaseService<Cluster, CreateOptions, UpdateOp
       // Validate cluster data
       const clusterResult = clusterSchema.safeParse(res.data.cluster);
       if (!clusterResult.success) {
-        console.error('Validation error:', clusterResult.error.errors);
+        console.error('Validation error:', clusterResult.error.issues);
         throw new Error('Received invalid cluster data from the API after registration.');
       }
 

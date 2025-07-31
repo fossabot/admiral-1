@@ -306,13 +306,13 @@ func BenchmarkReferenceKindValue(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rk.Value()
+		_, _ = rk.Value()
 	}
 }
 
 func BenchmarkParseReferenceKind(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ParseReferenceKind("user")
+		_, _ = ParseReferenceKind("user")
 	}
 }

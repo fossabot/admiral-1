@@ -3,7 +3,7 @@ package meta
 import (
 	"fmt"
 
-	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/desc" //nolint:staticcheck // Required for gRPC reflection functionality
 	"github.com/jhump/protoreflect/grpcreflect"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"

@@ -8,7 +8,7 @@ before:
 report_sizes: true
 env:
   - CGO_ENABLED=0
-dist: build
+dist: dist
 builds:
   - id: admiral-server
     binary: admiral-server

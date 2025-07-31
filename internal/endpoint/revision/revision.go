@@ -174,7 +174,7 @@ func (a *api) CreateRevision(ctx context.Context, req *revisionv1.CreateRevision
 			filename = fmt.Sprintf("%s-%d%s", strings.TrimSuffix(base, ext), i, ext)
 			filePath = filepath.Join(tempDir, filename)
 		}
-		if err := os.WriteFile(filePath, processed.Bytes(), 0644); err != nil {
+		if err := os.WriteFile(filePath, processed.Bytes(), 0600); err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to write processed manifest %s to file %s: %v", m.Id, filePath, err))
 		}
 		processedFiles[m.Id.String()] = filePath
@@ -186,7 +186,7 @@ func (a *api) CreateRevision(ctx context.Context, req *revisionv1.CreateRevision
 		if !ok {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("missing processed file for manifest %s", manifestId))
 		}
-		content, err := os.ReadFile(filePath)
+		content, err := os.ReadFile(filePath) //nolint:gosec // filePath is controlled and comes from processedFiles map
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to read processed manifest %s from %s: %v", manifestId, filePath, err))
 		}

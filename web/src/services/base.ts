@@ -29,7 +29,7 @@ export abstract class BaseService<TModel, TCreateOptions, TUpdateOptions, TListO
       const result = this.itemSchema.safeParse(res.data[this.itemResponseKey]);
 
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error(`Received invalid ${this.itemResponseKey} data from the API after creation.`);
       }
 
@@ -45,7 +45,7 @@ export abstract class BaseService<TModel, TCreateOptions, TUpdateOptions, TListO
       const result = this.itemSchema.safeParse(res.data[this.itemResponseKey]);
 
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error(`Received invalid ${this.itemResponseKey} data from the API.`);
       }
 
@@ -68,7 +68,7 @@ export abstract class BaseService<TModel, TCreateOptions, TUpdateOptions, TListO
       const result = this.listSchema.safeParse(res.data);
 
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error(`Received invalid ${this.listResponseKey} list data from the API.`);
       }
 
@@ -87,7 +87,7 @@ export abstract class BaseService<TModel, TCreateOptions, TUpdateOptions, TListO
       const result = this.itemSchema.safeParse(res.data[this.itemResponseKey]);
 
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error(`Received invalid ${this.itemResponseKey} data from the API after update.`);
       }
 

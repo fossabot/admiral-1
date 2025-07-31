@@ -11,6 +11,14 @@ DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 BUILT_BY ?= $(shell whoami)
 PROJECT_ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
+# Tool binaries
+AIR := ./tools/air.sh
+BUN := ./tools/bun.sh
+BUF := ./tools/buf.sh
+GOLANGCI-LINT := ./tools/golangci-lint.sh
+NO-DIFF := tools/ensure-no-diff.sh
+PREFLIGHT-CHECKS := ./tools/preflight-checks.sh
+
 .PHONY: all # Build everything (default target).
 all: server web
 
@@ -46,20 +54,20 @@ verify:
 
 .PHONY: clean # Remove build and cache artifacts.
 clean:
-	rm -rf build cmd/assets/generated_assets.go node_modules web/build web/node_modules
+	rm -rf build cmd/assets/generated_assets.go dist node_modules web/build web/node_modules web/tsconfig.tsbuildinfo tmp
 
 .PHONY: proto # Generate proto assets.
 proto:
-	./tools/buf.sh generate --clean
+	$(BUF) generate --clean
 
 .PHONY: proto-lint # Lint the generated proto assets.
 proto-lint:
-	./tools/buf.sh lint
+	$(BUF) lint
 
 .PHONY: proto-verify # Verify proto changes.
 proto-verify:
 	@$(MAKE) proto
-	tools/ensure-no-diff.sh server/api web/src/api
+	$(NO-DIFF) server/api web/src/api
 
 .PHONY: pigeon # Generate PEG parser
 pigeon:
@@ -77,15 +85,15 @@ server-with-assets: preflight-checks-go
 
 .PHONY: server-dev # Start the server in development mode.
 server-dev: preflight-checks-go
-	tools/air.sh
+	$(AIR)
 
 .PHONY: server-lint # Lint the server code.
 server-lint: preflight-checks-go
-	tools/golangci-lint.sh run --timeout 2m30s
+	$(GOLANGCI-LINT) run --timeout 2m30s
 
 .PHONY: server-lint-fix # Lint and fix the server code.
 server-lint-fix: preflight-checks-go
-	tools/golangci-lint.sh run --fix
+	$(GOLANGCI-LINT) run --fix
 	go mod tidy
 
 .PHONY: server-test # Run unit tests for the server code.
@@ -95,54 +103,50 @@ server-test: preflight-checks-go
 .PHONY: server-verify # Verify go modules' requirements files are clean.
 server-verify: preflight-checks-go
 	go mod tidy
-	tools/ensure-no-diff.sh server
+	$(NO-DIFF) server
 
 .PHONY: web # Build production web assets.
 web: bun-install
-	bun run --cwd web build
+	$(BUN) run --cwd web build
 
 .PHONY: web-dev-build # Build development web assets.
 web-dev-build: bun-install
-	bun run --cwd web preview
+	$(BUN) run --cwd web preview
 
 .PHONY: web-dev # Start the web in development mode.
 web-dev: bun-install
-	bun run --cwd web dev
+	$(BUN) run --cwd web dev
 
 .PHONY: web-lint # Lint the web code.
 web-lint: bun-install
-	bun run --cwd web lint
+	$(BUN) run --cwd web lint
 
 .PHONY: web-lint-fix # Lint and fix the web code.
 web-lint-fix: bun-install
-	bun run --cwd web lint:fix
+	$(BUN) run --cwd web lint:fix
 
 .PHONY: web-test # Run unit tests for the web code.
 web-test: bun-install
-	bun run --cwd web test:run
+	$(BUN) run --cwd web test:run
 
 .PHONY: web-test-storybook # Run Storybook browser tests for the web code.
 web-test-storybook: bun-install
 	@echo "⚠️  Running Storybook tests (known cleanup timeout issue)..."
-	-bun run --cwd web test:storybook
+	-$(BUN) run --cwd web test:storybook
 	@echo "✅ Storybook tests completed. Check above for results."
 
 .PHONY: web-verify # Verify web packages are sorted.
 web-verify: bun-install
-	bun run --cwd web lint:packages
+	$(BUN) run --cwd web lint:packages
 
 .PHONY: bun-install # Install web dependencies.
-bun-install: preflight-checks-bun
-	bun install --cwd web --frozen-lockfile
-
-.PHONY: preflight-checks-bun
-preflight-checks-bun:
-	@tools/preflight-checks.sh bun
+bun-install:
+	$(BUN) install --cwd web --frozen-lockfile
 
 .PHONY: preflight-checks-go
 preflight-checks-go:
-	@tools/preflight-checks.sh go
+	$(PREFLIGHT-CHECKS) go
 
 .PHONY: preflight-checks
 preflight-checks:
-	@tools/preflight-checks.sh
+	$(PREFLIGHT-CHECKS)

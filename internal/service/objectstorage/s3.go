@@ -41,7 +41,7 @@ func newS3Service(cfg *config.S3StorageConfig, logger *zap.Logger, scope tally.S
 	}
 
 	// Configure HTTP client with SSL settings
-	if !cfg.UseSSL {
+	if cfg.UseSSL != nil && !*cfg.UseSSL {
 		httpClient := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{

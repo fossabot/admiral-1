@@ -3,9 +3,9 @@ server:
     address: 0.0.0.0
     port: 8080
   timeouts:
-    default: 60s
+    default: 15s
   logger:
-    level: debug
+    level: ${LOGGER_LEVEL}
   access_log:
     status_code_filters:
       - 2 # Unknown
@@ -31,11 +31,7 @@ services:
     client_secret: ${OAUTH2_CLIENT_SECRET}
     redirect_url: ${OAUTH2_REDIRECT_URL}
     nonce_secret: ${OAUTH2_NONCE_SECRET}
-    scopes:
-      - openid
-      - offline_access
-      - email
-      - profile
+    scopes: ${OAUTH2_SCOPES}
   #    claim_mapping:
   #      preferred_username: other_user_name
   #      email: mail

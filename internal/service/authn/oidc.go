@@ -68,7 +68,7 @@ func NewOIDCProvider(cfg *config.Config, logger *zap.Logger, store *store) (Prov
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: cfg.Services.Authn.SkipTLSVerify,
+				InsecureSkipVerify: cfg.Services.Authn.SkipTLSVerify, //nolint:gosec // Configurable for development environments
 			},
 		},
 	}

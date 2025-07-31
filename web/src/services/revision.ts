@@ -15,7 +15,7 @@ export class RevisionService {
       const result = createRevisionResponseSchema.safeParse(res.data);
 
       if (!result.success) {
-        console.error('Validation error:', result.error.errors);
+        console.error('Validation error:', result.error.issues);
         throw new Error('Received invalid revision data from the API after creation.');
       }
 

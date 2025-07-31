@@ -6,7 +6,6 @@ did_checks_pass=true
 
 # Minimum versions
 MIN_GO_VERSION="1.20"
-MIN_BUN_VERSION="1.0"
 
 SCRIPT_ROOT="$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")"
 REPO_ROOT="${SCRIPT_ROOT}"
@@ -65,16 +64,8 @@ check_go() {
 }
 
 check_bun() {
-  if ! command -v bun --version &> /dev/null; then
-    echo "bun is not installed or cannot be found in the current PATH, this is a required dependency."
-    did_checks_pass=false
-  else
-    current_version=$(bun --version)
-    if ! is_version_ok $MIN_BUN_VERSION "$current_version"; then
-      echo "bun version must be >= $MIN_BUN_VERSION, current version $current_version"
-      did_checks_pass=false
-    fi
-  fi
+  # Bun is now managed via tools/bun.sh and no system installation is required
+  echo "Bun is managed via tools/bun.sh - skipping system check"
 }
 
 main() {

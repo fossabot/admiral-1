@@ -119,7 +119,7 @@ func setDefaults(cfg *Config) *Config {
 		cfg.Server.Listener.Address = "0.0.0.0"
 	}
 	if cfg.Server.Listener.Port == 0 {
-		cfg.Server.Listener.Port = 50051
+		cfg.Server.Listener.Port = 8080
 	}
 
 	if cfg.Server.Logger == nil {
@@ -133,6 +133,30 @@ func setDefaults(cfg *Config) *Config {
 			ReporterType:  ReporterTypeNull,
 		}
 	}
+
+	// Set default database values if not specified
+	if cfg.Services.Database != nil {
+		if cfg.Services.Database.SSLMode == SSLModeUnspecified {
+			cfg.Services.Database.SSLMode = SSLModeRequire
+		}
+		if cfg.Services.Database.Port == 0 {
+			cfg.Services.Database.Port = 5432
+		}
+	}
+
+	// Set default temporal port if not specified
+	if cfg.Services.Temporal != nil && cfg.Services.Temporal.Port == 0 {
+		cfg.Services.Temporal.Port = 7233
+	}
+
+	// Set default storage SSL to true if not specified (only for S3 type)
+	if cfg.Services.ObjectStorage != nil && cfg.Services.ObjectStorage.Type == ObjectStorageTypeS3 && cfg.Services.ObjectStorage.S3 != nil {
+		if cfg.Services.ObjectStorage.S3.UseSSL == nil {
+			useSSL := true
+			cfg.Services.ObjectStorage.S3.UseSSL = &useSSL
+		}
+	}
+
 	return cfg
 }
 

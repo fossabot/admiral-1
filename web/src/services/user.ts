@@ -38,7 +38,7 @@ export class UserService extends BaseService<User, CreateOptions, UpdateOptions>
 
       const result = userSchema.safeParse(userData);
       if (!result.success) {
-        const validationErrors = result.error.errors.map((err) => `${err.path}: ${err.message}`).join(', ');
+        const validationErrors = result.error.issues.map((err) => `${err.path}: ${err.message}`).join(', ');
 
         throw new Error(`User data validation failed: ${validationErrors}`);
       }

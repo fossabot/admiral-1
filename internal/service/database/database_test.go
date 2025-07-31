@@ -109,7 +109,7 @@ func TestNew(t *testing.T) {
 		// Create mock database
 		db, mock, err := sqlmock.New()
 		require.NoError(t, err)
-		defer db.Close()
+		defer func() { _ = db.Close() }()
 
 		// Mock successful ping
 		mock.ExpectPing()
@@ -176,7 +176,7 @@ func TestService_Interface(t *testing.T) {
 	// Create mock database
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Create GORM database from the mock
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: db}), &gorm.Config{})

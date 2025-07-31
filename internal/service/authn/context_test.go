@@ -24,6 +24,8 @@ func TestClaimsRoundTrip(t *testing.T) {
 	assert.Equal(t, "foo", cc.Subject)
 }
 
+type testContextKey string
+
 func TestContextWithAnonymousClaims(t *testing.T) {
 	t.Run("creates context with anonymous claims", func(t *testing.T) {
 		ctx := context.Background()
@@ -34,13 +36,13 @@ func TestContextWithAnonymousClaims(t *testing.T) {
 	})
 
 	t.Run("works with non-background context", func(t *testing.T) {
-		parentCtx := context.WithValue(context.Background(), "key", "value")
+		parentCtx := context.WithValue(context.Background(), testContextKey("key"), "value")
 		ctx := ContextWithAnonymousClaims(parentCtx)
 
 		assert.NotNil(t, ctx)
 
 		// Verify parent context values are preserved
-		assert.Equal(t, "value", ctx.Value("key"))
+		assert.Equal(t, "value", ctx.Value(testContextKey("key")))
 
 		// Verify anonymous claims are set
 		claims, err := ClaimsFromContext(ctx)
@@ -172,7 +174,7 @@ func TestContextWithClaims(t *testing.T) {
 	}
 
 	t.Run("preserves parent context values", func(t *testing.T) {
-		parentCtx := context.WithValue(context.Background(), "parent-key", "parent-value")
+		parentCtx := context.WithValue(context.Background(), testContextKey("parent-key"), "parent-value")
 		claims := &Claims{
 			RegisteredClaims: &jwt.RegisteredClaims{Subject: validUUID},
 			Kind:             "user",
@@ -181,7 +183,7 @@ func TestContextWithClaims(t *testing.T) {
 		ctx := ContextWithClaims(parentCtx, claims)
 
 		// Verify parent context value is preserved
-		assert.Equal(t, "parent-value", ctx.Value("parent-key"))
+		assert.Equal(t, "parent-value", ctx.Value(testContextKey("parent-key")))
 
 		// Verify claims are set
 		retrievedClaims, err := ClaimsFromContext(ctx)
@@ -366,8 +368,8 @@ func TestContextIntegration(t *testing.T) {
 		ctx := context.Background()
 
 		// Add some parent values
-		ctx = context.WithValue(ctx, "request-id", "req-123")
-		ctx = context.WithValue(ctx, "trace-id", "trace-456")
+		ctx = context.WithValue(ctx, testContextKey("request-id"), "req-123")
+		ctx = context.WithValue(ctx, testContextKey("trace-id"), "trace-456")
 
 		// Set anonymous claims first
 		ctx = ContextWithAnonymousClaims(ctx)
@@ -396,8 +398,8 @@ func TestContextIntegration(t *testing.T) {
 		assert.NotEqual(t, AnonymousSubject, claims.Subject)
 
 		// Verify parent context values are preserved
-		assert.Equal(t, "req-123", ctx.Value("request-id"))
-		assert.Equal(t, "trace-456", ctx.Value("trace-id"))
+		assert.Equal(t, "req-123", ctx.Value(testContextKey("request-id")))
+		assert.Equal(t, "trace-456", ctx.Value(testContextKey("trace-id")))
 	})
 
 	t.Run("context chain with multiple claims updates", func(t *testing.T) {
@@ -476,8 +478,9 @@ func TestContextEdgeCases(t *testing.T) {
 
 		// Create deeply nested context
 		ctx := context.Background()
+		type testIntKey int
 		for i := 0; i < 10; i++ {
-			ctx = context.WithValue(ctx, i, i*2)
+			ctx = context.WithValue(ctx, testIntKey(i), i*2)
 		}
 
 		// Add claims
@@ -494,7 +497,7 @@ func TestContextEdgeCases(t *testing.T) {
 
 		// Verify all parent values are still accessible
 		for i := 0; i < 10; i++ {
-			assert.Equal(t, i*2, ctx.Value(i))
+			assert.Equal(t, i*2, ctx.Value(testIntKey(i)))
 		}
 	})
 

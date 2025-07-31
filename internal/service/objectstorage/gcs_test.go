@@ -515,7 +515,7 @@ func TestGCSService_ConfigValidation(t *testing.T) {
 			t.Errorf("Configuration should be valid: %v", err)
 		}
 		if service != nil {
-			service.Close()
+			_ = service.Close()
 		}
 	})
 }
