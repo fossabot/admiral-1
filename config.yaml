@@ -30,7 +30,7 @@ services:
     client_id: ${OAUTH2_CLIENT_ID}
     client_secret: ${OAUTH2_CLIENT_SECRET}
     redirect_url: ${OAUTH2_REDIRECT_URL}
-    nonce_secret: ${OAUTH2_NONCE_SECRET}
+    signing_secret: ${OAUTH2_SIGNING_SECRET}
     scopes: ${OAUTH2_SCOPES}
   #    claim_mapping:
   #      preferred_username: other_user_name
@@ -55,6 +55,16 @@ services:
     gcs:
       credentials_json: ${GCS_CREDENTIALS_JSON}
       project_id: ${GCS_PROJECT_ID}
+  session:
+    idle_timeout: ${SESSION_IDLE_TIMEOUT}
+    lifetime: ${SESSION_LIFETIME}
+    cookie:
+      name: ${SESSION_COOKIE_NAME}
+      domain: ${SESSION_COOKIE_DOMAIN}
+      http_only: ${SESSION_COOKIE_HTTP_ONLY}
+      same_site: ${SESSION_COOKIE_SAME_SITE}
+      secure: ${SESSION_COOKIE_SECURE}
+      persist: ${SESSION_COOKIE_PERSIST}
   temporal:
     host: ${TEMPORAL_HOST}
     port: ${TEMPORAL_PORT}

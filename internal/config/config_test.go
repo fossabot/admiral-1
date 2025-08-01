@@ -266,6 +266,10 @@ services:
   database:
     host: localhost
     port: 5432
+    database_name: test
+    user: test
+    password: test
+    ssl_mode: disable
   object_storage:
     type: s3
     s3:
@@ -336,6 +340,10 @@ services:
   database:
     host: localhost
     port: 5432
+    database_name: test
+    user: test
+    password: test
+    ssl_mode: disable
   object_storage:
     type: s3
     s3:
@@ -371,10 +379,17 @@ services:
   authn:
     name: ${OAUTH2_NAME}
     issuer: ${OAUTH2_ISSUER}
+    client_id: test-client-id
+    client_secret: test-client-secret
+    signing_secret: test-signing-secret
     scopes: ${OAUTH2_SCOPES}
   database:
     host: localhost
     port: 5432
+    database_name: test
+    user: test
+    password: test
+    ssl_mode: disable
   object_storage:
     type: s3
     s3:
@@ -422,7 +437,7 @@ services:
 			envScopes:      "",
 			envName:        "default",
 			envIssuer:      "http://default.example.com",
-			expectedScopes: []string{"openid", "offline_access", "email", "profile"},
+			expectedScopes: []string{"openid", "email", "profile"},
 		},
 	}
 
@@ -451,6 +466,244 @@ services:
 			assert.Equal(t, tt.expectedScopes, cfg.Services.Authn.Scopes)
 			assert.Equal(t, tt.envName, cfg.Services.Authn.Name)
 			assert.Equal(t, tt.envIssuer, cfg.Services.Authn.Issuer)
+		})
+	}
+}
+
+func TestConfig_Validate(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      *Config
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "nil config",
+			config:      nil,
+			expectError: true,
+			errorMsg:    "config is nil",
+		},
+		{
+			name: "valid config",
+			config: &Config{
+				Services: Services{
+					Database: &Database{
+						Host:         "localhost",
+						Port:         5432,
+						DatabaseName: "test",
+						User:         "test",
+						Password:     "test",
+						SSLMode:      SSLModeDisable,
+					},
+					ObjectStorage: &ObjectStorage{
+						Type: ObjectStorageTypeS3,
+						S3: &S3StorageConfig{
+							Region: "us-east-1",
+						},
+					},
+					Temporal: &Temporal{
+						Host: "localhost",
+						Port: 7233,
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "missing required database config",
+			config: &Config{
+				Services: Services{
+					ObjectStorage: &ObjectStorage{
+						Type: ObjectStorageTypeS3,
+						S3: &S3StorageConfig{
+							Region: "us-east-1",
+						},
+					},
+					Temporal: &Temporal{
+						Host: "localhost",
+						Port: 7233,
+					},
+				},
+			},
+			expectError: true,
+			errorMsg:    "services.database config is nil",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var err error
+			if tt.config == nil {
+				err = (*Config)(nil).validate()
+			} else {
+				// Apply defaults before validation (like parseConfig does)
+				configWithDefaults := setDefaults(tt.config)
+				err = configWithDefaults.validate()
+			}
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestConfig_Build(t *testing.T) {
+	// Create a minimal valid config file
+	configContent := `
+server:
+  listener:
+    address: 0.0.0.0
+    port: 8080
+services:
+  database:
+    host: localhost
+    port: 5432
+    database_name: test
+    user: test
+    password: test
+    ssl_mode: disable
+  object_storage:
+    type: s3
+    s3:
+      region: us-east-1
+  temporal:
+    host: localhost
+    port: 7233
+`
+
+	tmpDir := t.TempDir()
+	configFile := filepath.Join(tmpDir, "config.yaml")
+	err := os.WriteFile(configFile, []byte(configContent), 0600)
+	require.NoError(t, err)
+
+	// Create a .env file
+	envContent := "TEST_VAR=test_value\n"
+	envFile := filepath.Join(tmpDir, ".env")
+	err = os.WriteFile(envFile, []byte(envContent), 0600)
+	require.NoError(t, err)
+
+	// Test Build function
+	cfg := Build(configFile, []string{envFile}, false)
+	require.NotNil(t, cfg)
+	assert.NotNil(t, cfg.Services.Database)
+	assert.NotNil(t, cfg.Services.ObjectStorage)
+	assert.NotNil(t, cfg.Services.Temporal)
+}
+
+func TestConfig_ParseConfigErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		content     string
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "invalid yaml syntax",
+			content:     "invalid: [unclosed",
+			expectError: true,
+			errorMsg:    "did not find expected",
+		},
+	}
+
+	tmpDir := t.TempDir()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configFile := filepath.Join(tmpDir, "config-"+tt.name+".yaml")
+			err := os.WriteFile(configFile, []byte(tt.content), 0600)
+			require.NoError(t, err)
+
+			_, err = parseConfig(configFile, false)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestConfig_LoadEnvErrors(t *testing.T) {
+	// Test with non-existent file - should not error but warn
+	err := loadEnv([]string{"/nonexistent/file.env"})
+	assert.NoError(t, err) // loadEnv continues on error
+
+	// Test with invalid file permissions (if possible)
+	tmpDir := t.TempDir()
+	envFile := filepath.Join(tmpDir, "test.env")
+	err = os.WriteFile(envFile, []byte("TEST=value"), 0600)
+	require.NoError(t, err)
+
+	// Valid env file should work
+	err = loadEnv([]string{envFile})
+	assert.NoError(t, err)
+}
+
+func TestValidateConfigItem(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      Configurable
+		configName  string
+		required    bool
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "nil required config fails",
+			config:      nil,
+			configName:  "test",
+			required:    true,
+			expectError: true,
+			errorMsg:    "test config is nil",
+		},
+		{
+			name:        "nil optional config passes",
+			config:      nil,
+			configName:  "test",
+			required:    false,
+			expectError: false,
+		},
+		{
+			name: "valid config passes",
+			config: &Temporal{
+				Host: "localhost",
+				Port: 7233,
+			},
+			configName:  "temporal",
+			required:    true,
+			expectError: false,
+		},
+		{
+			name: "invalid config fails",
+			config: &Temporal{
+				Host: "",
+				Port: 7233,
+			},
+			configName:  "temporal",
+			required:    true,
+			expectError: true,
+			errorMsg:    "invalid temporal config",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateConfigItem(tt.config, tt.configName, tt.required)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

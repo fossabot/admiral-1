@@ -19,9 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthnAPI_Login_FullMethodName       = "/admiral.authn.v1.AuthnAPI/Login"
-	AuthnAPI_Callback_FullMethodName    = "/admiral.authn.v1.AuthnAPI/Callback"
-	AuthnAPI_CreateToken_FullMethodName = "/admiral.authn.v1.AuthnAPI/CreateToken"
+	AuthnAPI_Login_FullMethodName    = "/admiral.authn.v1.AuthnAPI/Login"
+	AuthnAPI_Callback_FullMethodName = "/admiral.authn.v1.AuthnAPI/Callback"
 )
 
 // AuthnAPIClient is the client API for AuthnAPI service.
@@ -30,7 +29,6 @@ const (
 type AuthnAPIClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Callback(ctx context.Context, in *CallbackRequest, opts ...grpc.CallOption) (*CallbackResponse, error)
-	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error)
 }
 
 type authnAPIClient struct {
@@ -61,23 +59,12 @@ func (c *authnAPIClient) Callback(ctx context.Context, in *CallbackRequest, opts
 	return out, nil
 }
 
-func (c *authnAPIClient) CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateTokenResponse)
-	err := c.cc.Invoke(ctx, AuthnAPI_CreateToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthnAPIServer is the server API for AuthnAPI service.
 // All implementations should embed UnimplementedAuthnAPIServer
 // for forward compatibility.
 type AuthnAPIServer interface {
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	Callback(context.Context, *CallbackRequest) (*CallbackResponse, error)
-	CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error)
 }
 
 // UnimplementedAuthnAPIServer should be embedded to have
@@ -92,9 +79,6 @@ func (UnimplementedAuthnAPIServer) Login(context.Context, *LoginRequest) (*Login
 }
 func (UnimplementedAuthnAPIServer) Callback(context.Context, *CallbackRequest) (*CallbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Callback not implemented")
-}
-func (UnimplementedAuthnAPIServer) CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateToken not implemented")
 }
 func (UnimplementedAuthnAPIServer) testEmbeddedByValue() {}
 
@@ -152,24 +136,6 @@ func _AuthnAPI_Callback_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthnAPI_CreateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthnAPIServer).CreateToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthnAPI_CreateToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthnAPIServer).CreateToken(ctx, req.(*CreateTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthnAPI_ServiceDesc is the grpc.ServiceDesc for AuthnAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -184,10 +150,6 @@ var AuthnAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Callback",
 			Handler:    _AuthnAPI_Callback_Handler,
-		},
-		{
-			MethodName: "CreateToken",
-			Handler:    _AuthnAPI_CreateToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

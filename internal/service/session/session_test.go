@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/alexedwards/scs/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -46,6 +47,29 @@ func (m *mockDatabaseService) GormDB() *gorm.DB {
 // Test utilities
 func createTestConfig() *config.Config {
 	return &config.Config{}
+}
+
+func createTestConfigWithSession() *config.Config {
+	httpOnly := true
+	secure := false
+	persist := true
+
+	return &config.Config{
+		Services: config.Services{
+			Session: &config.Session{
+				IdleTimeout: 30 * time.Minute,
+				Lifetime:    48 * time.Hour,
+				Cookie: config.Cookie{
+					Name:     "test-session",
+					Domain:   "test.example.com",
+					HttpOnly: &httpOnly,
+					SameSite: config.SessionSameSiteStrict,
+					Secure:   &secure,
+					Persist:  &persist,
+				},
+			},
+		},
+	}
 }
 
 func createTestLogger() *zap.Logger {
@@ -100,6 +124,214 @@ func mockGormstoreInit(mock sqlmock.Sqlmock) {
 	// 3. Create index
 	mock.ExpectExec(`CREATE INDEX IF NOT EXISTS "idx_sessions_expiry" ON "sessions" \("expiry"\)`).
 		WillReturnResult(sqlmock.NewResult(0, 0))
+}
+
+// Tests for session configuration
+func TestNew_WithSessionConfiguration(t *testing.T) {
+	t.Run("session service configured with full config", func(t *testing.T) {
+		gormDB, mock := setupMockGormDB(t)
+		defer func() { _ = mock.ExpectationsWereMet() }()
+
+		// Mock gormstore initialization
+		mockGormstoreInit(mock)
+
+		dbService := &mockDatabaseService{}
+		dbService.On("GormDB").Return(gormDB)
+		service.Registry["service.database"] = dbService
+		cfg := createTestConfigWithSession()
+		logger := createTestLogger()
+		scope := createTestScope()
+
+		result, err := New(cfg, logger, scope)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+
+		// Verify the result implements the Service interface
+		_, ok := result.(Service)
+		require.True(t, ok)
+
+		// Verify internal structure and configuration
+		srv, ok := result.(*srv)
+		require.True(t, ok)
+
+		// Test session manager configuration
+		assert.Equal(t, 30*time.Minute, srv.IdleTimeout)
+		assert.Equal(t, 48*time.Hour, srv.Lifetime)
+
+		// Test cookie configuration
+		assert.Equal(t, "test-session", srv.Cookie.Name)
+		assert.Equal(t, "test.example.com", srv.Cookie.Domain)
+		assert.True(t, srv.Cookie.HttpOnly)
+		assert.False(t, srv.Cookie.Secure)
+		assert.True(t, srv.Cookie.Persist)
+		assert.Equal(t, http.SameSiteStrictMode, srv.Cookie.SameSite)
+		assert.Equal(t, "/", srv.Cookie.Path)
+	})
+
+	t.Run("session service with nil session config uses defaults", func(t *testing.T) {
+		gormDB, mock := setupMockGormDB(t)
+		defer func() { _ = mock.ExpectationsWereMet() }()
+
+		// Mock gormstore initialization
+		mockGormstoreInit(mock)
+
+		dbService := &mockDatabaseService{}
+		dbService.On("GormDB").Return(gormDB)
+		service.Registry["service.database"] = dbService
+		cfg := createTestConfig() // Empty config
+		logger := createTestLogger()
+		scope := createTestScope()
+
+		result, err := New(cfg, logger, scope)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+
+		// Verify the result implements the Service interface
+		_, ok := result.(Service)
+		require.True(t, ok)
+
+		// Verify internal structure uses defaults
+		srv, ok := result.(*srv)
+		require.True(t, ok)
+
+		// SCS defaults should be used
+		assert.NotEqual(t, 30*time.Minute, srv.IdleTimeout) // Should be SCS default
+		assert.NotEqual(t, 48*time.Hour, srv.Lifetime)      // Should be SCS default
+	})
+
+	t.Run("session service with partial config", func(t *testing.T) {
+		gormDB, mock := setupMockGormDB(t)
+		defer func() { _ = mock.ExpectationsWereMet() }()
+
+		// Mock gormstore initialization
+		mockGormstoreInit(mock)
+
+		dbService := &mockDatabaseService{}
+		dbService.On("GormDB").Return(gormDB)
+		service.Registry["service.database"] = dbService
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					Lifetime: 12 * time.Hour, // Only set lifetime
+					Cookie: config.Cookie{
+						Name: "partial-session", // Only set name
+					},
+				},
+			},
+		}
+		logger := createTestLogger()
+		scope := createTestScope()
+
+		result, err := New(cfg, logger, scope)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+
+		srv, ok := result.(*srv)
+		require.True(t, ok)
+
+		// Test that configured values are set
+		assert.Equal(t, 12*time.Hour, srv.Lifetime)
+		assert.Equal(t, "partial-session", srv.Cookie.Name)
+
+		// Test that other values use defaults or remain unchanged
+		assert.Equal(t, "/", srv.Cookie.Path) // Always set
+		assert.Empty(t, srv.Cookie.Domain)    // Not configured, so empty
+	})
+
+	t.Run("session service with different SameSite modes", func(t *testing.T) {
+		testCases := []struct {
+			name         string
+			sameSite     config.SameSiteMode
+			expectedHTTP http.SameSite
+		}{
+			{
+				name:         "lax mode",
+				sameSite:     config.SessionSameSiteLax,
+				expectedHTTP: http.SameSiteLaxMode,
+			},
+			{
+				name:         "strict mode",
+				sameSite:     config.SessionSameSiteStrict,
+				expectedHTTP: http.SameSiteStrictMode,
+			},
+			{
+				name:         "none mode",
+				sameSite:     config.SessionSameSiteNone,
+				expectedHTTP: http.SameSiteNoneMode,
+			},
+			{
+				name:         "empty mode defaults to lax",
+				sameSite:     "",
+				expectedHTTP: http.SameSiteLaxMode,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				gormDB, mock := setupMockGormDB(t)
+				defer func() { _ = mock.ExpectationsWereMet() }()
+
+				// Mock gormstore initialization
+				mockGormstoreInit(mock)
+
+				dbService := &mockDatabaseService{}
+				dbService.On("GormDB").Return(gormDB)
+				service.Registry["service.database"] = dbService
+				cfg := &config.Config{
+					Services: config.Services{
+						Session: &config.Session{
+							Cookie: config.Cookie{
+								SameSite: tc.sameSite,
+							},
+						},
+					},
+				}
+
+				result, err := New(cfg, createTestLogger(), createTestScope())
+				require.NoError(t, err)
+
+				srv, ok := result.(*srv)
+				require.True(t, ok)
+
+				assert.Equal(t, tc.expectedHTTP, srv.Cookie.SameSite)
+			})
+		}
+	})
+
+	t.Run("session service with zero duration values ignores them", func(t *testing.T) {
+		gormDB, mock := setupMockGormDB(t)
+		defer func() { _ = mock.ExpectationsWereMet() }()
+
+		// Mock gormstore initialization
+		mockGormstoreInit(mock)
+
+		dbService := &mockDatabaseService{}
+		dbService.On("GormDB").Return(gormDB)
+		service.Registry["service.database"] = dbService
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					IdleTimeout: 0, // Zero value should be ignored
+					Lifetime:    0, // Zero value should be ignored
+					Cookie: config.Cookie{
+						Name: "zero-duration-test",
+					},
+				},
+			},
+		}
+		logger := createTestLogger()
+		scope := createTestScope()
+
+		result, err := New(cfg, logger, scope)
+		require.NoError(t, err)
+
+		srv, ok := result.(*srv)
+		require.True(t, ok)
+
+		// Zero durations should not override SCS defaults
+		// We don't test exact values since SCS sets its own defaults
+		assert.Equal(t, "zero-duration-test", srv.Cookie.Name)
+	})
 }
 
 // Tests for New function
@@ -174,7 +406,6 @@ func TestNew(t *testing.T) {
 				// Verify internal structure
 				srv, ok := result.(*srv)
 				assert.True(t, ok)
-				assert.NotNil(t, srv.gormDB)
 				assert.NotNil(t, srv.logger)
 				assert.NotNil(t, srv.scope)
 				assert.NotNil(t, srv.SessionManager)
@@ -718,6 +949,235 @@ func BenchmarkService_Get(b *testing.B) {
 func TestConstants(t *testing.T) {
 	t.Run("service name constant", func(t *testing.T) {
 		assert.Equal(t, "service.session", Name)
+	})
+}
+
+// Tests for validateConfig function
+func TestValidateConfig(t *testing.T) {
+	t.Run("nil config returns error", func(t *testing.T) {
+		err := validateConfig(nil)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "configuration is nil")
+	})
+
+	t.Run("nil session config is valid", func(t *testing.T) {
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: nil,
+			},
+		}
+		err := validateConfig(cfg)
+		assert.NoError(t, err)
+	})
+
+	t.Run("valid config returns nil", func(t *testing.T) {
+		cfg := createTestConfigWithSession()
+		err := validateConfig(cfg)
+		assert.NoError(t, err)
+	})
+
+	t.Run("empty session config is valid", func(t *testing.T) {
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{},
+			},
+		}
+		err := validateConfig(cfg)
+		assert.NoError(t, err)
+	})
+
+	t.Run("invalid SameSite mode returns error", func(t *testing.T) {
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					Cookie: config.Cookie{
+						SameSite: "invalid-mode",
+					},
+				},
+			},
+		}
+		err := validateConfig(cfg)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid SameSite mode: invalid-mode")
+	})
+
+	t.Run("valid SameSite modes are accepted", func(t *testing.T) {
+		validModes := []config.SameSiteMode{
+			config.SessionSameSiteLax,
+			config.SessionSameSiteStrict,
+			config.SessionSameSiteNone,
+			"", // empty string should be valid
+		}
+
+		for _, mode := range validModes {
+			cfg := &config.Config{
+				Services: config.Services{
+					Session: &config.Session{
+						Cookie: config.Cookie{
+							SameSite: mode,
+						},
+					},
+				},
+			}
+			err := validateConfig(cfg)
+			assert.NoError(t, err, "mode %s should be valid", mode)
+		}
+	})
+}
+
+// Tests for configureSession function
+func TestConfigureSession(t *testing.T) {
+	t.Run("configure session with full config", func(t *testing.T) {
+		sm := scs.New()
+		cfg := createTestConfigWithSession()
+
+		err := configureSession(cfg, sm)
+		assert.NoError(t, err)
+
+		// Verify session manager configuration
+		assert.Equal(t, 30*time.Minute, sm.IdleTimeout)
+		assert.Equal(t, 48*time.Hour, sm.Lifetime)
+
+		// Verify cookie configuration
+		assert.Equal(t, "test-session", sm.Cookie.Name)
+		assert.Equal(t, "test.example.com", sm.Cookie.Domain)
+		assert.True(t, sm.Cookie.HttpOnly)
+		assert.False(t, sm.Cookie.Secure)
+		assert.True(t, sm.Cookie.Persist)
+		assert.Equal(t, http.SameSiteStrictMode, sm.Cookie.SameSite)
+		assert.Equal(t, "/", sm.Cookie.Path)
+	})
+
+	t.Run("configure session with partial config", func(t *testing.T) {
+		sm := scs.New()
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					Lifetime: 12 * time.Hour,
+					Cookie: config.Cookie{
+						Name: "partial-session",
+					},
+				},
+			},
+		}
+
+		err := configureSession(cfg, sm)
+		assert.NoError(t, err)
+
+		// Verify configured values
+		assert.Equal(t, 12*time.Hour, sm.Lifetime)
+		assert.Equal(t, "partial-session", sm.Cookie.Name)
+		assert.Equal(t, "/", sm.Cookie.Path) // Always set
+
+		// Verify defaults are preserved for unconfigured values
+		assert.Empty(t, sm.Cookie.Domain)
+	})
+
+	t.Run("configure session with zero duration values", func(t *testing.T) {
+		sm := scs.New()
+		originalLifetime := sm.Lifetime
+		originalIdleTimeout := sm.IdleTimeout
+
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					Lifetime:    0, // Zero value should be ignored
+					IdleTimeout: 0, // Zero value should be ignored
+					Cookie: config.Cookie{
+						Name: "zero-duration-test",
+					},
+				},
+			},
+		}
+
+		err := configureSession(cfg, sm)
+		assert.NoError(t, err)
+
+		// Zero durations should not override defaults
+		assert.Equal(t, originalLifetime, sm.Lifetime)
+		assert.Equal(t, originalIdleTimeout, sm.IdleTimeout)
+		assert.Equal(t, "zero-duration-test", sm.Cookie.Name)
+	})
+
+	t.Run("configure session with different SameSite modes", func(t *testing.T) {
+		testCases := []struct {
+			name         string
+			sameSite     config.SameSiteMode
+			expectedHTTP http.SameSite
+		}{
+			{
+				name:         "lax mode",
+				sameSite:     config.SessionSameSiteLax,
+				expectedHTTP: http.SameSiteLaxMode,
+			},
+			{
+				name:         "strict mode",
+				sameSite:     config.SessionSameSiteStrict,
+				expectedHTTP: http.SameSiteStrictMode,
+			},
+			{
+				name:         "none mode",
+				sameSite:     config.SessionSameSiteNone,
+				expectedHTTP: http.SameSiteNoneMode,
+			},
+			{
+				name:         "empty mode defaults to lax",
+				sameSite:     "",
+				expectedHTTP: http.SameSiteLaxMode,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				sm := scs.New()
+				cfg := &config.Config{
+					Services: config.Services{
+						Session: &config.Session{
+							Cookie: config.Cookie{
+								SameSite: tc.sameSite,
+							},
+						},
+					},
+				}
+
+				err := configureSession(cfg, sm)
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedHTTP, sm.Cookie.SameSite)
+			})
+		}
+	})
+
+	t.Run("configure session with all cookie options", func(t *testing.T) {
+		sm := scs.New()
+		httpOnly := false
+		secure := true
+		persist := false
+
+		cfg := &config.Config{
+			Services: config.Services{
+				Session: &config.Session{
+					Cookie: config.Cookie{
+						Name:     "all-options",
+						Domain:   "secure.example.com",
+						HttpOnly: &httpOnly,
+						Secure:   &secure,
+						Persist:  &persist,
+						SameSite: config.SessionSameSiteNone,
+					},
+				},
+			},
+		}
+
+		err := configureSession(cfg, sm)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "all-options", sm.Cookie.Name)
+		assert.Equal(t, "secure.example.com", sm.Cookie.Domain)
+		assert.False(t, sm.Cookie.HttpOnly)
+		assert.True(t, sm.Cookie.Secure)
+		assert.False(t, sm.Cookie.Persist)
+		assert.Equal(t, http.SameSiteNoneMode, sm.Cookie.SameSite)
+		assert.Equal(t, "/", sm.Cookie.Path)
 	})
 }
 

@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"time"
 
@@ -20,32 +19,27 @@ func (rk ReferenceKind) Value() (driver.Value, error) {
 	switch rk {
 	case ReferenceKindUser, ReferenceKindCluster:
 		return string(rk), nil
+	default:
+		return nil, fmt.Errorf("invalid reference_kind value")
 	}
-	return nil, errors.New("invalid reference_kind value")
 }
 
 func (rk *ReferenceKind) Scan(value interface{}) error {
+	if value == nil {
+		*rk = ""
+		return nil
+	}
+
 	switch v := value.(type) {
-	case []byte:
-		*rk = ReferenceKind(v)
 	case string:
+		*rk = ReferenceKind(v)
+	case []byte:
 		*rk = ReferenceKind(v)
 	default:
 		return fmt.Errorf("cannot scan %T into ReferenceKind", value)
 	}
+
 	return nil
-}
-
-var referenceKindLookup = map[string]ReferenceKind{
-	"user":    ReferenceKindUser,
-	"cluster": ReferenceKindCluster,
-}
-
-func ParseReferenceKind(s string) (ReferenceKind, error) {
-	if k, ok := referenceKindLookup[s]; ok {
-		return k, nil
-	}
-	return "", fmt.Errorf("invalid reference kind %q", s)
 }
 
 func (rk ReferenceKind) String() string {
@@ -54,6 +48,17 @@ func (rk ReferenceKind) String() string {
 		return string(rk)
 	default:
 		return ""
+	}
+}
+
+func ParseReferenceKind(s string) (ReferenceKind, error) {
+	switch s {
+	case "user":
+		return ReferenceKindUser, nil
+	case "cluster":
+		return ReferenceKindCluster, nil
+	default:
+		return "", fmt.Errorf("invalid reference kind %q", s)
 	}
 }
 

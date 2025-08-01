@@ -21,6 +21,7 @@ type store struct {
 	updateUserOnLogin bool
 }
 
+// TODO: FIX
 func newStore(cfg *config.Config, db *gorm.DB) (*store, error) {
 	//if cfg == nil {
 	//	return nil, status.Error(codes.InvalidArgument, "configuration is nil")
@@ -89,7 +90,7 @@ func (s *store) syncUserByPrincipal(ctx context.Context, claims *Claims) (*model
 	return &user, nil
 }
 
-func (s *store) StoreToken(ctx context.Context, id string, parentID *string, provider string, referenceKind model.ReferenceKind, referenceId uuid.UUID, token *oauth2.Token) (*model.AuthnToken, error) {
+func (s *store) StoreToken(ctx context.Context, id string, parentID *string, provider string, referenceKind TokenKind, referenceId uuid.UUID, token *oauth2.Token) (*model.AuthnToken, error) {
 	if id == "" {
 		return nil, errors.New("id cannot be empty")
 	}
@@ -103,11 +104,22 @@ func (s *store) StoreToken(ctx context.Context, id string, parentID *string, pro
 		return nil, errors.New("token expiry is invalid")
 	}
 
+	// Convert TokenKind to model.ReferenceKind
+	var modelReferenceKind model.ReferenceKind
+	switch referenceKind {
+	case TokenKindUser:
+		modelReferenceKind = model.ReferenceKindUser
+	case TokenKindCluster:
+		modelReferenceKind = model.ReferenceKindCluster
+	default:
+		return nil, fmt.Errorf("unsupported reference kind: %s", referenceKind)
+	}
+
 	authnToken := &model.AuthnToken{
 		Id:            id,
 		ParentID:      parentID,
 		Provider:      provider,
-		ReferenceKind: referenceKind,
+		ReferenceKind: modelReferenceKind,
 		ReferenceId:   referenceId,
 		AccessToken:   []byte(token.AccessToken),
 		ExpiresAt:     token.Expiry,
@@ -184,4 +196,21 @@ func (s *store) GetToken(ctx context.Context, id string) (*model.AuthnToken, *oa
 	}
 
 	return &authnToken, oauth2Token, nil
+}
+
+func (s *store) DeleteToken(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id cannot be empty")
+	}
+
+	result := s.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", id)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete authn token: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no token found to delete")
+	}
+
+	return nil
 }

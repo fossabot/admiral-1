@@ -16,12 +16,52 @@ type Server struct {
 	Stats                *Stats     `yaml:"stats"`
 	EnablePprof          bool       `yaml:"enable_pprof"`
 	MaxResponseSizeBytes int        `yaml:"max_response_size_bytes"`
-	Cookies              *Cookies   `yaml:"cookies"`
+}
+
+func (s *Server) SetDefaults() {
+	if s == nil {
+		return
+	}
+	s.Listener.SetDefaults()
+
+	if s.Logger == nil {
+		s.Logger = &Logger{Level: zap.ErrorLevel}
+	}
+
+	if s.Stats == nil {
+		s.Stats = &Stats{
+			FlushInterval: time.Second,
+			Prefix:        "admiral",
+			ReporterType:  ReporterTypeNull,
+		}
+	}
+}
+
+func (s *Server) Validate() error {
+	if s == nil {
+		return nil
+	}
+	if s.Stats != nil {
+		if err := s.Stats.ReporterType.Validate(); err != nil {
+			return fmt.Errorf("invalid stats.reporter_type: %w", err)
+		}
+	}
+
+	return nil
 }
 
 type Listener struct {
 	Address string `yaml:"address" validate:"ip"`
 	Port    int    `yaml:"port" validate:"required,min=1,max=65535"`
+}
+
+func (l *Listener) SetDefaults() {
+	if l.Address == "" {
+		l.Address = "0.0.0.0"
+	}
+	if l.Port == 0 {
+		l.Port = 8080
+	}
 }
 
 type Timeouts struct {
@@ -41,7 +81,6 @@ type Logger struct {
 	Pretty    bool          `yaml:"pretty"`
 }
 
-// UnmarshalYAML implements custom unmarshaling to handle empty level values
 func (l *Logger) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// Define a type alias to avoid recursion
 	type rawLogger Logger
@@ -80,68 +119,11 @@ const (
 	ReporterTypePrometheus ReporterType = "prometheus"
 )
 
-func (r *ReporterType) String() string {
-	return string(*r)
-}
-
-func (r *ReporterType) MarshalYAML() (interface{}, error) {
-	return r.String(), nil
-}
-
-func (r *ReporterType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	if err := unmarshal(&str); err != nil {
-		return err
-	}
-
-	switch str {
-	case string(ReporterTypeNull):
-		*r = ReporterTypeNull
-	case string(ReporterTypeLog):
-		*r = ReporterTypeLog
-	case string(ReporterTypePrometheus):
-		*r = ReporterTypePrometheus
-	default:
-		return fmt.Errorf("invalid reporter model: %q", str)
-	}
-
-	return nil
-}
-
-func (r *ReporterType) Validate() error {
-	switch *r {
+func (r ReporterType) Validate() error {
+	switch r {
 	case ReporterTypeNull, ReporterTypeLog, ReporterTypePrometheus:
 		return nil
 	default:
-		return fmt.Errorf("invalid reporter model: %s", *r)
-	}
-}
-
-type Cookies struct {
-	Secure   bool     `yaml:"secure"`
-	SameSite SameSite `yaml:"same_site"`
-}
-
-type SameSite string
-
-const (
-	SameSiteLax    SameSite = "lax"
-	SameSiteStrict SameSite = "strict"
-	SameSiteNone   SameSite = "none"
-)
-
-func (s *SameSite) String() string {
-	if s == nil {
-		return "none"
-	}
-	return string(*s)
-}
-
-func (s *SameSite) Validate() error {
-	switch *s {
-	case SameSiteLax, SameSiteStrict, SameSiteNone:
-		return nil
-	default:
-		return fmt.Errorf("invalid same_site setting: %q", *s)
+		return fmt.Errorf("invalid reporter type: %q (valid: null, log, prometheus)", r)
 	}
 }

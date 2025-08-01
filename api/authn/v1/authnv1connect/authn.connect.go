@@ -37,15 +37,12 @@ const (
 	AuthnAPILoginProcedure = "/admiral.authn.v1.AuthnAPI/Login"
 	// AuthnAPICallbackProcedure is the fully-qualified name of the AuthnAPI's Callback RPC.
 	AuthnAPICallbackProcedure = "/admiral.authn.v1.AuthnAPI/Callback"
-	// AuthnAPICreateTokenProcedure is the fully-qualified name of the AuthnAPI's CreateToken RPC.
-	AuthnAPICreateTokenProcedure = "/admiral.authn.v1.AuthnAPI/CreateToken"
 )
 
 // AuthnAPIClient is a client for the admiral.authn.v1.AuthnAPI service.
 type AuthnAPIClient interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error)
-	CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error)
 }
 
 // NewAuthnAPIClient constructs a client for the admiral.authn.v1.AuthnAPI service. By default, it
@@ -71,20 +68,13 @@ func NewAuthnAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(authnAPIMethods.ByName("Callback")),
 			connect.WithClientOptions(opts...),
 		),
-		createToken: connect.NewClient[v1.CreateTokenRequest, v1.CreateTokenResponse](
-			httpClient,
-			baseURL+AuthnAPICreateTokenProcedure,
-			connect.WithSchema(authnAPIMethods.ByName("CreateToken")),
-			connect.WithClientOptions(opts...),
-		),
 	}
 }
 
 // authnAPIClient implements AuthnAPIClient.
 type authnAPIClient struct {
-	login       *connect.Client[v1.LoginRequest, v1.LoginResponse]
-	callback    *connect.Client[v1.CallbackRequest, v1.CallbackResponse]
-	createToken *connect.Client[v1.CreateTokenRequest, v1.CreateTokenResponse]
+	login    *connect.Client[v1.LoginRequest, v1.LoginResponse]
+	callback *connect.Client[v1.CallbackRequest, v1.CallbackResponse]
 }
 
 // Login calls admiral.authn.v1.AuthnAPI.Login.
@@ -97,16 +87,10 @@ func (c *authnAPIClient) Callback(ctx context.Context, req *connect.Request[v1.C
 	return c.callback.CallUnary(ctx, req)
 }
 
-// CreateToken calls admiral.authn.v1.AuthnAPI.CreateToken.
-func (c *authnAPIClient) CreateToken(ctx context.Context, req *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error) {
-	return c.createToken.CallUnary(ctx, req)
-}
-
 // AuthnAPIHandler is an implementation of the admiral.authn.v1.AuthnAPI service.
 type AuthnAPIHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error)
-	CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error)
 }
 
 // NewAuthnAPIHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -128,20 +112,12 @@ func NewAuthnAPIHandler(svc AuthnAPIHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(authnAPIMethods.ByName("Callback")),
 		connect.WithHandlerOptions(opts...),
 	)
-	authnAPICreateTokenHandler := connect.NewUnaryHandler(
-		AuthnAPICreateTokenProcedure,
-		svc.CreateToken,
-		connect.WithSchema(authnAPIMethods.ByName("CreateToken")),
-		connect.WithHandlerOptions(opts...),
-	)
 	return "/admiral.authn.v1.AuthnAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthnAPILoginProcedure:
 			authnAPILoginHandler.ServeHTTP(w, r)
 		case AuthnAPICallbackProcedure:
 			authnAPICallbackHandler.ServeHTTP(w, r)
-		case AuthnAPICreateTokenProcedure:
-			authnAPICreateTokenHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -157,8 +133,4 @@ func (UnimplementedAuthnAPIHandler) Login(context.Context, *connect.Request[v1.L
 
 func (UnimplementedAuthnAPIHandler) Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.authn.v1.AuthnAPI.Callback is not implemented"))
-}
-
-func (UnimplementedAuthnAPIHandler) CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.authn.v1.AuthnAPI.CreateToken is not implemented"))
 }
