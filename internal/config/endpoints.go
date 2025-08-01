@@ -1,6 +1,6 @@
 package config
 
-type Handlers struct {
+type Endpoints struct {
 	Manifest Manifest
 	Revision Revision
 }

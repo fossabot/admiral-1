@@ -14,9 +14,9 @@ import (
 )
 
 type Config struct {
-	Server   Server   `yaml:"server"`
-	Handlers Handlers `yaml:"handlers"`
-	Services Services `yaml:"services"`
+	Server    Server    `yaml:"server"`
+	Endpoints Endpoints `yaml:"endpoints"`
+	Services  Services  `yaml:"services"`
 }
 
 type Services struct {

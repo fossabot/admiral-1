@@ -21,12 +21,6 @@ service AuthnAPI {
     };
   }
 
-  rpc Logout(LogoutRequest) returns (LogoutResponse) {
-    option (google.api.http) = {
-      get : "/auth/logout"
-    };
-  }
-
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
     option (google.api.http) = {
       post : "/api/v1/authn/createToken"
@@ -60,9 +54,6 @@ message CallbackRequest {
 }
 message CallbackResponse {
 }
-
-message LogoutRequest {}
-message LogoutResponse {}
 
 message CreateTokenRequest {
   string subject_id = 1 [(buf.validate.field).string.uuid = true];

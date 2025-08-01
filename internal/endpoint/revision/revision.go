@@ -55,7 +55,7 @@ func New(cfg *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpo
 		return nil, err
 	}
 
-	if cfg.Handlers.Revision.BucketName == "" {
+	if cfg.Endpoints.Revision.BucketName == "" {
 		return nil, fmt.Errorf("revision bucket_name is required")
 	}
 
@@ -64,7 +64,7 @@ func New(cfg *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpo
 		gormDB:       dbService.GormDB(),
 		queryBuilder: querybuilder.New([]string{"name"}),
 		storage:      storageService,
-		bucket:       cfg.Handlers.Revision.BucketName,
+		bucket:       cfg.Endpoints.Revision.BucketName,
 		logger:       log.Named("revision"),
 		scope:        scope.SubScope("revision"),
 	}

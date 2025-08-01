@@ -10,6 +10,7 @@ import type { User } from '@/types/user';
 import { useUserData } from '../hooks/use-user-data';
 import { DataTable, PageHeader, StatusChip } from '@/components';
 import type { Column } from '@/components';
+import { getValidPictureUrl, getAvatarInitial } from '@/utils/avatar';
 
 const UsersPage: React.FC = () => {
   const { users, currentUser, loading, error, fetchUsersWithCurrent } = useUserData();
@@ -29,8 +30,12 @@ const UsersPage: React.FC = () => {
       label: 'Name',
       format: (_, user) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar src={user.pictureUrl} alt={user.name || user.email} sx={{ width: 32, height: 32 }}>
-            {(user.name || user.email).charAt(0).toUpperCase()}
+          <Avatar
+            src={getValidPictureUrl(user.pictureUrl)}
+            alt={user.name || user.email}
+            sx={{ width: 32, height: 32 }}
+          >
+            {getAvatarInitial(user.name, user.email)}
           </Avatar>
           <Box>
             <Typography variant="body2">

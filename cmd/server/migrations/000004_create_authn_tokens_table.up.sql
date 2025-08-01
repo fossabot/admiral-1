@@ -1,8 +1,8 @@
 CREATE TYPE reference_kind AS ENUM ('user', 'cluster');
 
 CREATE TABLE IF NOT EXISTS authn_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    parent_id UUID REFERENCES authn_tokens(id) ON DELETE SET NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    parent_id TEXT REFERENCES authn_tokens(id) ON DELETE SET NULL,
     provider TEXT NOT NULL CHECK (provider <> ''),
     reference_kind reference_kind NOT NULL,
     reference_id UUID NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS authn_tokens (
     id_token BYTEA,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL CHECK (expires_at > NOW())
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL CHECK (expires_at > created_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_authn_tokens_provider ON authn_tokens(provider);

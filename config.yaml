@@ -18,7 +18,7 @@ server:
     go_runtime_stats:
       collection_interval: 5s
     reporter_type: prometheus
-handlers:
+endpoints:
   manifest:
     bucket_name: ${MANIFEST_BUCKET_NAME}
   revision:

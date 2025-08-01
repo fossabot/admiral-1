@@ -174,16 +174,6 @@ export function DataTable<T extends Record<string, unknown>>({
     );
   }
 
-  if (rows.length === 0 && emptyState) {
-    return (
-      <EmptyState
-        title={emptyState.title}
-        description={emptyState.description}
-        icon={emptyState.icon}
-        action={emptyState.action}
-      />
-    );
-  }
 
   return (
     <Paper elevation={0} sx={{ width: '100%', overflow: 'hidden', border: '1px solid', borderColor: 'divider', ...sx }}>
@@ -257,52 +247,73 @@ export function DataTable<T extends Record<string, unknown>>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedRows.map((row) => {
-              const isItemSelected = isSelected(row[keyField]);
-
-              return (
-                <TableRow
-                  hover
-                  onClick={() => handleClick(row)}
-                  role="checkbox"
-                  aria-checked={isItemSelected}
-                  tabIndex={-1}
-                  key={String(row[keyField])}
-                  selected={isItemSelected}
-                  sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
+            {sortedRows.length === 0 && emptyState ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}
+                  sx={{
+                    border: 0,
+                    p: 0,
+                  }}
                 >
-                  {selectable && (
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </TableCell>
-                  )}
-                  {columns.map((column) => {
-                    const columnIdStr = String(column.id);
-                    const value = columnIdStr.includes('.')
-                      ? columnIdStr.split('.').reduce((obj: unknown, key: string) => (obj as Record<string, unknown>)?.[key], row)
-                      : row[column.id as keyof T];
+                  <Box sx={{ py: 8 }}>
+                    <EmptyState
+                      title={emptyState.title}
+                      description={emptyState.description}
+                      icon={emptyState.icon}
+                      action={emptyState.action}
+                    />
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ) : (
+              sortedRows.map((row) => {
+                const isItemSelected = isSelected(row[keyField]);
 
-                    return (
-                      <TableCell
-                        key={column.id as string}
-                        align={column.align || (column.numeric ? 'right' : 'left')}
-                      >
-                        {column.format ? column.format(value, row) : String(value ?? '')}
+                return (
+                  <TableRow
+                    hover
+                    onClick={() => handleClick(row)}
+                    role="checkbox"
+                    aria-checked={isItemSelected}
+                    tabIndex={-1}
+                    key={String(row[keyField])}
+                    selected={isItemSelected}
+                    sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                  >
+                    {selectable && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          color="primary"
+                          checked={isItemSelected}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </TableCell>
-                    );
-                  })}
-                  {actions && (
-                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      {actions}
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })}
+                    )}
+                    {columns.map((column) => {
+                      const columnIdStr = String(column.id);
+                      const value = columnIdStr.includes('.')
+                        ? columnIdStr.split('.').reduce((obj: unknown, key: string) => (obj as Record<string, unknown>)?.[key], row)
+                        : row[column.id as keyof T];
+
+                      return (
+                        <TableCell
+                          key={column.id as string}
+                          align={column.align || (column.numeric ? 'right' : 'left')}
+                        >
+                          {column.format ? column.format(value, row) : String(value ?? '')}
+                        </TableCell>
+                      );
+                    })}
+                    {actions && (
+                      <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                        {actions}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>

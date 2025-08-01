@@ -11,7 +11,11 @@ export const userSchema = z.object({
     .optional(),
   givenName: z.string().optional(),
   familyName: z.string().optional(),
-  pictureUrl: z.string().url().optional(),
+  pictureUrl: z
+    .string()
+    .optional()
+    .transform((val) => val && val.trim() !== '' ? val : undefined)
+    .pipe(z.string().url().optional()),
   createdAt: z.string().datetime({ message: 'Created at must be a valid ISO 8601 date' }).optional(),
   updatedAt: z.string().datetime({ message: 'Updated at must be a valid ISO 8601 date' }).optional(),
 });

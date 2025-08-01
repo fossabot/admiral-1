@@ -17,8 +17,8 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import type { RootState } from '@/store';
 import { ThemeMode, setThemeMode } from '@/store/slices/user';
+import { getValidPictureUrl, getAvatarInitial } from '@/utils/avatar';
 
-// TODO: should this stay here, be moved to a global component, be moved to component in the layout?
 const ThemeSelector = ({
   value,
   onChange,
@@ -64,7 +64,7 @@ const ThemeSelector = ({
 const Header: React.FC = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const { name, pictureUrl } = useSelector((s: RootState) => s.user);
+  const { name, pictureUrl, email } = useSelector((s: RootState) => s.user);
   const themeMode = useSelector((s: RootState) => s.user.preferences.themeMode);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -103,12 +103,13 @@ const Header: React.FC = () => {
           '&:hover': {
             transform: 'scale(1.05)',
           },
-          px: 2,
+          p: 1, // Use equal padding on all sides for circular shape
+          borderRadius: '50%', // Ensure the hover effect is circular
         }}
       >
         <Avatar
-          alt={name}
-          src={pictureUrl}
+          alt={name || email}
+          src={getValidPictureUrl(pictureUrl)}
           sx={{
             width: 36,
             height: 36,
@@ -119,7 +120,9 @@ const Header: React.FC = () => {
             border: `2px solid ${theme.palette.background.paper}`,
             transition: 'all 0.2s ease-in-out',
           }}
-        />
+        >
+          {getAvatarInitial(name, email)}
+        </Avatar>
       </IconButton>
       <Menu
         anchorEl={anchorEl}

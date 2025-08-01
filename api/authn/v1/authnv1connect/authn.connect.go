@@ -37,8 +37,6 @@ const (
 	AuthnAPILoginProcedure = "/admiral.authn.v1.AuthnAPI/Login"
 	// AuthnAPICallbackProcedure is the fully-qualified name of the AuthnAPI's Callback RPC.
 	AuthnAPICallbackProcedure = "/admiral.authn.v1.AuthnAPI/Callback"
-	// AuthnAPILogoutProcedure is the fully-qualified name of the AuthnAPI's Logout RPC.
-	AuthnAPILogoutProcedure = "/admiral.authn.v1.AuthnAPI/Logout"
 	// AuthnAPICreateTokenProcedure is the fully-qualified name of the AuthnAPI's CreateToken RPC.
 	AuthnAPICreateTokenProcedure = "/admiral.authn.v1.AuthnAPI/CreateToken"
 )
@@ -47,7 +45,6 @@ const (
 type AuthnAPIClient interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error)
-	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error)
 }
 
@@ -74,12 +71,6 @@ func NewAuthnAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(authnAPIMethods.ByName("Callback")),
 			connect.WithClientOptions(opts...),
 		),
-		logout: connect.NewClient[v1.LogoutRequest, v1.LogoutResponse](
-			httpClient,
-			baseURL+AuthnAPILogoutProcedure,
-			connect.WithSchema(authnAPIMethods.ByName("Logout")),
-			connect.WithClientOptions(opts...),
-		),
 		createToken: connect.NewClient[v1.CreateTokenRequest, v1.CreateTokenResponse](
 			httpClient,
 			baseURL+AuthnAPICreateTokenProcedure,
@@ -93,7 +84,6 @@ func NewAuthnAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 type authnAPIClient struct {
 	login       *connect.Client[v1.LoginRequest, v1.LoginResponse]
 	callback    *connect.Client[v1.CallbackRequest, v1.CallbackResponse]
-	logout      *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
 	createToken *connect.Client[v1.CreateTokenRequest, v1.CreateTokenResponse]
 }
 
@@ -107,11 +97,6 @@ func (c *authnAPIClient) Callback(ctx context.Context, req *connect.Request[v1.C
 	return c.callback.CallUnary(ctx, req)
 }
 
-// Logout calls admiral.authn.v1.AuthnAPI.Logout.
-func (c *authnAPIClient) Logout(ctx context.Context, req *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error) {
-	return c.logout.CallUnary(ctx, req)
-}
-
 // CreateToken calls admiral.authn.v1.AuthnAPI.CreateToken.
 func (c *authnAPIClient) CreateToken(ctx context.Context, req *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error) {
 	return c.createToken.CallUnary(ctx, req)
@@ -121,7 +106,6 @@ func (c *authnAPIClient) CreateToken(ctx context.Context, req *connect.Request[v
 type AuthnAPIHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error)
-	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error)
 }
 
@@ -144,12 +128,6 @@ func NewAuthnAPIHandler(svc AuthnAPIHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(authnAPIMethods.ByName("Callback")),
 		connect.WithHandlerOptions(opts...),
 	)
-	authnAPILogoutHandler := connect.NewUnaryHandler(
-		AuthnAPILogoutProcedure,
-		svc.Logout,
-		connect.WithSchema(authnAPIMethods.ByName("Logout")),
-		connect.WithHandlerOptions(opts...),
-	)
 	authnAPICreateTokenHandler := connect.NewUnaryHandler(
 		AuthnAPICreateTokenProcedure,
 		svc.CreateToken,
@@ -162,8 +140,6 @@ func NewAuthnAPIHandler(svc AuthnAPIHandler, opts ...connect.HandlerOption) (str
 			authnAPILoginHandler.ServeHTTP(w, r)
 		case AuthnAPICallbackProcedure:
 			authnAPICallbackHandler.ServeHTTP(w, r)
-		case AuthnAPILogoutProcedure:
-			authnAPILogoutHandler.ServeHTTP(w, r)
 		case AuthnAPICreateTokenProcedure:
 			authnAPICreateTokenHandler.ServeHTTP(w, r)
 		default:
@@ -181,10 +157,6 @@ func (UnimplementedAuthnAPIHandler) Login(context.Context, *connect.Request[v1.L
 
 func (UnimplementedAuthnAPIHandler) Callback(context.Context, *connect.Request[v1.CallbackRequest]) (*connect.Response[v1.CallbackResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.authn.v1.AuthnAPI.Callback is not implemented"))
-}
-
-func (UnimplementedAuthnAPIHandler) Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.authn.v1.AuthnAPI.Logout is not implemented"))
 }
 
 func (UnimplementedAuthnAPIHandler) CreateToken(context.Context, *connect.Request[v1.CreateTokenRequest]) (*connect.Response[v1.CreateTokenResponse], error) {

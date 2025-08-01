@@ -9,9 +9,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	authnv1 "go.admiral.io/admiral/api/authn/v1"
 	"go.admiral.io/admiral/internal/config"
@@ -70,6 +68,7 @@ func (a *api) Login(ctx context.Context, req *authnv1.LoginRequest) (*authnv1.Lo
 	if err != nil {
 		return nil, err
 	}
+
 	authURL, err := a.provider.GetAuthCodeURL(ctx, state)
 	if err != nil {
 		return nil, err
@@ -163,10 +162,6 @@ func (a *api) loginViaRefresh(ctx context.Context, redirectURL string) (*authnv1
 			},
 		},
 	}, nil
-}
-
-func (a *api) Logout(ctx context.Context, req *authnv1.LogoutRequest) (*authnv1.LogoutResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 func (a *api) CreateToken(ctx context.Context, request *authnv1.CreateTokenRequest) (*authnv1.CreateTokenResponse, error) {

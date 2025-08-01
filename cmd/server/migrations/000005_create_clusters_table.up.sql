@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS clusters (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL CHECK (name ~ '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'),
-    authn_token_id UUID REFERENCES authn_tokens(id) ON DELETE SET NULL,
+    authn_token_id TEXT REFERENCES authn_tokens(id) ON DELETE SET NULL,
     cluster_identifier UUID UNIQUE,
     metadata JSONB,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
