@@ -15,35 +15,145 @@ import (
 )
 
 type store struct {
-	crypto            *cryptographer
-	database          *gorm.DB
-	createUserOnLogin bool
-	updateUserOnLogin bool
+	database *gorm.DB
 }
 
-// TODO: FIX
-func newStore(cfg *config.Config, db *gorm.DB) (*store, error) {
-	//if cfg == nil {
-	//	return nil, status.Error(codes.InvalidArgument, "configuration is nil")
-	//}
-	//if database == nil {
-	//	return nil, status.Error(codes.InvalidArgument, "database connection is nil")
-	//}
-
-	crypto, err := newCryptographer("cfg.EncryptionPassphrase")
-	if err != nil {
-		return nil, err
+func newStore(_ *config.Config, db *gorm.DB) (*store, error) {
+	if db == nil {
+		return nil, errors.New("database is required")
 	}
 
 	return &store{
-		database:          db,
-		crypto:            crypto,
-		createUserOnLogin: true,
-		updateUserOnLogin: false,
+		database: db,
 	}, nil
 }
 
-func (s *store) syncUserByPrincipal(ctx context.Context, claims *Claims) (*model.User, error) {
+func (s *store) save(ctx context.Context, tokenId uuid.UUID, parentTokenId *uuid.UUID, subject string, issuer string, kind model.AuthnTokenKind, token *oauth2.Token) (*model.AuthnToken, error) {
+	if tokenId == uuid.Nil {
+		return nil, errors.New("id cannot be empty")
+	}
+	if subject == "" {
+		return nil, errors.New("subject cannot be empty")
+	}
+	if issuer == "" {
+		return nil, errors.New("issuer cannot be empty")
+	}
+	if token == nil {
+		return nil, errors.New("token provided for storage was nil")
+	}
+	if token.AccessToken == "" {
+		return nil, errors.New("access token cannot be empty")
+	}
+	if token.Expiry.IsZero() || token.Expiry.Before(time.Now()) {
+		return nil, errors.New("token expiry is invalid")
+	}
+
+	// Check if token with this ID already exists
+	var existing model.AuthnToken
+	err := s.database.WithContext(ctx).First(&existing, "id = ?", tokenId).Error
+
+	if err == nil {
+		updates := map[string]interface{}{
+			"subject":      subject,
+			"issuer":       issuer,
+			"kind":         kind,
+			"access_token": []byte(token.AccessToken),
+			"expires_at":   token.Expiry,
+			"updated_at":   time.Now(),
+		}
+
+		if parentTokenId != nil {
+			updates["parent_id"] = *parentTokenId
+		}
+
+		if token.RefreshToken != "" {
+			updates["refresh_token"] = []byte(token.RefreshToken)
+		}
+
+		if it, ok := token.Extra("id_token").(string); ok && it != "" {
+			updates["id_token"] = []byte(it)
+		}
+
+		err = s.database.WithContext(ctx).Model(&existing).Updates(updates).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to update token: %w", err)
+		}
+
+		// Reload the updated token
+		err = s.database.WithContext(ctx).First(&existing, "id = ?", tokenId).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to reload updated token: %w", err)
+		}
+
+		return &existing, nil
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		authnToken := &model.AuthnToken{
+			Id:          tokenId,
+			ParentID:    parentTokenId,
+			Subject:     subject,
+			Issuer:      issuer,
+			Kind:        kind,
+			AccessToken: []byte(token.AccessToken),
+			ExpiresAt:   token.Expiry,
+		}
+
+		if token.RefreshToken != "" {
+			authnToken.RefreshToken = []byte(token.RefreshToken)
+		}
+
+		if it, ok := token.Extra("id_token").(string); ok && it != "" {
+			authnToken.IdToken = []byte(it)
+		}
+
+		err = s.database.WithContext(ctx).Create(authnToken).Error
+		if err != nil {
+			return nil, fmt.Errorf("failed to create token: %w", err)
+		}
+
+		return authnToken, nil
+	} else {
+		return nil, fmt.Errorf("failed to check for existing token: %w", err)
+	}
+}
+
+func (s *store) get(ctx context.Context, id uuid.UUID) (*model.AuthnToken, error) {
+	if id == uuid.Nil {
+		return nil, errors.New("id cannot be empty")
+	}
+
+	var authnToken model.AuthnToken
+	err := s.database.WithContext(ctx).
+		Where("id = ?", id).
+		First(&authnToken).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("token not found: %s", id)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve authn token with id %s: %w", id, err)
+	}
+
+	return &authnToken, nil
+}
+
+func (s *store) delete(ctx context.Context, id uuid.UUID) error {
+	if id == uuid.Nil {
+		return errors.New("id cannot be empty")
+	}
+
+	result := s.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", id)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete authn token: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no token found to delete")
+	}
+
+	return nil
+}
+
+func (s *store) upsertUserFromClaims(ctx context.Context, claims *Claims) (*model.User, error) {
 	if claims == nil || claims.Subject == "" {
 		return nil, errors.New("invalid claims: nil, or missing subject")
 	}
@@ -53,10 +163,6 @@ func (s *store) syncUserByPrincipal(ctx context.Context, claims *Claims) (*model
 	if result.Error != nil {
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to retrieve user for subject %s: %v", claims.Subject, result.Error)
-		}
-
-		if !s.createUserOnLogin {
-			return nil, errors.New("user not found and creation disabled")
 		}
 
 		user = model.User{
@@ -72,9 +178,7 @@ func (s *store) syncUserByPrincipal(ctx context.Context, claims *Claims) (*model
 			return nil, fmt.Errorf("failed to create user for subject %s: %v", claims.Subject, err)
 		}
 		return &user, nil
-	}
-
-	if s.updateUserOnLogin {
+	} else {
 		user.Email = claims.Email
 		user.EmailVerified = claims.EmailVerified
 		user.Name = claims.Name
@@ -88,129 +192,4 @@ func (s *store) syncUserByPrincipal(ctx context.Context, claims *Claims) (*model
 	}
 
 	return &user, nil
-}
-
-func (s *store) StoreToken(ctx context.Context, id string, parentID *string, provider string, referenceKind TokenKind, referenceId uuid.UUID, token *oauth2.Token) (*model.AuthnToken, error) {
-	if id == "" {
-		return nil, errors.New("id cannot be empty")
-	}
-	if token == nil {
-		return nil, errors.New("token provided for storage was nil")
-	}
-	if token.AccessToken == "" {
-		return nil, errors.New("access token cannot be empty")
-	}
-	if token.Expiry.IsZero() || token.Expiry.Before(time.Now()) {
-		return nil, errors.New("token expiry is invalid")
-	}
-
-	// Convert TokenKind to model.ReferenceKind
-	var modelReferenceKind model.ReferenceKind
-	switch referenceKind {
-	case TokenKindUser:
-		modelReferenceKind = model.ReferenceKindUser
-	case TokenKindCluster:
-		modelReferenceKind = model.ReferenceKindCluster
-	default:
-		return nil, fmt.Errorf("unsupported reference kind: %s", referenceKind)
-	}
-
-	authnToken := &model.AuthnToken{
-		Id:            id,
-		ParentID:      parentID,
-		Provider:      provider,
-		ReferenceKind: modelReferenceKind,
-		ReferenceId:   referenceId,
-		AccessToken:   []byte(token.AccessToken),
-		ExpiresAt:     token.Expiry,
-	}
-
-	if token.RefreshToken != "" {
-		authnToken.RefreshToken = []byte(token.RefreshToken)
-	}
-
-	if it, ok := token.Extra("id_token").(string); ok {
-		authnToken.IdToken = []byte(it)
-	}
-
-	err := s.database.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var existing model.AuthnToken
-		err := tx.Where("id = ?", id).First(&existing).Error
-		if err == nil {
-			updates := map[string]interface{}{
-				"provider":       authnToken.Provider,
-				"reference_kind": authnToken.ReferenceKind,
-				"reference_id":   authnToken.ReferenceId,
-				"access_token":   authnToken.AccessToken,
-				"refresh_token":  authnToken.RefreshToken,
-				"id_token":       authnToken.IdToken,
-				"expires_at":     authnToken.ExpiresAt,
-			}
-			if authnToken.ParentID != nil {
-				updates["parent_id"] = authnToken.ParentID
-			}
-			return tx.Model(&existing).Updates(updates).Error
-		}
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("failed to check existing token: %w", err)
-		}
-		return tx.Create(authnToken).Error
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to upsert authn token: %w", err)
-	}
-
-	return authnToken, nil
-}
-
-func (s *store) GetToken(ctx context.Context, id string) (*model.AuthnToken, *oauth2.Token, error) {
-	if id == "" {
-		return nil, nil, errors.New("id cannot be empty")
-	}
-
-	var authnToken model.AuthnToken
-	err := s.database.WithContext(ctx).
-		Where("id = ?", id).
-		First(&authnToken).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil, errors.New("no active token found")
-	}
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to retrieve authn token: %w", err)
-	}
-
-	oauth2Token := &oauth2.Token{
-		AccessToken: string(authnToken.AccessToken),
-		Expiry:      authnToken.ExpiresAt,
-	}
-
-	if len(authnToken.RefreshToken) > 0 {
-		oauth2Token.RefreshToken = string(authnToken.RefreshToken)
-	}
-
-	if len(authnToken.IdToken) > 0 {
-		oauth2Token = oauth2Token.WithExtra(map[string]interface{}{
-			"id_token": string(authnToken.IdToken),
-		})
-	}
-
-	return &authnToken, oauth2Token, nil
-}
-
-func (s *store) DeleteToken(ctx context.Context, id string) error {
-	if id == "" {
-		return errors.New("id cannot be empty")
-	}
-
-	result := s.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", id)
-	if result.Error != nil {
-		return fmt.Errorf("failed to delete authn token: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return errors.New("no token found to delete")
-	}
-
-	return nil
 }

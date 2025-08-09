@@ -103,7 +103,6 @@ func validateConfig(cfg *config.Config) error {
 		return nil
 	}
 
-	// Validate SameSite mode
 	if session.Cookie.SameSite != "" {
 		switch session.Cookie.SameSite {
 		case config.SessionSameSiteLax, config.SessionSameSiteStrict, config.SessionSameSiteNone:

@@ -6,72 +6,85 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/oauth2"
 )
 
-type ReferenceKind string
+type AuthnToken struct {
+	Id           uuid.UUID      `gorm:"column:id;primaryKey"`
+	ParentID     *uuid.UUID     `gorm:"column:parent_id"`
+	Subject      string         `gorm:"column:subject"`
+	Issuer       string         `gorm:"column:issuer"`
+	Kind         AuthnTokenKind `gorm:"column:kind"`
+	AccessToken  []byte         `gorm:"column:access_token"`
+	RefreshToken []byte         `gorm:"column:refresh_token"`
+	IdToken      []byte         `gorm:"column:id_token"`
+	CreatedAt    time.Time      `gorm:"column:created_at"`
+	UpdatedAt    time.Time      `gorm:"column:updated_at"`
+	ExpiresAt    time.Time      `gorm:"column:expires_at"`
+}
+
+func (AuthnToken) TableName() string {
+	return "authn_tokens"
+}
+
+func (at *AuthnToken) ToOAuth2Token() *oauth2.Token {
+	token := &oauth2.Token{
+		AccessToken: string(at.AccessToken),
+		Expiry:      at.ExpiresAt,
+		TokenType:   "Bearer",
+	}
+
+	if len(at.RefreshToken) > 0 {
+		token.RefreshToken = string(at.RefreshToken)
+	}
+
+	if len(at.IdToken) > 0 {
+		token = token.WithExtra(map[string]interface{}{"id_token": string(at.IdToken)})
+	}
+
+	return token
+}
+
+type AuthnTokenKind string
 
 const (
-	ReferenceKindUser    ReferenceKind = "user"
-	ReferenceKindCluster ReferenceKind = "cluster"
+	AuthnTokenKindExternal AuthnTokenKind = "external"
+	AuthnTokenKindUser     AuthnTokenKind = "user"
+	AuthnTokenKindCluster  AuthnTokenKind = "cluster"
 )
 
-func (rk ReferenceKind) Value() (driver.Value, error) {
-	switch rk {
-	case ReferenceKindUser, ReferenceKindCluster:
-		return string(rk), nil
+func (k *AuthnTokenKind) Value() (driver.Value, error) {
+	switch *k {
+	case AuthnTokenKindExternal, AuthnTokenKindUser, AuthnTokenKindCluster:
+		return string(*k), nil
 	default:
-		return nil, fmt.Errorf("invalid reference_kind value")
+		return nil, fmt.Errorf("invalid AuthnTokenKind value")
 	}
 }
 
-func (rk *ReferenceKind) Scan(value interface{}) error {
+func (k *AuthnTokenKind) Scan(value interface{}) error {
 	if value == nil {
-		*rk = ""
+		*k = ""
 		return nil
 	}
 
 	switch v := value.(type) {
 	case string:
-		*rk = ReferenceKind(v)
+		*k = AuthnTokenKind(v)
 	case []byte:
-		*rk = ReferenceKind(v)
+		*k = AuthnTokenKind(v)
 	default:
-		return fmt.Errorf("cannot scan %T into ReferenceKind", value)
+		return fmt.Errorf("cannot scan %T into AuthnTokenKind", value)
 	}
 
 	return nil
 }
 
-func (rk ReferenceKind) String() string {
-	switch rk {
-	case ReferenceKindUser, ReferenceKindCluster:
-		return string(rk)
+func (k *AuthnTokenKind) String() string {
+	switch *k {
+	case AuthnTokenKindExternal, AuthnTokenKindUser, AuthnTokenKindCluster:
+		return string(*k)
 	default:
 		return ""
 	}
-}
-
-func ParseReferenceKind(s string) (ReferenceKind, error) {
-	switch s {
-	case "user":
-		return ReferenceKindUser, nil
-	case "cluster":
-		return ReferenceKindCluster, nil
-	default:
-		return "", fmt.Errorf("invalid reference kind %q", s)
-	}
-}
-
-type AuthnToken struct {
-	Id            string `gorm:"type:uuid;primaryKey"`
-	ParentID      *string
-	Provider      string
-	ReferenceKind ReferenceKind
-	ReferenceId   uuid.UUID
-	AccessToken   []byte
-	RefreshToken  []byte
-	IdToken       []byte
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	ExpiresAt     time.Time
 }

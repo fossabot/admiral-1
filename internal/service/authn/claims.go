@@ -31,7 +31,7 @@ func (c *stateClaims) Validate() error {
 
 type Claims struct {
 	*jwt.RegisteredClaims
-	ExternalSubject string   `json:"external_subject,omitempty"`
+	ExternalSubject string   `json:"external_sub,omitempty"`
 	Kind            string   `json:"kind,omitempty"`
 	Email           string   `json:"email,omitempty"`
 	EmailVerified   bool     `json:"email_verified,omitempty"`

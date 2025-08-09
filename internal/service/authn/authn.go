@@ -56,7 +56,7 @@ type Provider interface {
 
 type Issuer interface {
 	// TODO: improve options for example, additional claims, generate refresh token, etc.
-	CreateToken(ctx context.Context, subjectId string, tokenKind TokenKind, expiry *time.Duration) (*oauth2.Token, error)
+	CreateToken(ctx context.Context, subject string, tokenKind TokenKind, expiry *time.Duration) (*oauth2.Token, error)
 	RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error)
 	RevokeToken(ctx context.Context, token *oauth2.Token) error
 }

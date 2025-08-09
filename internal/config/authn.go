@@ -3,17 +3,19 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Authn struct {
-	Name          string   `yaml:"name"`
-	Issuer        string   `yaml:"issuer"`
-	ClientID      string   `yaml:"client_id"`
-	ClientSecret  string   `yaml:"client_secret"`
-	Scopes        []string `yaml:"scopes"`
-	RedirectURL   string   `yaml:"redirect_url"`
-	SigningSecret string   `yaml:"signing_secret"`
-	SkipTLSVerify bool     `yaml:"skip_tls_verify"`
+	Name            string        `yaml:"name"`
+	Issuer          string        `yaml:"issuer"`
+	ClientID        string        `yaml:"client_id"`
+	ClientSecret    string        `yaml:"client_secret"`
+	Scopes          []string      `yaml:"scopes"`
+	RedirectURL     string        `yaml:"redirect_url"`
+	SigningSecret   string        `yaml:"signing_secret"`
+	RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl"`
+	SkipTLSVerify   bool          `yaml:"skip_tls_verify"`
 }
 
 func (a *Authn) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -48,6 +50,18 @@ func (a *Authn) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if v, ok := temp["skip_tls_verify"]; ok {
 		raw.SkipTLSVerify = v.(bool)
 	}
+	if v, ok := temp["refresh_token_ttl"]; ok {
+		switch ttl := v.(type) {
+		case string:
+			if duration, err := time.ParseDuration(ttl); err == nil {
+				raw.RefreshTokenTTL = duration
+			}
+		case float64:
+			raw.RefreshTokenTTL = time.Duration(ttl) * time.Second
+		case int:
+			raw.RefreshTokenTTL = time.Duration(ttl) * time.Second
+		}
+	}
 
 	// Handle scopes - can be string (comma-separated) or array
 	if v, ok := temp["scopes"]; ok {
@@ -77,6 +91,9 @@ func (a *Authn) SetDefaults() {
 	}
 	if len(a.Scopes) == 0 {
 		a.Scopes = []string{"openid", "email", "profile"}
+	}
+	if a.RefreshTokenTTL == 0 {
+		a.RefreshTokenTTL = time.Hour * 12
 	}
 }
 
