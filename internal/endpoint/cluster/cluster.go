@@ -320,7 +320,7 @@ func (a *api) DeleteCluster(ctx context.Context, req *clusterv1.DeleteClusterReq
 
 	// Use transaction to ensure both deletions succeed or fail together
 	err = a.database.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// First delete all associated auth tokens
+		// First, delete all associated auth tokens
 		if err := tx.Where("subject = ? AND kind = ?", id, model.AuthnTokenKindCluster).Delete(&model.AuthnToken{}).Error; err != nil {
 			return err
 		}
