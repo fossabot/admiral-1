@@ -318,13 +318,31 @@ func (a *api) DeleteCluster(ctx context.Context, req *clusterv1.DeleteClusterReq
 		return nil, status.Error(codes.InvalidArgument, "id is not a valid uuid")
 	}
 
-	result := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", id.String())
-	if e := result.Error; e != nil {
-		return nil, status.Error(codes.Internal, e.Error())
-	}
+	// Use transaction to ensure both deletions succeed or fail together
+	err = a.database.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// First delete all associated auth tokens
+		if err := tx.Where("subject = ? AND kind = ?", id, model.AuthnTokenKindCluster).Delete(&model.AuthnToken{}).Error; err != nil {
+			return err
+		}
 
-	if result.RowsAffected == 0 {
-		return nil, status.Error(codes.NotFound, "cluster not found")
+		// Then delete the cluster
+		result := tx.Delete(&model.Cluster{}, "id = ?", id.String())
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "cluster not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &clusterv1.DeleteClusterResponse{}, nil

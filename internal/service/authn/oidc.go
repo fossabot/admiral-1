@@ -364,9 +364,30 @@ func (p *OIDCProvider) RefreshToken(ctx context.Context, token *oauth2.Token) (*
 	} else {
 		p.logger.Info("populate existing token claims", zap.String("token", string(aat.AccessToken)))
 
-		internalClaims, err = p.parseTokenClaims(string(aat.AccessToken))
+		existingClaims, err := p.parseTokenClaims(string(aat.AccessToken))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse existing token claims: %w", err)
+		}
+
+		// Create new claims with updated timestamps and new ID
+		internalClaims = &Claims{
+			RegisteredClaims: &jwt.RegisteredClaims{
+				ID:        uuid.NewString(),
+				Subject:   existingClaims.Subject,
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(p.refreshTokenTTL)),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+				NotBefore: jwt.NewNumericDate(time.Now()),
+				Issuer:    admiralProviderName,
+			},
+			ExternalSubject: existingClaims.ExternalSubject,
+			Kind:            existingClaims.Kind,
+			Email:           existingClaims.Email,
+			EmailVerified:   existingClaims.EmailVerified,
+			Name:            existingClaims.Name,
+			GivenName:       existingClaims.GivenName,
+			FamilyName:      existingClaims.FamilyName,
+			Picture:         existingClaims.Picture,
+			Groups:          existingClaims.Groups,
 		}
 	}
 
