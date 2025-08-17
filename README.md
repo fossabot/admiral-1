@@ -6,6 +6,7 @@
 [![GitHub License](https://img.shields.io/github/license/mberwanger/admiral?style=flat-square)](https://github.com/mberwanger/admiral/blob/master/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/mberwanger/admiral?label=openssf%20scorecard&style=flat-square)](https://scorecard.dev/viewer/?uri=github.com/mberwanger/admiral)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mberwanger/admiral?style=flat-square)](https://goreportcard.com/report/github.com/mberwanger/admiral)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmberwanger%2Fadmiral.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmberwanger%2Fadmiral?ref=badge_shield)
 
 ## Contributing
 
@@ -18,6 +19,9 @@ We takes security issues very seriously. **Please do not file GitHub issues or p
 ## License
 
 See the [LICENSE](https://github.com/mberwanger/admiral/tree/master/LICENSE) file for licensing information
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmberwanger%2Fadmiral.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmberwanger%2Fadmiral?ref=badge_large)
 
 ## Thank You
 
