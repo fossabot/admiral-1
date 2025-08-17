@@ -20,6 +20,53 @@ type Database struct {
 	ConnectionTimeout time.Duration `yaml:"connection_timeout"`
 }
 
+func (d *Database) SetDefaults() {
+	if d == nil {
+		return
+	}
+	if d.Port == 0 {
+		d.Port = 5432
+	}
+	if d.SSLMode == SSLModeUnspecified {
+		d.SSLMode = SSLModeRequire
+	}
+	if d.DatabaseName == "" {
+		d.DatabaseName = "admiral"
+	}
+	if d.MaxOpenConns == 0 {
+		d.MaxOpenConns = 100
+	}
+	if d.MaxIdleConns == 0 {
+		d.MaxIdleConns = 10
+	}
+	if d.ConnMaxLifetime == 0 {
+		d.ConnMaxLifetime = 30 * time.Minute
+	}
+	if d.ConnMaxIdleTime == 0 {
+		d.ConnMaxIdleTime = 5 * time.Minute
+	}
+	if d.ConnectionTimeout == 0 {
+		d.ConnectionTimeout = 5 * time.Second
+	}
+}
+
+func (d *Database) Validate() error {
+	if d == nil {
+		return nil
+	}
+	if d.Host == "" {
+		return fmt.Errorf("host is required")
+	}
+	if d.User == "" {
+		return fmt.Errorf("user is required")
+	}
+	if d.Password == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	return d.SSLMode.Validate()
+}
+
 type SSLMode int
 
 const (

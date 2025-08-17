@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,7 +55,7 @@ scopes:
 name: generic
 scopes: ""
 `,
-			expectedScopes: []string{"openid", "offline_access", "email", "profile"},
+			expectedScopes: []string{"openid", "email", "profile"},
 			expectedName:   "generic",
 		},
 		{
@@ -63,7 +64,7 @@ scopes: ""
 name: cognito
 issuer: http://cognito.example.com
 `,
-			expectedScopes: []string{"openid", "offline_access", "email", "profile"},
+			expectedScopes: []string{"openid", "email", "profile"},
 			expectedName:   "cognito",
 		},
 		{
@@ -105,9 +106,10 @@ issuer: http://localhost:9090/realms/test
 client_id: test-client
 client_secret: secret123
 redirect_url: http://localhost:8080/callback
-nonce_secret: nonce123
+signing_secret: signing123
 skip_tls_verify: true
 scopes: openid,profile
+refresh_token_ttl: 24h
 `
 
 	var authn Authn
@@ -119,7 +121,250 @@ scopes: openid,profile
 	assert.Equal(t, "test-client", authn.ClientID)
 	assert.Equal(t, "secret123", authn.ClientSecret)
 	assert.Equal(t, "http://localhost:8080/callback", authn.RedirectURL)
-	assert.Equal(t, "nonce123", authn.NonceSecret)
+	assert.Equal(t, "signing123", authn.SigningSecret)
 	assert.True(t, authn.SkipTLSVerify)
 	assert.Equal(t, []string{"openid", "profile"}, authn.Scopes)
+	assert.Equal(t, 24*time.Hour, authn.RefreshTokenTTL)
+}
+
+func TestAuthn_SetDefaults(t *testing.T) {
+	tests := []struct {
+		name                    string
+		authn                   Authn
+		expectedScopes          []string
+		expectedRefreshTokenTTL time.Duration
+	}{
+		{
+			name:                    "empty scopes gets defaults",
+			authn:                   Authn{Scopes: []string{}},
+			expectedScopes:          []string{"openid", "email", "profile"},
+			expectedRefreshTokenTTL: time.Hour * 12,
+		},
+		{
+			name:                    "nil scopes gets defaults",
+			authn:                   Authn{Scopes: nil},
+			expectedScopes:          []string{"openid", "email", "profile"},
+			expectedRefreshTokenTTL: time.Hour * 12,
+		},
+		{
+			name:                    "existing scopes preserved",
+			authn:                   Authn{Scopes: []string{"read", "write"}},
+			expectedScopes:          []string{"read", "write"},
+			expectedRefreshTokenTTL: time.Hour * 12,
+		},
+		{
+			name:                    "existing refresh token ttl preserved",
+			authn:                   Authn{RefreshTokenTTL: time.Hour * 24},
+			expectedScopes:          []string{"openid", "email", "profile"},
+			expectedRefreshTokenTTL: time.Hour * 24,
+		},
+		{
+			name:                    "zero refresh token ttl gets default",
+			authn:                   Authn{RefreshTokenTTL: 0},
+			expectedScopes:          []string{"openid", "email", "profile"},
+			expectedRefreshTokenTTL: time.Hour * 12,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.authn.SetDefaults()
+			assert.Equal(t, tt.expectedScopes, tt.authn.Scopes)
+			assert.Equal(t, tt.expectedRefreshTokenTTL, tt.authn.RefreshTokenTTL)
+		})
+	}
+}
+
+func TestAuthn_Validate(t *testing.T) {
+	tests := []struct {
+		name        string
+		authn       Authn
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid authn config",
+			authn: Authn{
+				Issuer:        "http://localhost:9090",
+				ClientID:      "test-client",
+				ClientSecret:  "secret123",
+				SigningSecret: "signing123",
+			},
+			expectError: false,
+		},
+		{
+			name: "missing issuer",
+			authn: Authn{
+				ClientID:      "test-client",
+				ClientSecret:  "secret123",
+				SigningSecret: "signing123",
+			},
+			expectError: true,
+			errorMsg:    "issuer is required",
+		},
+		{
+			name: "missing client_id",
+			authn: Authn{
+				Issuer:        "http://localhost:9090",
+				ClientSecret:  "secret123",
+				SigningSecret: "signing123",
+			},
+			expectError: true,
+			errorMsg:    "client_id is required",
+		},
+		{
+			name: "missing client_secret",
+			authn: Authn{
+				Issuer:        "http://localhost:9090",
+				ClientID:      "test-client",
+				SigningSecret: "signing123",
+			},
+			expectError: true,
+			errorMsg:    "client_secret is required",
+		},
+		{
+			name: "missing signing_secret",
+			authn: Authn{
+				Issuer:       "http://localhost:9090",
+				ClientID:     "test-client",
+				ClientSecret: "secret123",
+			},
+			expectError: true,
+			errorMsg:    "signing_secret is required",
+		},
+		{
+			name: "empty issuer",
+			authn: Authn{
+				Issuer:        "",
+				ClientID:      "test-client",
+				ClientSecret:  "secret123",
+				SigningSecret: "signing123",
+			},
+			expectError: true,
+			errorMsg:    "issuer is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.authn.Validate()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAuthn_UnmarshalYAML_ErrorCases(t *testing.T) {
+	tests := []struct {
+		name    string
+		yaml    string
+		wantErr bool
+	}{
+		{
+			name:    "invalid yaml structure",
+			yaml:    "invalid: [unclosed",
+			wantErr: true,
+		},
+		{
+			name:    "scopes as invalid type (number)",
+			yaml:    "scopes: 123",
+			wantErr: false, // Should not error, just ignore invalid scopes
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var authn Authn
+			err := yaml.Unmarshal([]byte(tt.yaml), &authn)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAuthn_RefreshTokenTTL_UnmarshalYAML(t *testing.T) {
+	tests := []struct {
+		name        string
+		yaml        string
+		expectedTTL time.Duration
+	}{
+		{
+			name:        "refresh token ttl as duration string",
+			yaml:        `refresh_token_ttl: "24h"`,
+			expectedTTL: 24 * time.Hour,
+		},
+		{
+			name:        "refresh token ttl as minutes",
+			yaml:        `refresh_token_ttl: "720m"`,
+			expectedTTL: 720 * time.Minute,
+		},
+		{
+			name:        "refresh token ttl as seconds string",
+			yaml:        `refresh_token_ttl: "3600s"`,
+			expectedTTL: 3600 * time.Second,
+		},
+		{
+			name:        "refresh token ttl as numeric seconds (int)",
+			yaml:        `refresh_token_ttl: 3600`,
+			expectedTTL: 3600 * time.Second,
+		},
+		{
+			name:        "refresh token ttl as numeric seconds (float)",
+			yaml:        `refresh_token_ttl: 3600.0`,
+			expectedTTL: 3600 * time.Second,
+		},
+		{
+			name:        "missing refresh token ttl defaults to zero",
+			yaml:        `name: test`,
+			expectedTTL: 0,
+		},
+		{
+			name:        "invalid duration string ignored",
+			yaml:        `refresh_token_ttl: "invalid"`,
+			expectedTTL: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var authn Authn
+			err := yaml.Unmarshal([]byte(tt.yaml), &authn)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedTTL, authn.RefreshTokenTTL)
+		})
+	}
+}
+
+func TestAuthn_StructFields(t *testing.T) {
+	t.Run("authn struct has all expected fields", func(t *testing.T) {
+		authn := Authn{
+			Name:            "test-provider",
+			Issuer:          "http://localhost:9090",
+			ClientID:        "test-client",
+			ClientSecret:    "secret123",
+			Scopes:          []string{"openid", "email"},
+			RedirectURL:     "http://localhost:8080/callback",
+			SigningSecret:   "signing123",
+			RefreshTokenTTL: time.Hour * 24,
+			SkipTLSVerify:   true,
+		}
+
+		assert.Equal(t, "test-provider", authn.Name)
+		assert.Equal(t, "http://localhost:9090", authn.Issuer)
+		assert.Equal(t, "test-client", authn.ClientID)
+		assert.Equal(t, "secret123", authn.ClientSecret)
+		assert.Equal(t, []string{"openid", "email"}, authn.Scopes)
+		assert.Equal(t, "http://localhost:8080/callback", authn.RedirectURL)
+		assert.Equal(t, "signing123", authn.SigningSecret)
+		assert.Equal(t, time.Hour*24, authn.RefreshTokenTTL)
+		assert.True(t, authn.SkipTLSVerify)
+	})
 }

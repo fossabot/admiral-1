@@ -55,7 +55,6 @@ func New(cfg *config.Config, logger *zap.Logger, scope tally.Scope) (service.Ser
 		return nil, err
 	}
 
-	// Configure connection pool
 	if dbCfg.MaxOpenConns > 0 {
 		sqlDB.SetMaxOpenConns(dbCfg.MaxOpenConns)
 	} else {

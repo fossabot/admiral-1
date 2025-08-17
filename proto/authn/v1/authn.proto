@@ -5,8 +5,6 @@ package admiral.authn.v1;
 option go_package = "go.admiral.io/admiral/api/authn/v1;authnv1";
 
 import "google/api/annotations.proto";
-import "google/protobuf/duration.proto";
-import "buf/validate/validate.proto";
 
 service AuthnAPI {
   rpc Login(LoginRequest) returns (LoginResponse) {
@@ -18,19 +16,6 @@ service AuthnAPI {
   rpc Callback(CallbackRequest) returns (CallbackResponse) {
     option (google.api.http) = {
       get : "/auth/callback"
-    };
-  }
-
-  rpc Logout(LogoutRequest) returns (LogoutResponse) {
-    option (google.api.http) = {
-      get : "/auth/logout"
-    };
-  }
-
-  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
-    option (google.api.http) = {
-      post : "/api/v1/authn/createToken"
-      body : "*"
     };
   }
 }
@@ -59,22 +44,4 @@ message CallbackRequest {
   string error_description = 4;
 }
 message CallbackResponse {
-}
-
-message LogoutRequest {}
-message LogoutResponse {}
-
-message CreateTokenRequest {
-  string subject_id = 1 [(buf.validate.field).string.uuid = true];
-  google.protobuf.Duration expiry = 2;
-
-  enum TokenType {
-    UNSPECIFIED = 0;
-    USER = 1;
-    CLUSTER = 2;
-  }
-  TokenType token_type = 3 [ (buf.validate.field).enum = { defined_only: true, not_in: [0] } ];
-}
-message CreateTokenResponse {
-  string access_token = 1;
 }

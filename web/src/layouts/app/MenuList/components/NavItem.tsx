@@ -91,14 +91,18 @@ const NavItem = ({ item, level, parentId }: NavItemProps) => {
         },
       };
 
+    const submenuHoverColor = level !== 1 ?
+      (theme.palette.mode === 'dark' ? theme.palette.secondary.main + 15 : theme.palette.secondary.light) :
+      'transparent';
+
     const drawerClosedOrNotLevelOneStyles = (!isDrawerOpen || level !== 1) && {
       py: level === 1 ? 0 : 1,
       '&:hover': {
-        backgroundColor: 'transparent',
+        backgroundColor: level === 1 && !isDrawerOpen ? 'transparent' : submenuHoverColor,
       },
       '&.Mui-selected': {
         '&:hover': {
-          backgroundColor: 'transparent',
+          backgroundColor: level === 1 && !isDrawerOpen ? 'transparent' : submenuHoverColor,
         },
         backgroundColor: 'transparent',
       },

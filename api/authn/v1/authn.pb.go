@@ -11,7 +11,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -23,55 +23,6 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
-
-type CreateTokenRequest_TokenType int32
-
-const (
-	CreateTokenRequest_UNSPECIFIED CreateTokenRequest_TokenType = 0
-	CreateTokenRequest_USER        CreateTokenRequest_TokenType = 1
-	CreateTokenRequest_CLUSTER     CreateTokenRequest_TokenType = 2
-)
-
-// Enum value maps for CreateTokenRequest_TokenType.
-var (
-	CreateTokenRequest_TokenType_name = map[int32]string{
-		0: "UNSPECIFIED",
-		1: "USER",
-		2: "CLUSTER",
-	}
-	CreateTokenRequest_TokenType_value = map[string]int32{
-		"UNSPECIFIED": 0,
-		"USER":        1,
-		"CLUSTER":     2,
-	}
-)
-
-func (x CreateTokenRequest_TokenType) Enum() *CreateTokenRequest_TokenType {
-	p := new(CreateTokenRequest_TokenType)
-	*p = x
-	return p
-}
-
-func (x CreateTokenRequest_TokenType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (CreateTokenRequest_TokenType) Descriptor() protoreflect.EnumDescriptor {
-	return file_authn_v1_authn_proto_enumTypes[0].Descriptor()
-}
-
-func (CreateTokenRequest_TokenType) Type() protoreflect.EnumType {
-	return &file_authn_v1_authn_proto_enumTypes[0]
-}
-
-func (x CreateTokenRequest_TokenType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use CreateTokenRequest_TokenType.Descriptor instead.
-func (CreateTokenRequest_TokenType) EnumDescriptor() ([]byte, []int) {
-	return file_authn_v1_authn_proto_rawDescGZIP(), []int{6, 0}
-}
 
 type LoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -306,182 +257,6 @@ func (*CallbackResponse) Descriptor() ([]byte, []int) {
 	return file_authn_v1_authn_proto_rawDescGZIP(), []int{3}
 }
 
-type LogoutRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LogoutRequest) Reset() {
-	*x = LogoutRequest{}
-	mi := &file_authn_v1_authn_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LogoutRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LogoutRequest) ProtoMessage() {}
-
-func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_authn_v1_authn_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
-func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_authn_v1_authn_proto_rawDescGZIP(), []int{4}
-}
-
-type LogoutResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LogoutResponse) Reset() {
-	*x = LogoutResponse{}
-	mi := &file_authn_v1_authn_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LogoutResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LogoutResponse) ProtoMessage() {}
-
-func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_authn_v1_authn_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
-func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_authn_v1_authn_proto_rawDescGZIP(), []int{5}
-}
-
-type CreateTokenRequest struct {
-	state         protoimpl.MessageState       `protogen:"open.v1"`
-	SubjectId     string                       `protobuf:"bytes,1,opt,name=subject_id,json=subjectId,proto3" json:"subject_id,omitempty"`
-	Expiry        *durationpb.Duration         `protobuf:"bytes,2,opt,name=expiry,proto3" json:"expiry,omitempty"`
-	TokenType     CreateTokenRequest_TokenType `protobuf:"varint,3,opt,name=token_type,json=tokenType,proto3,enum=admiral.authn.v1.CreateTokenRequest_TokenType" json:"token_type,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateTokenRequest) Reset() {
-	*x = CreateTokenRequest{}
-	mi := &file_authn_v1_authn_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateTokenRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateTokenRequest) ProtoMessage() {}
-
-func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_authn_v1_authn_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateTokenRequest.ProtoReflect.Descriptor instead.
-func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
-	return file_authn_v1_authn_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *CreateTokenRequest) GetSubjectId() string {
-	if x != nil {
-		return x.SubjectId
-	}
-	return ""
-}
-
-func (x *CreateTokenRequest) GetExpiry() *durationpb.Duration {
-	if x != nil {
-		return x.Expiry
-	}
-	return nil
-}
-
-func (x *CreateTokenRequest) GetTokenType() CreateTokenRequest_TokenType {
-	if x != nil {
-		return x.TokenType
-	}
-	return CreateTokenRequest_UNSPECIFIED
-}
-
-type CreateTokenResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateTokenResponse) Reset() {
-	*x = CreateTokenResponse{}
-	mi := &file_authn_v1_authn_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateTokenResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateTokenResponse) ProtoMessage() {}
-
-func (x *CreateTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_authn_v1_authn_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateTokenResponse.ProtoReflect.Descriptor instead.
-func (*CreateTokenResponse) Descriptor() ([]byte, []int) {
-	return file_authn_v1_authn_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *CreateTokenResponse) GetAccessToken() string {
-	if x != nil {
-		return x.AccessToken
-	}
-	return ""
-}
-
 type LoginResponse_Token struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
@@ -492,7 +267,7 @@ type LoginResponse_Token struct {
 
 func (x *LoginResponse_Token) Reset() {
 	*x = LoginResponse_Token{}
-	mi := &file_authn_v1_authn_proto_msgTypes[8]
+	mi := &file_authn_v1_authn_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -504,7 +279,7 @@ func (x *LoginResponse_Token) String() string {
 func (*LoginResponse_Token) ProtoMessage() {}
 
 func (x *LoginResponse_Token) ProtoReflect() protoreflect.Message {
-	mi := &file_authn_v1_authn_proto_msgTypes[8]
+	mi := &file_authn_v1_authn_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -553,27 +328,10 @@ const file_authn_v1_authn_proto_rawDesc = "" +
 	"\x05state\x18\x02 \x01(\tR\x05state\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error\x12+\n" +
 	"\x11error_description\x18\x04 \x01(\tR\x10errorDescription\"\x12\n" +
-	"\x10CallbackResponse\"\x0f\n" +
-	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse\"\x80\x02\n" +
-	"\x12CreateTokenRequest\x12'\n" +
-	"\n" +
-	"subject_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tsubjectId\x121\n" +
-	"\x06expiry\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x06expiry\x12Y\n" +
-	"\n" +
-	"token_type\x18\x03 \x01(\x0e2..admiral.authn.v1.CreateTokenRequest.TokenTypeB\n" +
-	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\ttokenType\"3\n" +
-	"\tTokenType\x12\x0f\n" +
-	"\vUNSPECIFIED\x10\x00\x12\b\n" +
-	"\x04USER\x10\x01\x12\v\n" +
-	"\aCLUSTER\x10\x02\"8\n" +
-	"\x13CreateTokenResponse\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2\xba\x03\n" +
+	"\x10CallbackResponse2\xd4\x01\n" +
 	"\bAuthnAPI\x12]\n" +
 	"\x05Login\x12\x1e.admiral.authn.v1.LoginRequest\x1a\x1f.admiral.authn.v1.LoginResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/auth/login\x12i\n" +
-	"\bCallback\x12!.admiral.authn.v1.CallbackRequest\x1a\".admiral.authn.v1.CallbackResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/auth/callback\x12a\n" +
-	"\x06Logout\x12\x1f.admiral.authn.v1.LogoutRequest\x1a .admiral.authn.v1.LogoutResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/auth/logout\x12\x80\x01\n" +
-	"\vCreateToken\x12$.admiral.authn.v1.CreateTokenRequest\x1a%.admiral.authn.v1.CreateTokenResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/authn/createTokenB\xb0\x01\n" +
+	"\bCallback\x12!.admiral.authn.v1.CallbackRequest\x1a\".admiral.authn.v1.CallbackResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/auth/callbackB\xb0\x01\n" +
 	"\x14com.admiral.authn.v1B\n" +
 	"AuthnProtoP\x01Z*go.admiral.io/admiral/api/authn/v1;authnv1\xa2\x02\x03AAX\xaa\x02\x10Admiral.Authn.V1\xca\x02\x10Admiral\\Authn\\V1\xe2\x02\x1cAdmiral\\Authn\\V1\\GPBMetadata\xea\x02\x12Admiral::Authn::V1b\x06proto3"
 
@@ -589,38 +347,25 @@ func file_authn_v1_authn_proto_rawDescGZIP() []byte {
 	return file_authn_v1_authn_proto_rawDescData
 }
 
-var file_authn_v1_authn_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_authn_v1_authn_proto_goTypes = []any{
-	(CreateTokenRequest_TokenType)(0), // 0: admiral.authn.v1.CreateTokenRequest.TokenType
-	(*LoginRequest)(nil),              // 1: admiral.authn.v1.LoginRequest
-	(*LoginResponse)(nil),             // 2: admiral.authn.v1.LoginResponse
-	(*CallbackRequest)(nil),           // 3: admiral.authn.v1.CallbackRequest
-	(*CallbackResponse)(nil),          // 4: admiral.authn.v1.CallbackResponse
-	(*LogoutRequest)(nil),             // 5: admiral.authn.v1.LogoutRequest
-	(*LogoutResponse)(nil),            // 6: admiral.authn.v1.LogoutResponse
-	(*CreateTokenRequest)(nil),        // 7: admiral.authn.v1.CreateTokenRequest
-	(*CreateTokenResponse)(nil),       // 8: admiral.authn.v1.CreateTokenResponse
-	(*LoginResponse_Token)(nil),       // 9: admiral.authn.v1.LoginResponse.Token
-	(*durationpb.Duration)(nil),       // 10: google.protobuf.Duration
+	(*LoginRequest)(nil),        // 0: admiral.authn.v1.LoginRequest
+	(*LoginResponse)(nil),       // 1: admiral.authn.v1.LoginResponse
+	(*CallbackRequest)(nil),     // 2: admiral.authn.v1.CallbackRequest
+	(*CallbackResponse)(nil),    // 3: admiral.authn.v1.CallbackResponse
+	(*LoginResponse_Token)(nil), // 4: admiral.authn.v1.LoginResponse.Token
 }
 var file_authn_v1_authn_proto_depIdxs = []int32{
-	9,  // 0: admiral.authn.v1.LoginResponse.token:type_name -> admiral.authn.v1.LoginResponse.Token
-	10, // 1: admiral.authn.v1.CreateTokenRequest.expiry:type_name -> google.protobuf.Duration
-	0,  // 2: admiral.authn.v1.CreateTokenRequest.token_type:type_name -> admiral.authn.v1.CreateTokenRequest.TokenType
-	1,  // 3: admiral.authn.v1.AuthnAPI.Login:input_type -> admiral.authn.v1.LoginRequest
-	3,  // 4: admiral.authn.v1.AuthnAPI.Callback:input_type -> admiral.authn.v1.CallbackRequest
-	5,  // 5: admiral.authn.v1.AuthnAPI.Logout:input_type -> admiral.authn.v1.LogoutRequest
-	7,  // 6: admiral.authn.v1.AuthnAPI.CreateToken:input_type -> admiral.authn.v1.CreateTokenRequest
-	2,  // 7: admiral.authn.v1.AuthnAPI.Login:output_type -> admiral.authn.v1.LoginResponse
-	4,  // 8: admiral.authn.v1.AuthnAPI.Callback:output_type -> admiral.authn.v1.CallbackResponse
-	6,  // 9: admiral.authn.v1.AuthnAPI.Logout:output_type -> admiral.authn.v1.LogoutResponse
-	8,  // 10: admiral.authn.v1.AuthnAPI.CreateToken:output_type -> admiral.authn.v1.CreateTokenResponse
-	7,  // [7:11] is the sub-list for method output_type
-	3,  // [3:7] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	4, // 0: admiral.authn.v1.LoginResponse.token:type_name -> admiral.authn.v1.LoginResponse.Token
+	0, // 1: admiral.authn.v1.AuthnAPI.Login:input_type -> admiral.authn.v1.LoginRequest
+	2, // 2: admiral.authn.v1.AuthnAPI.Callback:input_type -> admiral.authn.v1.CallbackRequest
+	1, // 3: admiral.authn.v1.AuthnAPI.Login:output_type -> admiral.authn.v1.LoginResponse
+	3, // 4: admiral.authn.v1.AuthnAPI.Callback:output_type -> admiral.authn.v1.CallbackResponse
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_authn_v1_authn_proto_init() }
@@ -637,14 +382,13 @@ func file_authn_v1_authn_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authn_v1_authn_proto_rawDesc), len(file_authn_v1_authn_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   9,
+			NumEnums:      0,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_authn_v1_authn_proto_goTypes,
 		DependencyIndexes: file_authn_v1_authn_proto_depIdxs,
-		EnumInfos:         file_authn_v1_authn_proto_enumTypes,
 		MessageInfos:      file_authn_v1_authn_proto_msgTypes,
 	}.Build()
 	File_authn_v1_authn_proto = out.File

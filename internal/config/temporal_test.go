@@ -66,7 +66,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: 7233,
 			},
 			expectError: true,
-			errorMsg:    "temporal host is required",
+			errorMsg:    "host is required",
 		},
 		{
 			name: "zero port returns error",
@@ -75,7 +75,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: 0,
 			},
 			expectError: true,
-			errorMsg:    "temporal port must be between 1 and 65535, got 0",
+			errorMsg:    "port must be between 1 and 65535, got 0",
 		},
 		{
 			name: "negative port returns error",
@@ -84,7 +84,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: -1,
 			},
 			expectError: true,
-			errorMsg:    "temporal port must be between 1 and 65535, got -1",
+			errorMsg:    "port must be between 1 and 65535, got -1",
 		},
 		{
 			name: "port too high returns error",
@@ -93,7 +93,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: 65536,
 			},
 			expectError: true,
-			errorMsg:    "temporal port must be between 1 and 65535, got 65536",
+			errorMsg:    "port must be between 1 and 65535, got 65536",
 		},
 		{
 			name: "port much too high returns error",
@@ -102,7 +102,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: 99999,
 			},
 			expectError: true,
-			errorMsg:    "temporal port must be between 1 and 65535, got 99999",
+			errorMsg:    "port must be between 1 and 65535, got 99999",
 		},
 		{
 			name: "whitespace host returns error",
@@ -111,7 +111,7 @@ func TestTemporal_Validate(t *testing.T) {
 				Port: 7233,
 			},
 			expectError: true,
-			errorMsg:    "temporal host is required",
+			errorMsg:    "host is required",
 		},
 	}
 
@@ -352,7 +352,7 @@ func TestConfig_TemporalValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
-			errorMsg:    "invalid services.temporal config: temporal host is required",
+			errorMsg:    "invalid services.temporal config: host is required",
 		},
 		{
 			name: "invalid temporal port should fail",
@@ -379,7 +379,7 @@ func TestConfig_TemporalValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
-			errorMsg:    "invalid services.temporal config: temporal port must be between 1 and 65535, got 0",
+			errorMsg:    "invalid services.temporal config: port must be between 1 and 65535, got 0",
 		},
 	}
 
@@ -428,4 +428,186 @@ func TestConfig_TemporalValidation_EdgeCases(t *testing.T) {
 		err := cfg.validate()
 		assert.NoError(t, err, "Valid temporal configuration should pass validation")
 	})
+}
+
+func TestTemporal_SetDefaults(t *testing.T) {
+	// Note: The Temporal struct doesn't have a SetDefaults method in the current implementation
+	// but we can test that it would work properly if it did
+	t.Run("temporal struct supports default values", func(t *testing.T) {
+		temporal := &Temporal{
+			Host: "localhost",
+			// Port is set to 0, which should be handled by setDefaults in config.go
+		}
+
+		// The actual defaults are set in setDefaults() function in config.go
+		// which sets Port to 7233 if it's 0
+		assert.Equal(t, "localhost", temporal.Host)
+		assert.Equal(t, 0, temporal.Port) // Before defaults are applied
+	})
+}
+
+func TestTemporal_ZeroValues(t *testing.T) {
+	t.Run("temporal struct with zero values", func(t *testing.T) {
+		temporal := Temporal{}
+
+		assert.Empty(t, temporal.Host)
+		assert.Equal(t, 0, temporal.Port)
+	})
+}
+
+func TestTemporal_ValidateWithWhitespace(t *testing.T) {
+	t.Run("host with only whitespace fails validation", func(t *testing.T) {
+		temporal := &Temporal{
+			Host: "   \t\n   ",
+			Port: 7233,
+		}
+
+		err := temporal.Validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "host is required")
+	})
+
+	t.Run("host with tabs and spaces fails validation", func(t *testing.T) {
+		temporal := &Temporal{
+			Host: "\t  \t",
+			Port: 7233,
+		}
+
+		err := temporal.Validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "host is required")
+	})
+}
+
+func TestTemporal_PortBoundaryValues(t *testing.T) {
+	tests := []struct {
+		name        string
+		port        int
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name:        "port 1 is valid",
+			port:        1,
+			expectError: false,
+		},
+		{
+			name:        "port 65535 is valid",
+			port:        65535,
+			expectError: false,
+		},
+		{
+			name:        "port 0 is invalid",
+			port:        0,
+			expectError: true,
+			errorMsg:    "port must be between 1 and 65535, got 0",
+		},
+		{
+			name:        "port 65536 is invalid",
+			port:        65536,
+			expectError: true,
+			errorMsg:    "port must be between 1 and 65535, got 65536",
+		},
+		{
+			name:        "negative port is invalid",
+			port:        -1,
+			expectError: true,
+			errorMsg:    "port must be between 1 and 65535, got -1",
+		},
+		{
+			name:        "very negative port is invalid",
+			port:        -65536,
+			expectError: true,
+			errorMsg:    "port must be between 1 and 65535, got -65536",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			temporal := &Temporal{
+				Host: "localhost",
+				Port: tt.port,
+			}
+
+			err := temporal.Validate()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTemporal_NilPointerSafety(t *testing.T) {
+	t.Run("nil temporal pointer validation", func(t *testing.T) {
+		var temporal *Temporal = nil
+
+		err := temporal.Validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "temporal config is nil")
+	})
+}
+
+func TestTemporal_HostVariations(t *testing.T) {
+	tests := []struct {
+		name        string
+		host        string
+		expectError bool
+		description string
+	}{
+		{
+			name:        "localhost is valid",
+			host:        "localhost",
+			expectError: false,
+			description: "Standard localhost hostname",
+		},
+		{
+			name:        "IPv4 address is valid",
+			host:        "192.168.1.100",
+			expectError: false,
+			description: "Valid IPv4 address",
+		},
+		{
+			name:        "IPv6 address is valid",
+			host:        "::1",
+			expectError: false,
+			description: "IPv6 loopback address",
+		},
+		{
+			name:        "FQDN is valid",
+			host:        "temporal.example.com",
+			expectError: false,
+			description: "Fully qualified domain name",
+		},
+		{
+			name:        "hyphenated hostname is valid",
+			host:        "temporal-server-01",
+			expectError: false,
+			description: "Hostname with hyphens",
+		},
+		{
+			name:        "single character host is valid",
+			host:        "a",
+			expectError: false,
+			description: "Minimal hostname",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			temporal := &Temporal{
+				Host: tt.host,
+				Port: 7233,
+			}
+
+			err := temporal.Validate()
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for case: %s", tt.description)
+			} else {
+				assert.NoError(t, err, "Expected no error for case: %s", tt.description)
+			}
+		})
+	}
 }

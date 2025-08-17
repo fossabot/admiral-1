@@ -116,15 +116,8 @@ func Run(cfg *config.Config, cf *ComponentFactory, assets http.FileSystem) {
 		interceptors = append(interceptors, m.UnaryInterceptor())
 	}
 
-	// TODO: Refactor handler logic:
-	//       - It would be cleaner to initialize the handler with dependencies like logger and metrics scope,
-	//         and then pass it to the mux instead of wiring things individually.
-	//       - Also, review how cookies are handled in middleware and handlers.
-	//       - Currently, gRPC cookies are passed via gRPC metadata, but we should explore whether using context
-	//         directly is a better or more idiomatic approach.
-
 	// Instantiate and register modules listed in the configuration.
-	rpcMux, err := mux.New(interceptors, assets, metricsHandler, cfg.Server)
+	rpcMux, err := mux.New(interceptors, assets, metricsHandler, *cfg.Server)
 	if err != nil {
 		panic(err)
 	}

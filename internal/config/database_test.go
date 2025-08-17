@@ -440,3 +440,234 @@ func TestSSLMode_Maps(t *testing.T) {
 		}
 	})
 }
+
+func TestDatabase_SetDefaults(t *testing.T) {
+	tests := []struct {
+		name     string
+		database Database
+		expected Database
+	}{
+		{
+			name:     "empty database gets all defaults",
+			database: Database{},
+			expected: Database{
+				Port:              5432,
+				SSLMode:           SSLModeRequire,
+				DatabaseName:      "admiral",
+				MaxOpenConns:      100,
+				MaxIdleConns:      10,
+				ConnMaxLifetime:   30 * time.Minute,
+				ConnMaxIdleTime:   5 * time.Minute,
+				ConnectionTimeout: 5 * time.Second,
+			},
+		},
+		{
+			name: "partial database gets missing defaults",
+			database: Database{
+				Host:     "localhost",
+				User:     "admin",
+				Password: "secret",
+			},
+			expected: Database{
+				Host:              "localhost",
+				User:              "admin",
+				Password:          "secret",
+				Port:              5432,
+				SSLMode:           SSLModeRequire,
+				DatabaseName:      "admiral",
+				MaxOpenConns:      100,
+				MaxIdleConns:      10,
+				ConnMaxLifetime:   30 * time.Minute,
+				ConnMaxIdleTime:   5 * time.Minute,
+				ConnectionTimeout: 5 * time.Second,
+			},
+		},
+		{
+			name: "existing values preserved",
+			database: Database{
+				Host:              "custom-host",
+				Port:              3306,
+				DatabaseName:      "custom_db",
+				User:              "custom_user",
+				Password:          "custom_pass",
+				SSLMode:           SSLModeDisable,
+				MaxOpenConns:      50,
+				MaxIdleConns:      5,
+				ConnMaxLifetime:   time.Hour,
+				ConnMaxIdleTime:   10 * time.Minute,
+				ConnectionTimeout: 10 * time.Second,
+			},
+			expected: Database{
+				Host:              "custom-host",
+				Port:              3306,
+				DatabaseName:      "custom_db",
+				User:              "custom_user",
+				Password:          "custom_pass",
+				SSLMode:           SSLModeDisable,
+				MaxOpenConns:      50,
+				MaxIdleConns:      5,
+				ConnMaxLifetime:   time.Hour,
+				ConnMaxIdleTime:   10 * time.Minute,
+				ConnectionTimeout: 10 * time.Second,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.database.SetDefaults()
+			assert.Equal(t, tt.expected, tt.database)
+		})
+	}
+}
+
+func TestDatabase_Validate(t *testing.T) {
+	tests := []struct {
+		name        string
+		database    Database
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid database config",
+			database: Database{
+				Host:     "localhost",
+				User:     "admin",
+				Password: "secret",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: false,
+		},
+		{
+			name: "missing host",
+			database: Database{
+				User:     "admin",
+				Password: "secret",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "host is required",
+		},
+		{
+			name: "missing user",
+			database: Database{
+				Host:     "localhost",
+				Password: "secret",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "user is required",
+		},
+		{
+			name: "missing password",
+			database: Database{
+				Host:    "localhost",
+				User:    "admin",
+				SSLMode: SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "password is required",
+		},
+		{
+			name: "empty host",
+			database: Database{
+				Host:     "",
+				User:     "admin",
+				Password: "secret",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "host is required",
+		},
+		{
+			name: "empty user",
+			database: Database{
+				Host:     "localhost",
+				User:     "",
+				Password: "secret",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "user is required",
+		},
+		{
+			name: "empty password",
+			database: Database{
+				Host:     "localhost",
+				User:     "admin",
+				Password: "",
+				SSLMode:  SSLModeRequire,
+			},
+			expectError: true,
+			errorMsg:    "password is required",
+		},
+		{
+			name: "invalid SSL mode",
+			database: Database{
+				Host:     "localhost",
+				User:     "admin",
+				Password: "secret",
+				SSLMode:  SSLMode(999),
+			},
+			expectError: true,
+			errorMsg:    "invalid SSLMode: 999",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.database.Validate()
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestDatabase_DefaultValues(t *testing.T) {
+	t.Run("default values are correct", func(t *testing.T) {
+		db := &Database{}
+		db.SetDefaults()
+
+		assert.Equal(t, 5432, db.Port, "Default port should be 5432")
+		assert.Equal(t, SSLModeRequire, db.SSLMode, "Default SSL mode should be require")
+		assert.Equal(t, "admiral", db.DatabaseName, "Default database name should be admiral")
+		assert.Equal(t, 100, db.MaxOpenConns, "Default max open connections should be 100")
+		assert.Equal(t, 10, db.MaxIdleConns, "Default max idle connections should be 10")
+		assert.Equal(t, 30*time.Minute, db.ConnMaxLifetime, "Default connection max lifetime should be 30 minutes")
+		assert.Equal(t, 5*time.Minute, db.ConnMaxIdleTime, "Default connection max idle time should be 5 minutes")
+		assert.Equal(t, 5*time.Second, db.ConnectionTimeout, "Default connection timeout should be 5 seconds")
+	})
+
+	t.Run("zero values are replaced with defaults", func(t *testing.T) {
+		db := &Database{
+			Host:              "localhost",
+			User:              "user",
+			Password:          "pass",
+			Port:              0,                  // Should be replaced
+			SSLMode:           SSLModeUnspecified, // Should be replaced
+			DatabaseName:      "",                 // Should be replaced
+			MaxOpenConns:      0,                  // Should be replaced
+			MaxIdleConns:      0,                  // Should be replaced
+			ConnMaxLifetime:   0,                  // Should be replaced
+			ConnMaxIdleTime:   0,                  // Should be replaced
+			ConnectionTimeout: 0,                  // Should be replaced
+		}
+		db.SetDefaults()
+
+		assert.Equal(t, "localhost", db.Host) // Should be preserved
+		assert.Equal(t, "user", db.User)      // Should be preserved
+		assert.Equal(t, "pass", db.Password)  // Should be preserved
+		assert.Equal(t, 5432, db.Port)
+		assert.Equal(t, SSLModeRequire, db.SSLMode)
+		assert.Equal(t, "admiral", db.DatabaseName)
+		assert.Equal(t, 100, db.MaxOpenConns)
+		assert.Equal(t, 10, db.MaxIdleConns)
+		assert.Equal(t, 30*time.Minute, db.ConnMaxLifetime)
+		assert.Equal(t, 5*time.Minute, db.ConnMaxIdleTime)
+		assert.Equal(t, 5*time.Second, db.ConnectionTimeout)
+	})
+}

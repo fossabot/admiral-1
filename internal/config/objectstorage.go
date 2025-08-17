@@ -8,7 +8,25 @@ type ObjectStorage struct {
 	GCS  *GCSStorageConfig `yaml:"gcs,omitempty"`
 }
 
+func (s *ObjectStorage) SetDefaults() {
+	if s == nil {
+		return
+	}
+	// Set S3 defaults
+	if s.Type == ObjectStorageTypeS3 && s.S3 != nil {
+		s.S3.SetDefaults()
+	}
+	// GCS doesn't have defaults currently
+}
+
 func (s *ObjectStorage) Validate() error {
+	if s == nil {
+		return nil
+	}
+	if s.Type == "" {
+		return fmt.Errorf("type is required")
+	}
+
 	switch s.Type {
 	case ObjectStorageTypeS3:
 		if s.S3 == nil {
@@ -56,6 +74,13 @@ type S3StorageConfig struct {
 	SecretKey    string `yaml:"secret_key"`
 	RoleARN      string `yaml:"role_arn"`
 	SessionToken string `yaml:"session_token"`
+}
+
+func (s *S3StorageConfig) SetDefaults() {
+	if s.UseSSL == nil {
+		useSSL := true
+		s.UseSSL = &useSSL
+	}
 }
 
 func (s *S3StorageConfig) Validate() error {
