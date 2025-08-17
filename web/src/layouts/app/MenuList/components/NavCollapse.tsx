@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { styled, useTheme } from '@mui/material/styles';
 import {
   Box,
+  ButtonBase,
   ClickAwayListener,
   Collapse,
   List,
@@ -50,9 +51,8 @@ interface NavCollapseProps {
 const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string | null | undefined>(null);
   const [anchorEl, setAnchorEl] = useState<VirtualElement | (() => VirtualElement) | null | undefined>(null);
-  const { drawerOpen } = useSelector((state) => state.menu);
+  const { drawerOpen, selectedID } = useSelector((state) => state.menu);
 
   const handleClickMini = (
     event: React.MouseEvent<HTMLAnchorElement> | React.MouseEvent<HTMLDivElement, MouseEvent> | undefined,
@@ -67,33 +67,29 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
 
   const handleClosePopper = () => {
     setOpen(false);
-    setSelected(null);
     setAnchorEl(null);
   };
 
   const openMini = Boolean(anchorEl);
   const { pathname } = useLocation();
 
-  const checkOpenForParent = (child: NavItemType[], id: string) => {
+  const checkOpenForParent = (child: NavItemType[]) => {
     child.forEach((item: NavItemType) => {
       if (item.url === pathname) {
         setOpen(true);
-        setSelected(id);
       }
     });
   };
 
   useEffect(() => {
     setOpen(false);
-    setSelected(null);
     if (openMini) setAnchorEl(null);
     if (menu.children) {
       menu.children.forEach((item: NavItemType) => {
         if (item.children?.length) {
-          checkOpenForParent(item.children, menu.id!);
+          checkOpenForParent(item.children);
         }
         if (item.url === pathname) {
-          setSelected(menu.id);
           setOpen(true);
         }
       });
@@ -117,7 +113,7 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
     }
   });
 
-  const isSelected = selected === menu.id;
+  const isSelected = selectedID === menu.id;
   const Icon = menu.icon!;
   const menuIcon = menu.icon ? (
     <Icon
@@ -204,31 +200,33 @@ const NavCollapse = ({ menu, level, parentId }: NavCollapseProps) => {
         onClick={handleClickMini}
       >
         {menuIcon && (
-          <ListItemIcon
-            sx={{
-              minWidth: level === 1 ? 36 : 18,
-              color: isSelected ? iconSelectedColor : textColor,
-              ...(!drawerOpen &&
-                level === 1 && {
-                  borderRadius: `8px`,
-                  width: 46,
-                  height: 46,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  '&:hover': {
-                    bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : 'secondary.light',
-                  },
-                  ...(isSelected && {
-                    bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : 'secondary.light',
+          <ButtonBase aria-label="theme-icon" sx={{ borderRadius: '8px' }} disableRipple={drawerOpen}>
+            <ListItemIcon
+              sx={{
+                minWidth: level === 1 ? 36 : 18,
+                color: isSelected ? iconSelectedColor : textColor,
+                ...(!drawerOpen &&
+                  level === 1 && {
+                    borderRadius: `8px`,
+                    width: 46,
+                    height: 46,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     '&:hover': {
-                      bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 30 : 'secondary.light',
+                      bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : 'secondary.light',
                     },
+                    ...(isSelected && {
+                      bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 25 : 'secondary.light',
+                      '&:hover': {
+                        bgcolor: theme.palette.mode === 'dark' ? theme.palette.secondary.main + 30 : 'secondary.light',
+                      },
+                    }),
                   }),
-                }),
-            }}
-          >
-            {menuIcon}
-          </ListItemIcon>
+              }}
+            >
+              {menuIcon}
+            </ListItemIcon>
+          </ButtonBase>
         )}
         {(drawerOpen || (!drawerOpen && level !== 1)) && (
           <ListItemText

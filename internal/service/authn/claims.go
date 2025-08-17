@@ -6,8 +6,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-
-	"go.admiral.io/admiral/internal/model"
 )
 
 type stateClaims struct {
@@ -33,7 +31,7 @@ func (c *stateClaims) Validate() error {
 
 type Claims struct {
 	*jwt.RegisteredClaims
-	ExternalSubject string   `json:"external_subject,omitempty"`
+	ExternalSubject string   `json:"external_sub,omitempty"`
 	Kind            string   `json:"kind,omitempty"`
 	Email           string   `json:"email,omitempty"`
 	EmailVerified   bool     `json:"email_verified,omitempty"`
@@ -50,7 +48,7 @@ func (c Claims) Validate() error {
 	if _, err := uuid.Parse(c.Subject); err != nil {
 		missing = append(missing, "subject (UUID)")
 	}
-	if _, err := model.ParseReferenceKind(c.Kind); err != nil {
+	if _, err := ParseTokenKind(c.Kind); err != nil {
 		missing = append(missing, "kind ("+err.Error()+")")
 	}
 

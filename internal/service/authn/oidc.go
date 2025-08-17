@@ -16,47 +16,22 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
-	authnv1 "go.admiral.io/admiral/api/authn/v1"
 	"go.admiral.io/admiral/internal/config"
 	"go.admiral.io/admiral/internal/model"
 )
 
-var defaultScopes = []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "email", "profile"}
-
-const admiralProvider = "admiral"
+const admiralProviderName = "https://internal.admiral.io"
 
 type OIDCProvider struct {
-	httpClient      *http.Client
-	oauth2          *oauth2.Config
-	oidcProvider    *oidc.Provider
-	oidcVerifier    *oidc.IDTokenVerifier
-	endpointClaims  *endpointClaims
-	nonceSecret     string
-	signingKey      string
-	refreshTokenTTL time.Duration
-	store           *store
-	providerName    string
-}
-
-type IntrospectionToken struct {
-	Active     bool             `json:"active"`
-	Subject    string           `json:"sub,omitempty"`
-	Audience   []string         `json:"aud,omitempty"`
-	NotBefore  *jwt.NumericDate `json:"nbf,omitempty"`
-	Scope      string           `json:"scope,omitempty"`
-	Issuer     string           `json:"iss,omitempty"`
-	Expiration *jwt.NumericDate `json:"exp,omitempty"`
-	IssuedAt   *jwt.NumericDate `json:"iat,omitempty"`
-	JWTId      string           `json:"jti,omitempty"`
-	TenantId   string           `json:"tid,omitempty"`
-	ClientId   string           `json:"client_id,omitempty"`
-	TokenType  string           `json:"token_type,omitempty"`
-}
-
-type endpointClaims struct {
-	RevocationUrl    string `json:"revocation_endpoint"`
-	IntrospectionUrl string `json:"introspection_endpoint"`
-	EndSessionUrl    string `json:"end_session_endpoint"`
+	httpClient       *http.Client
+	oauth2           *oauth2.Config
+	oidcProviderName string
+	oidcProvider     *oidc.Provider
+	oidcVerifier     *oidc.IDTokenVerifier
+	signingKey       string
+	refreshTokenTTL  time.Duration
+	store            *store
+	logger           *zap.Logger
 }
 
 func NewOIDCProvider(cfg *config.Config, logger *zap.Logger, store *store) (Provider, error) {
@@ -68,7 +43,7 @@ func NewOIDCProvider(cfg *config.Config, logger *zap.Logger, store *store) (Prov
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: cfg.Services.Authn.SkipTLSVerify, //nolint:gosec // Configurable for development environments
+				InsecureSkipVerify: cfg.Services.Authn.SkipTLSVerify, //nolint:gosec
 			},
 		},
 	}
@@ -84,46 +59,24 @@ func NewOIDCProvider(cfg *config.Config, logger *zap.Logger, store *store) (Prov
 		ClientID: cfg.Services.Authn.ClientID,
 	})
 
-	endpointClaims := &endpointClaims{}
-	if err := oidcProvider.Claims(endpointClaims); err != nil {
-		logger.Error("failed to retrieve OIDC provider endpointClaims", zap.Error(err))
-		return nil, fmt.Errorf("failed to retrieve OIDC provider endpointClaims: %w", err)
-	}
-
-	if endpointClaims.RevocationUrl == "" || endpointClaims.IntrospectionUrl == "" || endpointClaims.EndSessionUrl == "" {
-		errMsg := "missing revocation_endpoint, introspection_endpoint, or end_session_endpoint in OIDC metadata"
-		logger.Error(errMsg)
-		return nil, fmt.Errorf("invalid configuration: %s", errMsg)
-	}
-
-	scopes := cfg.Services.Authn.Scopes
-	if len(scopes) == 0 {
-		scopes = defaultScopes
-		logger.Info("no scopes provided, using default scopes", zap.Strings("scopes", defaultScopes))
-	} else {
-		logger.Info("using provided scopes", zap.Strings("scopes", scopes))
-	}
-
 	oauthConfig := &oauth2.Config{
 		ClientID:     cfg.Services.Authn.ClientID,
 		ClientSecret: cfg.Services.Authn.ClientSecret,
 		Endpoint:     oidcProvider.Endpoint(),
 		RedirectURL:  cfg.Services.Authn.RedirectURL,
-		Scopes:       scopes,
+		Scopes:       cfg.Services.Authn.Scopes,
 	}
 
-	// Return the service instance
 	return &OIDCProvider{
-		httpClient:      httpClient,
-		oauth2:          oauthConfig,
-		oidcProvider:    oidcProvider,
-		oidcVerifier:    oidcVerifier,
-		endpointClaims:  endpointClaims,
-		nonceSecret:     cfg.Services.Authn.NonceSecret,
-		signingKey:      cfg.Services.Authn.NonceSecret,
-		store:           store,
-		providerName:    cfg.Services.Authn.Name,
-		refreshTokenTTL: time.Hour * 12,
+		httpClient:       httpClient,
+		oauth2:           oauthConfig,
+		oidcProviderName: cfg.Services.Authn.Issuer,
+		oidcProvider:     oidcProvider,
+		oidcVerifier:     oidcVerifier,
+		signingKey:       cfg.Services.Authn.SigningSecret,
+		refreshTokenTTL:  cfg.Services.Authn.RefreshTokenTTL,
+		store:            store,
+		logger:           logger,
 	}, nil
 }
 
@@ -133,10 +86,6 @@ func validateConfig(cfg *config.Config) error {
 	}
 
 	authn := cfg.Services.Authn
-	if authn.Name == "" {
-		return fmt.Errorf("authn configuration error: 'name' field is empty; specify a valid authentication provider name")
-	}
-
 	if authn.ClientID == "" {
 		return fmt.Errorf("authn configuration error: 'client_id' is empty; provide a valid OAuth2 client ID")
 	}
@@ -145,16 +94,12 @@ func validateConfig(cfg *config.Config) error {
 		return fmt.Errorf("authn configuration error: 'client_secret' is empty; provide a valid OAuth2 client secret")
 	}
 
-	if authn.Issuer == "" {
-		return fmt.Errorf("authn configuration error: 'issuer' is empty; specify the OIDC provider's issuer URL (e.g., https://accounts.google.com)")
-	}
-
 	if authn.RedirectURL == "" {
 		return fmt.Errorf("authn configuration error: 'redirect_url' is empty; provide the OAuth2 redirect URL (e.g., https://yourapp.com/callback)")
 	}
 
-	if authn.NonceSecret == "" {
-		return fmt.Errorf("authn configuration error: 'nonce_secret' is empty; provide a secure secret for state nonce generation")
+	if authn.SigningSecret == "" {
+		return fmt.Errorf("authn configuration error: 'signing_secret' is empty; provide a secure secret for state nonce generation")
 	}
 
 	return nil
@@ -184,39 +129,16 @@ func (p *OIDCProvider) GetStateNonce(_ context.Context, redirectURL string) (str
 		RedirectURL: dest,
 	}
 
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(p.nonceSecret))
-	if err != nil {
-		return "", fmt.Errorf("failed to sign state nonce: %w", err)
-	}
-
-	return token, nil
-}
-
-func (p *OIDCProvider) GetAuthCodeURL(_ context.Context, state string) (string, error) {
-	if state == "" {
-		return "", errors.New("state parameter cannot be empty")
-	}
-
-	opts := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline}
-	authURL := p.oauth2.AuthCodeURL(state, opts...)
-	if authURL == "" {
-		return "", errors.New("failed to generate auth code URL")
-	}
-
-	return authURL, nil
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(p.signingKey))
 }
 
 func (p *OIDCProvider) ValidateStateNonce(_ context.Context, state string) (string, error) {
-	if state == "" {
-		return "", fmt.Errorf("validation failed: state token is empty")
-	}
-
 	claims := &stateClaims{}
 	token, err := jwt.ParseWithClaims(state, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || token.Method != jwt.SigningMethodHS256 {
 			return nil, fmt.Errorf("invalid signing method: expected HS256")
 		}
-		return []byte(p.nonceSecret), nil
+		return []byte(p.signingKey), nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("invalid state token: %w", err)
@@ -233,215 +155,277 @@ func (p *OIDCProvider) ValidateStateNonce(_ context.Context, state string) (stri
 	return claims.RedirectURL, nil
 }
 
-func (p *OIDCProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
-	if code == "" {
-		return nil, errors.New("authorization code cannot be empty")
+func (p *OIDCProvider) GetAuthCodeURL(_ context.Context, state string) (string, error) {
+	if state == "" {
+		return "", errors.New("state parameter cannot be empty")
 	}
 
-	httpCtx := context.WithValue(ctx, oauth2.HTTPClient, p.httpClient)
-	token, err := p.oauth2.Exchange(httpCtx, code, oauth2.AccessTypeOffline)
+	opts := []oauth2.AuthCodeOption{oauth2.AccessTypeOffline}
+	authURL := p.oauth2.AuthCodeURL(state, opts...)
+	if authURL == "" {
+		return "", errors.New("failed to generate auth code URL")
+	}
+
+	return authURL, nil
+}
+
+func (p *OIDCProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, p.httpClient)
+
+	oidcToken, err := p.oauth2.Exchange(ctx, code, oauth2.AccessTypeOffline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange auth code: %w", err)
 	}
 
-	oidcClaims, err := p.verifyAndExtractClaims(httpCtx, token)
+	oidcClaims, err := p.claimsFromOIDCToken(ctx, uuid.New(), oidcToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract claims from token: %w", err)
 	}
 
-	authenticatedUser, err := p.store.syncUserByPrincipal(httpCtx, oidcClaims)
+	authenticatedUser, err := p.store.upsertUserFromClaims(ctx, oidcClaims)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sync user: %w", err)
 	}
 
-	internalClaims := p.prepareTokenClaims(oidcClaims, authenticatedUser)
+	externalTokenId, err := uuid.Parse(oidcClaims.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token ID: %w", err)
+	}
 
-	providerToken, err := p.store.StoreToken(httpCtx, oidcClaims.ID, nil, p.providerName, model.ReferenceKindUser, authenticatedUser.Id, token)
+	externalToken, err := p.store.save(ctx, externalTokenId, nil, oidcClaims.Subject, p.oidcProviderName, model.AuthnTokenKindExternal, oidcToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store provider token: %w", err)
 	}
 
-	newToken, err := p.issueToken(internalClaims, true)
+	// Transform external OIDC provider claims into Admiral's internal token
+	internalClaims := p.createInternalClaims(authenticatedUser.Id.String(), oidcClaims)
+	internalToken, err := p.issueToken(internalClaims, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to issue token: %w", err)
 	}
 
-	if _, err = p.store.StoreToken(httpCtx, internalClaims.ID, &providerToken.Id, admiralProvider, model.ReferenceKindUser, authenticatedUser.Id, newToken); err != nil {
+	internalTokenId, err := uuid.Parse(internalClaims.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token ID: %w", err)
+	}
+
+	_, err = p.store.save(ctx, internalTokenId, &externalToken.Id, authenticatedUser.Id.String(), admiralProviderName, model.AuthnTokenKindUser, internalToken)
+	if err != nil {
 		return nil, fmt.Errorf("failed to store internal token: %w", err)
 	}
 
-	return newToken, nil
+	return internalToken, nil
 }
 
 func (p *OIDCProvider) Verify(ctx context.Context, rawToken string) (*Claims, error) {
-	if rawToken == "" {
-		return nil, errors.New("raw token is empty")
-	}
-
-	claims := &Claims{}
-	_, err := jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || token.Method != jwt.SigningMethodHS256 {
-			return nil, fmt.Errorf("invalid signing method: expected HS256")
-		}
-
-		if p.signingKey == "" {
-			return nil, errors.New("signing key is not configured")
-		}
-		return []byte(p.signingKey), nil
-	})
+	claims, err := p.parseTokenClaims(rawToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
-	if err := claims.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid claims: %w", err)
+	tokenId, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token ID: %w", err)
 	}
 
-	_, storedToken, err := p.store.GetToken(ctx, claims.ID)
+	storedAuthnToken, err := p.store.get(ctx, tokenId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve token: %w", err)
 	}
 
-	now := time.Now().UTC()
-	if !storedToken.Expiry.IsZero() && storedToken.Expiry.Before(now) {
-		return nil, errors.New("token has expired")
+	if string(storedAuthnToken.AccessToken) != rawToken {
+		return nil, errors.New("token mismatch: provided token doesn't match stored authn token")
 	}
 
 	return claims, nil
 }
 
-func (p *OIDCProvider) CreateToken(ctx context.Context, subjectId string, tokenType authnv1.CreateTokenRequest_TokenType, expiry *time.Duration) (*model.AuthnToken, error) {
-	if subjectId == "" {
-		return nil, errors.New("create token: subjectID is empty")
+func (p *OIDCProvider) CreateToken(ctx context.Context, subject string, tokenKind TokenKind, expiry *time.Duration) (*oauth2.Token, error) {
+	if subject == "" {
+		return nil, errors.New("subject is empty")
 	}
-	subject, err := uuid.Parse(subjectId)
-	if err != nil {
-		return nil, fmt.Errorf("create token: invalid UUID format for subjectID: %w", err)
-	}
+
 	if expiry == nil || *expiry <= 0 {
-		return nil, errors.New("create token: expiry must be positive")
+		return nil, errors.New("expiry must be positive")
 	}
 
-	var kind string
-	switch tokenType {
-	case authnv1.CreateTokenRequest_USER:
-		kind = string(model.ReferenceKindUser)
-	case authnv1.CreateTokenRequest_CLUSTER:
-		kind = string(model.ReferenceKindCluster)
-	default:
-		return nil, fmt.Errorf("create token: unsupported token type %v", tokenType)
-	}
-
+	tokenId := uuid.New()
 	now := time.Now().UTC()
 	claims := &Claims{
 		RegisteredClaims: &jwt.RegisteredClaims{
-			ID:        uuid.New().String(),
-			Issuer:    admiralProvider,
-			Subject:   subject.String(),
+			ID:        tokenId.String(),
+			Issuer:    admiralProviderName,
+			Subject:   subject,
 			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(*expiry)),
 		},
-		Kind: kind,
+		Kind: string(tokenKind),
 	}
 
-	newToken, err := p.issueToken(claims, true)
-	if err != nil {
-		return nil, fmt.Errorf("create token: failed to issue token: %w", err)
-	}
-
-	referenceKind, err := model.ParseReferenceKind(kind)
-	if err != nil {
-		return nil, fmt.Errorf("create token: failed to parse reference kind %q: %w", kind, err)
-	}
-
-	httpCtx := context.WithValue(ctx, oauth2.HTTPClient, p.httpClient)
-	authnToken, err := p.store.StoreToken(httpCtx, claims.ID, nil, admiralProvider, referenceKind, subject, newToken)
-	if err != nil {
-		return nil, fmt.Errorf("create token: failed to store token: %w", err)
-	}
-
-	return authnToken, nil
-}
-
-func (p *OIDCProvider) RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error) {
-	httpCtx := context.WithValue(ctx, oauth2.HTTPClient, p.httpClient)
-
-	claims := &jwt.RegisteredClaims{}
-	_, err := jwt.ParseWithClaims(token.RefreshToken, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || token.Method != jwt.SigningMethodHS256 {
-			return nil, fmt.Errorf("invalid signing method: expected HS256")
-		}
-		return []byte(p.signingKey), nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse refresh token: %w", err)
-	}
-
-	admiralAt, admiralToken, err := p.store.GetToken(httpCtx, claims.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get stored token: %w", err)
-	}
-	if admiralToken.RefreshToken != token.RefreshToken {
-		return nil, errors.New("refresh token did not match")
-	}
-
-	parentAt, parentToken, err := p.store.GetToken(httpCtx, *admiralAt.ParentID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get parent token: %w", err)
-	}
-
-	if !parentToken.Valid() {
-		parentToken, err = p.oauth2.TokenSource(httpCtx, parentToken).Token()
-		if err != nil {
-			return nil, fmt.Errorf("failed to refresh external token: %w", err)
-		}
-
-		oidcClaims, err := p.verifyAndExtractClaims(httpCtx, parentToken)
-		if err != nil {
-			return nil, fmt.Errorf("failed to extract claims from token: %w", err)
-		}
-
-		if _, err = p.store.StoreToken(httpCtx, oidcClaims.ID, nil, p.providerName, parentAt.ReferenceKind, parentAt.ReferenceId, parentToken); err != nil {
-			return nil, fmt.Errorf("failed to store new token: %w", err)
-		}
-	}
-
-	oidcClaims, err := p.verifyAndExtractClaims(httpCtx, parentToken)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract claims from token: %w", err)
-	}
-
-	authenticatedUser, err := p.store.syncUserByPrincipal(httpCtx, oidcClaims)
-	if err != nil {
-		return nil, fmt.Errorf("failed to sync user: %w", err)
-	}
-
-	internalClaims := p.prepareTokenClaims(oidcClaims, authenticatedUser)
-
-	newToken, err := p.issueToken(internalClaims, true)
+	token, err := p.issueToken(claims, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to issue token: %w", err)
 	}
 
-	if _, err = p.store.StoreToken(ctx, internalClaims.ID, &oidcClaims.ID, admiralProvider, admiralAt.ReferenceKind, admiralAt.ReferenceId, newToken); err != nil {
-		return nil, fmt.Errorf("failed to store internal token: %w", err)
+	var modelTokenKind model.AuthnTokenKind
+	switch tokenKind {
+	case TokenKindUser:
+		modelTokenKind = model.AuthnTokenKindUser
+	case TokenKindCluster:
+		modelTokenKind = model.AuthnTokenKindCluster
+	default:
+		return nil, fmt.Errorf("unsupported token kind: %s", tokenKind)
 	}
 
-	return newToken, nil
+	_, err = p.store.save(ctx, tokenId, nil, subject, admiralProviderName, modelTokenKind, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store token: %w", err)
+	}
+
+	return token, nil
 }
 
-func (p *OIDCProvider) verifyAndExtractClaims(ctx context.Context, token *oauth2.Token) (*Claims, error) {
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		return nil, errors.New("id_token was not present or invalid in oauth token")
-	}
-
-	idToken, err := p.oidcVerifier.Verify(ctx, rawIDToken)
+func (p *OIDCProvider) RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error) {
+	refreshClaims, err := p.parseTokenClaims(token.RefreshToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to verify ID token: %w", err)
+		return nil, err
 	}
 
-	return p.claimsFromOIDCToken(idToken)
+	refreshTokenId, err := uuid.Parse(refreshClaims.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse refresh token ID: %w", err)
+	}
+
+	aat, err := p.store.get(ctx, refreshTokenId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stored token: %w", err)
+	}
+
+	if string(aat.RefreshToken) != token.RefreshToken {
+		_ = p.store.delete(ctx, refreshTokenId)
+		return nil, errors.New("refresh token did not match")
+	}
+
+	if time.Since(aat.CreatedAt) > 12*time.Hour {
+		_ = p.store.delete(ctx, refreshTokenId)
+		return nil, errors.New("token is too old to refresh, maximum age exceeded")
+	}
+
+	var internalClaims *Claims
+	var providerTokenId *uuid.UUID
+
+	if aat.ParentID != nil {
+		p.logger.Info("populate token claims from parent token", zap.String("parent_id", aat.ParentID.String()))
+
+		pat, err := p.store.get(ctx, *aat.ParentID)
+		if err != nil {
+			return nil, err
+		}
+
+		providerTokenId = &pat.Id
+
+		if pt := pat.ToOAuth2Token(); !pt.Valid() {
+			p.logger.Info("updating provider token", zap.String("id", providerTokenId.String()))
+
+			httpCtx := context.WithValue(ctx, oauth2.HTTPClient, p.httpClient)
+			oidcToken, err := p.oauth2.TokenSource(httpCtx, pt).Token()
+			if err != nil {
+				return nil, err
+			}
+
+			oidcClaims, err := p.claimsFromOIDCToken(ctx, *providerTokenId, oidcToken)
+			if err != nil {
+				return nil, fmt.Errorf("failed to extract claims from token: %w", err)
+			}
+
+			_, err = p.store.upsertUserFromClaims(ctx, oidcClaims)
+			if err != nil {
+				return nil, fmt.Errorf("failed to sync user: %w", err)
+			}
+
+			externalTokenId, err := uuid.Parse(oidcClaims.ID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse token ID: %w", err)
+			}
+
+			pat, err = p.store.save(ctx, externalTokenId, nil, oidcClaims.Subject, p.oidcProviderName, model.AuthnTokenKindExternal, oidcToken)
+			if err != nil {
+				return nil, fmt.Errorf("failed to store provider token: %w", err)
+			}
+		}
+
+		oidcClaims, err := p.claimsFromOIDCToken(ctx, *providerTokenId, pat.ToOAuth2Token())
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract claims from token: %w", err)
+		}
+
+		internalClaims = p.createInternalClaims(aat.Subject, oidcClaims)
+	} else {
+		p.logger.Info("populate existing token claims", zap.String("token", string(aat.AccessToken)))
+
+		existingClaims, err := p.parseTokenClaims(string(aat.AccessToken))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse existing token claims: %w", err)
+		}
+
+		// Create new claims with updated timestamps and new ID
+		internalClaims = &Claims{
+			RegisteredClaims: &jwt.RegisteredClaims{
+				ID:        uuid.NewString(),
+				Subject:   existingClaims.Subject,
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(p.refreshTokenTTL)),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+				NotBefore: jwt.NewNumericDate(time.Now()),
+				Issuer:    admiralProviderName,
+			},
+			ExternalSubject: existingClaims.ExternalSubject,
+			Kind:            existingClaims.Kind,
+			Email:           existingClaims.Email,
+			EmailVerified:   existingClaims.EmailVerified,
+			Name:            existingClaims.Name,
+			GivenName:       existingClaims.GivenName,
+			FamilyName:      existingClaims.FamilyName,
+			Picture:         existingClaims.Picture,
+			Groups:          existingClaims.Groups,
+		}
+	}
+
+	internalTokenId, err := uuid.Parse(internalClaims.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token ID: %w", err)
+	}
+
+	internalToken, err := p.issueToken(internalClaims, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to issue token: %w", err)
+	}
+
+	p.logger.Info("token not before", zap.Time("not_before", internalClaims.NotBefore.Time))
+	p.logger.Info("token issued at", zap.Time("issued_at", internalClaims.IssuedAt.Time))
+	p.logger.Info("token expires at", zap.Time("expires_at", internalClaims.ExpiresAt.Time))
+
+	_, err = p.store.save(ctx, internalTokenId, providerTokenId, internalClaims.Subject, admiralProviderName, aat.Kind, internalToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store internal token: %w", err)
+	}
+	_ = p.store.delete(ctx, refreshTokenId)
+
+	return internalToken, nil
+}
+
+func (p *OIDCProvider) RevokeToken(ctx context.Context, token *oauth2.Token) error {
+	claims, err := p.parseTokenClaims(token.AccessToken)
+	if err != nil {
+		return err
+	}
+
+	jti, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return fmt.Errorf("failed to parse token ID: %w", err)
+	}
+
+	return p.store.delete(ctx, jti)
 }
 
 func (p *OIDCProvider) issueToken(claims *Claims, refresh bool) (*oauth2.Token, error) {
@@ -474,57 +458,49 @@ func (p *OIDCProvider) issueToken(claims *Claims, refresh bool) (*oauth2.Token, 
 	return token, nil
 }
 
-func (p *OIDCProvider) prepareTokenClaims(oidcClaims *Claims, user *model.User) *Claims {
-	tokenClaims := Claims{
-		RegisteredClaims: &jwt.RegisteredClaims{},
-		ExternalSubject:  oidcClaims.ExternalSubject,
-		Kind:             oidcClaims.Kind,
-		Email:            oidcClaims.Email,
-		EmailVerified:    oidcClaims.EmailVerified,
-		Name:             oidcClaims.Name,
-		GivenName:        oidcClaims.GivenName,
-		FamilyName:       oidcClaims.FamilyName,
-		Picture:          oidcClaims.Picture,
-		Groups:           make([]string, len(oidcClaims.Groups)),
+func (p *OIDCProvider) parseTokenClaims(rawToken string) (*Claims, error) {
+	claims := &Claims{}
+	_, err := jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok || token.Method != jwt.SigningMethodHS256 {
+			return nil, fmt.Errorf("invalid signing method: expected HS256")
+		}
+		return []byte(p.signingKey), nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token claims: %w", err)
 	}
-
-	if oidcClaims.RegisteredClaims != nil {
-		*tokenClaims.RegisteredClaims = *oidcClaims.RegisteredClaims
-	}
-
-	copy(tokenClaims.Groups, oidcClaims.Groups)
-
-	tokenClaims.ID = uuid.NewString()
-	tokenClaims.Subject = user.Id.String()
-
-	return &tokenClaims
-
+	return claims, nil
 }
 
-func (p *OIDCProvider) claimsFromOIDCToken(t *oidc.IDToken) (*Claims, error) {
+func (p *OIDCProvider) claimsFromOIDCToken(ctx context.Context, id uuid.UUID, token *oauth2.Token) (*Claims, error) {
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return nil, errors.New("id_token was not present or invalid in oauth token")
+	}
+
+	idToken, err := p.oidcVerifier.Verify(ctx, rawIDToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify ID token: %w", err)
+	}
+
 	oidcClaims := &Claims{}
-	if err := t.Claims(oidcClaims); err != nil {
+	if err := idToken.Claims(oidcClaims); err != nil {
 		return nil, fmt.Errorf("failed to parse OIDC claims: %w", err)
 	}
 	if oidcClaims.Email == "" {
 		return nil, errors.New("required field 'email' missing from OIDC claims")
 	}
 
-	tokenID := oidcClaims.ID
-	if tokenID == "" {
-		tokenID = uuid.NewString()
-	}
-
 	claims := &Claims{
 		RegisteredClaims: &jwt.RegisteredClaims{
-			ID:        tokenID,
+			ID:        id.String(),
 			Subject:   oidcClaims.Subject,
-			ExpiresAt: jwt.NewNumericDate(t.Expiry),
-			IssuedAt:  jwt.NewNumericDate(t.IssuedAt),
-			Issuer:    t.Issuer,
+			ExpiresAt: oidcClaims.ExpiresAt,
+			IssuedAt:  oidcClaims.IssuedAt,
+			Issuer:    oidcClaims.Issuer,
 		},
 		ExternalSubject: oidcClaims.Subject,
-		Kind:            string(model.ReferenceKindUser),
+		Kind:            string(TokenKindUser),
 		Email:           oidcClaims.Email,
 		EmailVerified:   oidcClaims.EmailVerified,
 		Name:            oidcClaims.Name,
@@ -535,4 +511,30 @@ func (p *OIDCProvider) claimsFromOIDCToken(t *oidc.IDToken) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func (p *OIDCProvider) createInternalClaims(subject string, oidcClaims *Claims) *Claims {
+	tokenClaims := Claims{
+		RegisteredClaims: &jwt.RegisteredClaims{
+			ID:        uuid.NewString(),
+			Subject:   subject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(p.refreshTokenTTL)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    admiralProviderName,
+		},
+		ExternalSubject: oidcClaims.ExternalSubject,
+		Kind:            oidcClaims.Kind,
+		Email:           oidcClaims.Email,
+		EmailVerified:   oidcClaims.EmailVerified,
+		Name:            oidcClaims.Name,
+		GivenName:       oidcClaims.GivenName,
+		FamilyName:      oidcClaims.FamilyName,
+		Picture:         oidcClaims.Picture,
+		Groups:          make([]string, len(oidcClaims.Groups)),
+	}
+
+	copy(tokenClaims.Groups, oidcClaims.Groups)
+
+	return &tokenClaims
 }

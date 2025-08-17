@@ -42,7 +42,7 @@ const NavGroup = ({ item }: NavGroupProps) => {
     const childrens = data.children ? data.children : [];
     childrens.forEach((itemCheck: NavItemType) => {
       if (itemCheck?.children?.length) {
-        checkOpenForParent(itemCheck.children, currentItem.id!);
+        checkOpenForParent(itemCheck.children, itemCheck.id!);
       }
       if (itemCheck?.url === pathname) {
         dispatch(activeID(currentItem.id!));

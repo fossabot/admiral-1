@@ -74,9 +74,9 @@ const Sidebar = (): JSX.Element => {
       component="nav"
       variant="permanent"
       anchor="left"
-      open={!!drawerOpen}
+      open={drawerOpen}
       aria-label="Main navigation"
-      aria-expanded={!!drawerOpen}
+      aria-expanded={drawerOpen}
     >
       <Box
         sx={{
@@ -85,10 +85,20 @@ const Sidebar = (): JSX.Element => {
           minHeight: 0,
           minWidth: 0,
           flex: '1 1 0%',
+          overflow: 'hidden',
         }}
       >
         <SidebarHeader />
-        <MenuList />
+        <Box
+          sx={{
+            flex: '1 1 0%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            minHeight: 0,
+          }}
+        >
+          <MenuList />
+        </Box>
       </Box>
       <SidebarFooter />
     </Drawer>

@@ -3,15 +3,12 @@ package authn
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	authnv1 "go.admiral.io/admiral/api/authn/v1"
 	"go.admiral.io/admiral/internal/config"
@@ -70,6 +67,7 @@ func (a *api) Login(ctx context.Context, req *authnv1.LoginRequest) (*authnv1.Lo
 	if err != nil {
 		return nil, err
 	}
+
 	authURL, err := a.provider.GetAuthCodeURL(ctx, state)
 	if err != nil {
 		return nil, err
@@ -141,15 +139,17 @@ func (a *api) loginViaRefresh(ctx context.Context, redirectURL string) (*authnv1
 		return nil, nil
 	}
 
-	authToken, err := a.issuer.RefreshToken(ctx, &oauth2.Token{RefreshToken: refreshToken})
+	newToken, err := a.issuer.RefreshToken(ctx, &oauth2.Token{
+		RefreshToken: refreshToken,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	err = grpc.SetHeader(ctx, metadata.New(map[string]string{
 		"Location":          redirectURL,
-		"Set-Access-Token":  authToken.AccessToken,
-		"Set-Refresh-Token": authToken.RefreshToken,
+		"Set-Access-Token":  newToken.AccessToken,
+		"Set-Refresh-Token": newToken.RefreshToken,
 	}))
 	if err != nil {
 		return nil, err
@@ -158,31 +158,9 @@ func (a *api) loginViaRefresh(ctx context.Context, redirectURL string) (*authnv1
 	return &authnv1.LoginResponse{
 		Return: &authnv1.LoginResponse_Token_{
 			Token: &authnv1.LoginResponse_Token{
-				AccessToken:  authToken.AccessToken,
-				RefreshToken: authToken.RefreshToken,
+				AccessToken:  newToken.AccessToken,
+				RefreshToken: newToken.RefreshToken,
 			},
 		},
-	}, nil
-}
-
-func (a *api) Logout(ctx context.Context, req *authnv1.LogoutRequest) (*authnv1.LogoutResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implemented")
-}
-
-func (a *api) CreateToken(ctx context.Context, request *authnv1.CreateTokenRequest) (*authnv1.CreateTokenResponse, error) {
-	var expiry *time.Duration
-
-	if request.Expiry != nil {
-		convertedExpiry := request.Expiry.AsDuration()
-		expiry = &convertedExpiry
-	}
-
-	token, err := a.issuer.CreateToken(ctx, request.SubjectId, request.TokenType, expiry)
-	if err != nil {
-		return nil, err
-	}
-
-	return &authnv1.CreateTokenResponse{
-		AccessToken: string(token.AccessToken),
 	}, nil
 }

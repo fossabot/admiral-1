@@ -16,7 +16,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	authnv1 "go.admiral.io/admiral/api/authn/v1"
 	clusterv1 "go.admiral.io/admiral/api/cluster/v1"
 	"go.admiral.io/admiral/internal/config"
 	"go.admiral.io/admiral/internal/endpoint"
@@ -71,10 +70,8 @@ func (a *api) CreateCluster(ctx context.Context, req *clusterv1.CreateClusterReq
 		metadata[k] = v
 	}
 
+	// First, create a cluster in the database
 	var cluster model.Cluster
-	var accessToken string
-
-	// First, create cluster in database
 	err := a.database.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("name = ? AND deleted_at IS NULL", req.Name).
@@ -107,8 +104,7 @@ func (a *api) CreateCluster(ctx context.Context, req *clusterv1.CreateClusterReq
 		return nil, status.Error(codes.Internal, "failed to create cluster")
 	}
 
-	// After cluster is committed, create token
-	authnToken, err := a.issuer.CreateToken(ctx, cluster.Id.String(), authnv1.CreateTokenRequest_CLUSTER, &maxDuration)
+	token, err := a.issuer.CreateToken(ctx, cluster.Id.String(), authn.TokenKindCluster, &maxDuration)
 	if err != nil {
 		// Cleanup cluster on token creation failure
 		if cleanupErr := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", cluster.Id).Error; cleanupErr != nil {
@@ -119,17 +115,24 @@ func (a *api) CreateCluster(ctx context.Context, req *clusterv1.CreateClusterReq
 		return nil, status.Errorf(codes.Internal, "creating auth token: %v", err)
 	}
 
-	tokenId, err := uuid.Parse(authnToken.Id)
+	// Parse the JWT to extract the token ID
+	claims, err := authn.ParseTokenWithoutValidation(token.AccessToken)
 	if err != nil {
-		// Cleanup both cluster and token on parsing failure
+		// Cleanup cluster on token parsing failure
 		if cleanupErr := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", cluster.Id).Error; cleanupErr != nil {
 			a.logger.Warn("failed to cleanup cluster after token parsing failure",
 				zap.String("cluster_id", cluster.Id.String()),
 				zap.Error(cleanupErr))
 		}
-		if cleanupErr := a.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", authnToken.Id).Error; cleanupErr != nil {
-			a.logger.Warn("failed to cleanup token after parsing failure",
-				zap.String("token_id", authnToken.Id),
+		return nil, status.Errorf(codes.Internal, "parsing auth token: %v", err)
+	}
+
+	tokenId, err := uuid.Parse(claims.ID)
+	if err != nil {
+		// Cleanup cluster on invalid token ID
+		if cleanupErr := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", cluster.Id).Error; cleanupErr != nil {
+			a.logger.Warn("failed to cleanup cluster after invalid token ID",
+				zap.String("cluster_id", cluster.Id.String()),
 				zap.Error(cleanupErr))
 		}
 		return nil, status.Errorf(codes.Internal, "invalid token ID format: %v", err)
@@ -138,25 +141,22 @@ func (a *api) CreateCluster(ctx context.Context, req *clusterv1.CreateClusterReq
 	// Update cluster with token ID
 	cluster.TokenId = &tokenId
 	if err := a.database.WithContext(ctx).Save(&cluster).Error; err != nil {
-		// Cleanup both cluster and token on save failure
 		if cleanupErr := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", cluster.Id).Error; cleanupErr != nil {
 			a.logger.Warn("failed to cleanup cluster after save failure",
 				zap.String("cluster_id", cluster.Id.String()),
 				zap.Error(cleanupErr))
 		}
-		if cleanupErr := a.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", authnToken.Id).Error; cleanupErr != nil {
+		if cleanupErr := a.database.WithContext(ctx).Delete(&model.AuthnToken{}, "id = ?", tokenId).Error; cleanupErr != nil {
 			a.logger.Warn("failed to cleanup token after save failure",
-				zap.String("token_id", authnToken.Id),
+				zap.String("token_id", tokenId.String()),
 				zap.Error(cleanupErr))
 		}
 		return nil, status.Errorf(codes.Internal, "saving cluster token: %v", err)
 	}
 
-	accessToken = string(authnToken.AccessToken)
-
 	return &clusterv1.CreateClusterResponse{
 		Cluster:     model.ConvertClusterToProto(&cluster),
-		AccessToken: accessToken,
+		AccessToken: token.AccessToken,
 	}, nil
 }
 
@@ -171,7 +171,7 @@ func (a *api) RegisterCluster(ctx context.Context, req *clusterv1.RegisterCluste
 		return nil, status.Error(codes.Unauthenticated, "invalid subject in token")
 	}
 
-	if claims.Kind != string(model.ReferenceKindCluster) {
+	if claims.Kind != string(authn.TokenKindCluster) {
 		return nil, status.Error(codes.Unauthenticated, "invalid token kind")
 	}
 
@@ -318,13 +318,31 @@ func (a *api) DeleteCluster(ctx context.Context, req *clusterv1.DeleteClusterReq
 		return nil, status.Error(codes.InvalidArgument, "id is not a valid uuid")
 	}
 
-	result := a.database.WithContext(ctx).Delete(&model.Cluster{}, "id = ?", id.String())
-	if e := result.Error; e != nil {
-		return nil, status.Error(codes.Internal, e.Error())
-	}
+	// Use transaction to ensure both deletions succeed or fail together
+	err = a.database.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// First, delete all associated auth tokens
+		if err := tx.Where("subject = ? AND kind = ?", id, model.AuthnTokenKindCluster).Delete(&model.AuthnToken{}).Error; err != nil {
+			return err
+		}
 
-	if result.RowsAffected == 0 {
-		return nil, status.Error(codes.NotFound, "cluster not found")
+		// Then delete the cluster
+		result := tx.Delete(&model.Cluster{}, "id = ?", id.String())
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "cluster not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &clusterv1.DeleteClusterResponse{}, nil

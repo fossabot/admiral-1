@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
+	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -13,16 +13,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Configurable interface {
+	SetDefaults()
+	Validate() error
+}
+
 type Config struct {
-	Server   Server   `yaml:"server"`
-	Handlers Handlers `yaml:"handlers"`
-	Services Services `yaml:"services"`
+	Server    *Server    `yaml:"server"`
+	Endpoints *Endpoints `yaml:"endpoints"`
+	Services  Services   `yaml:"services"`
 }
 
 type Services struct {
 	Authn         *Authn         `yaml:"authn"`
 	Database      *Database      `yaml:"database"`
 	ObjectStorage *ObjectStorage `yaml:"object_storage"`
+	Session       *Session       `yaml:"session"`
 	Temporal      *Temporal      `yaml:"temporal"`
 }
 
@@ -87,7 +93,7 @@ func parseConfig(file string, debug bool) (*Config, error) {
 		return nil, err
 	}
 
-	// If debug flag is set, print the configuration and exit.
+	// If a debug flag is set, print the configuration and exit.
 	if debug {
 		b, err := json.MarshalIndent(cfg, "", "  ")
 		if err != nil {
@@ -115,45 +121,26 @@ func parseConfig(file string, debug bool) (*Config, error) {
 }
 
 func setDefaults(cfg *Config) *Config {
-	if len(cfg.Server.Listener.Address) <= 0 {
-		cfg.Server.Listener.Address = "0.0.0.0"
+	if cfg.Server == nil {
+		cfg.Server = &Server{}
 	}
-	if cfg.Server.Listener.Port == 0 {
-		cfg.Server.Listener.Port = 8080
-	}
-
-	if cfg.Server.Logger == nil {
-		cfg.Server.Logger = &Logger{Level: zap.ErrorLevel}
+	if cfg.Services.Session == nil {
+		cfg.Services.Session = &Session{}
 	}
 
-	if cfg.Server.Stats == nil {
-		cfg.Server.Stats = &Stats{
-			FlushInterval: time.Second,
-			Prefix:        "admiral",
-			ReporterType:  ReporterTypeNull,
-		}
+	configs := []Configurable{
+		cfg.Server,
+		cfg.Endpoints,
+		cfg.Services.Database,
+		cfg.Services.Temporal,
+		cfg.Services.ObjectStorage,
+		cfg.Services.Authn,
+		cfg.Services.Session,
 	}
 
-	// Set default database values if not specified
-	if cfg.Services.Database != nil {
-		if cfg.Services.Database.SSLMode == SSLModeUnspecified {
-			cfg.Services.Database.SSLMode = SSLModeRequire
-		}
-		if cfg.Services.Database.Port == 0 {
-			cfg.Services.Database.Port = 5432
-		}
-	}
-
-	// Set default temporal port if not specified
-	if cfg.Services.Temporal != nil && cfg.Services.Temporal.Port == 0 {
-		cfg.Services.Temporal.Port = 7233
-	}
-
-	// Set default storage SSL to true if not specified (only for S3 type)
-	if cfg.Services.ObjectStorage != nil && cfg.Services.ObjectStorage.Type == ObjectStorageTypeS3 && cfg.Services.ObjectStorage.S3 != nil {
-		if cfg.Services.ObjectStorage.S3.UseSSL == nil {
-			useSSL := true
-			cfg.Services.ObjectStorage.S3.UseSSL = &useSSL
+	for _, c := range configs {
+		if c != nil {
+			c.SetDefaults()
 		}
 	}
 
@@ -165,39 +152,43 @@ func (c *Config) validate() error {
 		return fmt.Errorf("config is nil")
 	}
 
-	// Validate stats reporter type if stats are configured
-	if c.Server.Stats != nil {
-		if err := c.Server.Stats.ReporterType.Validate(); err != nil {
-			return fmt.Errorf("invalid server.stats.reporter_type: %w", err)
+	// Define all configs with their requirements
+	configs := []struct {
+		config   Configurable
+		name     string
+		required bool
+	}{
+		// Optional configs
+		{c.Server, "server", false},
+		{c.Endpoints, "endpoints", false},
+		{c.Services.Authn, "services.authn", false},
+		{c.Services.Session, "services.session", false},
+		// Required configs
+		{c.Services.Database, "services.database", true},
+		{c.Services.ObjectStorage, "services.object_storage", true},
+		{c.Services.Temporal, "services.temporal", true},
+	}
+
+	// Validate all configs
+	for _, cfg := range configs {
+		if err := validateConfigItem(cfg.config, cfg.name, cfg.required); err != nil {
+			return err
 		}
 	}
 
-	// Validate database SSL mode (nil-safe due to pointer)
-	if c.Services.Database != nil {
-		if err := c.Services.Database.SSLMode.Validate(); err != nil {
-			return fmt.Errorf("invalid services.database.ssl_mode: %w", err)
-		}
-	} else {
-		return fmt.Errorf("services.database config is nil")
-	}
+	return nil
+}
 
-	// Validate storage config
-	if c.Services.ObjectStorage != nil {
-		if err := c.Services.ObjectStorage.Validate(); err != nil {
-			return fmt.Errorf("invalid services.object_storage config: %w", err)
+func validateConfigItem(c Configurable, name string, required bool) error {
+	// Check if the interface contains a nil value
+	if c == nil || reflect.ValueOf(c).IsNil() {
+		if required {
+			return fmt.Errorf("%s config is nil", name)
 		}
-	} else {
-		return fmt.Errorf("services.object_storage config is nil")
+		return nil // Optional and nil are OK
 	}
-
-	// Validate temporal config
-	if c.Services.Temporal != nil {
-		if err := c.Services.Temporal.Validate(); err != nil {
-			return fmt.Errorf("invalid services.temporal config: %w", err)
-		}
-	} else {
-		return fmt.Errorf("services.temporal config is nil")
+	if err := c.Validate(); err != nil {
+		return fmt.Errorf("invalid %s config: %w", name, err)
 	}
-
 	return nil
 }

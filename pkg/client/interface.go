@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	applicationv1 "go.admiral.io/admiral/api/application/v1"
 	clusterv1 "go.admiral.io/admiral/api/cluster/v1"
 	environmentv1 "go.admiral.io/admiral/api/environment/v1"
@@ -10,7 +12,6 @@ import (
 	manifestv1 "go.admiral.io/admiral/api/manifest/v1"
 	revisionv1 "go.admiral.io/admiral/api/revision/v1"
 	variablev1 "go.admiral.io/admiral/api/variable/v1"
-	"google.golang.org/grpc"
 )
 
 // AdmiralClient defines the interface for the Admiral gRPC client.

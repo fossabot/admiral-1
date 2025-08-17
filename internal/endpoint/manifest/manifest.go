@@ -57,7 +57,7 @@ func New(cfg *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpo
 		return nil, err
 	}
 
-	if cfg.Handlers.Manifest.BucketName == "" {
+	if cfg.Endpoints.Manifest.BucketName == "" {
 		return nil, fmt.Errorf("manifest bucket_name is required")
 	}
 
@@ -68,7 +68,7 @@ func New(cfg *config.Config, log *zap.Logger, scope tally.Scope) (endpoint.Endpo
 			"application_id", "version_group_id", "name", "description", "version", "is_latest",
 		}),
 		storage: storageService,
-		bucket:  cfg.Handlers.Manifest.BucketName,
+		bucket:  cfg.Endpoints.Manifest.BucketName,
 		logger:  log.Named("manifest"),
 		scope:   scope.SubScope("manifest"),
 	}

@@ -3,7 +3,7 @@ import { Theme } from '@mui/material/styles';
 export default function componentStyleOverrides(theme: Theme) {
   const mode = theme.palette.mode;
   const menuSelectedBack = mode === 'dark' ? theme.palette.secondary.main + 15 : theme.palette.secondary.light;
-  const menuSelected = mode === 'dark' ? theme.palette.secondary.main : theme.palette.secondary.dark;
+  const menuSelected = theme.palette.secondary.main;
 
   return {
     MuiButton: {
