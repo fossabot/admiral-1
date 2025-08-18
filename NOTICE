@@ -1,0 +1,94 @@
+Admiral
+
+This product includes software developed by the Admiral contributors.
+
+=========================================================================
+Third Party Components
+=========================================================================
+
+The following third party components are distributed with Admiral and
+carry their own copyright notices and license terms:
+
+-------------------------------------------------------------------------
+Go MySQL Driver
+-------------------------------------------------------------------------
+Copyright 2012 The Go-MySQL-Driver Authors. All rights reserved.
+License: Mozilla Public License Version 2.0 (MPL-2.0)
+Source: https://github.com/go-sql-driver/mysql
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The MPL-2.0 license applies only to the go-sql-driver/mysql library
+itself. The rest of Admiral remains licensed under Apache 2.0.
+
+-------------------------------------------------------------------------
+HashiCorp errwrap
+-------------------------------------------------------------------------
+Copyright (c) 2014 HashiCorp, Inc.
+License: Mozilla Public License Version 2.0 (MPL-2.0)
+Source: https://github.com/hashicorp/errwrap
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The MPL-2.0 license applies only to the hashicorp/errwrap library
+itself. The rest of Admiral remains licensed under Apache 2.0.
+
+-------------------------------------------------------------------------
+HashiCorp go-multierror
+-------------------------------------------------------------------------
+Copyright (c) 2014 HashiCorp, Inc.
+License: Mozilla Public License Version 2.0 (MPL-2.0)
+Source: https://github.com/hashicorp/go-multierror
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The MPL-2.0 license applies only to the hashicorp/go-multierror library
+itself. The rest of Admiral remains licensed under Apache 2.0.
+
+-------------------------------------------------------------------------
+OpenTelemetry Go Automatic Instrumentation
+-------------------------------------------------------------------------
+Copyright (c) The OpenTelemetry Authors
+License: Mozilla Public License Version 2.0 (MPL-2.0)
+Source: https://github.com/open-telemetry/opentelemetry-go-instrumentation
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The MPL-2.0 license applies only to the opentelemetry-go-instrumentation
+library itself. The rest of Admiral remains licensed under Apache 2.0.
+
+-------------------------------------------------------------------------
+Other OpenTelemetry Components
+-------------------------------------------------------------------------
+Copyright The OpenTelemetry Authors
+License: Apache License 2.0
+Source: https://github.com/open-telemetry/opentelemetry-go
+
+Licensed under the Apache License, Version 2.0. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+-------------------------------------------------------------------------
+Google Cloud Platform OpenTelemetry Operations
+-------------------------------------------------------------------------
+Copyright Google LLC
+License: Apache License 2.0
+Source: https://github.com/GoogleCloudPlatform/opentelemetry-operations-go
+
+Licensed under the Apache License, Version 2.0. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+=========================================================================
+For the full text of licenses, please see the LICENSE file in the root
+directory or visit the respective project repositories listed above.
+
+For detailed license analysis and compliance guidance, see:
+docs/third-party-licenses.md
+=========================================================================
